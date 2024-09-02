@@ -1,0 +1,145 @@
+.App {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 200px;
+  border-right: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.position-panels {
+  display: grid;
+  gap: 10px;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px); 
+  grid-template-columns: repeat(auto-fill, minmax(300px, 300px)); /* Responsive grid */
+  padding-right: 10px; 
+}
+
+.position-panel {
+  box-sizing: border-box;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease-in-out;
+  height: 300px;
+  width: 300px;
+}
+
+
+.perspective-selection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 20px;
+}
+
+.options-group {
+  display: flex;
+  gap: 10px;
+  align-items: center; /* Ensure vertical alignment */
+}
+
+.custom-dropdown .dropdown-toggle,
+.custom-btn-group .btn,
+.icon-button {
+  font-size: 14px;
+  padding: 6px 12px; /* Adjusted padding */
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  height: 38px; /* Set a fixed height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.equal-width-btn-group {
+  display: flex;
+  width: auto; /* Allow the group to size based on content */
+}
+
+.equal-width-btn-group .btn {
+  flex: 1 1 auto; /* Allow buttons to grow and shrink */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.button-text {
+  margin-left: 5px;
+}
+
+/* Ensure consistent styling for all buttons */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 38px; /* Match the height of dropdowns */
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+/* Adjust dropdown toggle to match button height */
+.dropdown-toggle {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.button-text {
+  margin-left: 5px;
+}
+
+.file-handler {
+  margin-left: auto;
+}
+
+.colour-toggle.react-toggle--checked .react-toggle-track {
+  background-color: #ff0000 !important; /* Red when checked */
+}
+
+.colour-toggle .react-toggle-track {
+  background-color: #0000ff; /* Blue when unchecked */
+}
+
+.colour-toggle:hover .react-toggle-track {
+  background-color: #0000ff !important; /* Keep blue on hover when unchecked */
+}
+
+.colour-toggle.react-toggle--checked:hover .react-toggle-track {
+  background-color: #ff0000 !important; /* Keep red on hover when checked */
+}
+
+@media (max-width: 768px) {
+  .perspective-selection {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .options-group {
+    margin-bottom: 10px;
+  }
+
+  .file-handler {
+    margin-left: 0;
+    margin-top: 10px;
+  }
+}
