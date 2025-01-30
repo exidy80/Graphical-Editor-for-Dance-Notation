@@ -5,15 +5,22 @@ import Symbol from './Symbols';
 import { useAppContext } from './AppContext';
 
 const Canvas = ({ panelId }) => {
-  const { panels, panelSize, opacity, handleCanvasClick } = useAppContext();
+  // Get the relevant panel data and global panelSize from useAppContext
+  const {
+    panelSize, // Access the global panel size
+    opacity,
+    handleCanvasClick,
+    getPanelStoreById,
+  } = useAppContext();
 
   // Find the panel data based on the supplied ID
-  const panel = panels.find((p) => p.id === panelId);
+  const panelStore = getPanelStoreById(panelId);
 
   // If it's not found for some reason, don't render anything
-  if (!panel) return null;
+  if (!panelStore) return null;
+
   // Get the data from the panel
-  const { dancers, headShapes, handShapes, shapes } = panel;
+  const { dancers, headShapes, handShapes, shapes } = panelStore;
 
   //Triggers if the user clicks on the canvas itself
   const handleCanvasClickInternal = (e) => {

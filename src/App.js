@@ -3,8 +3,9 @@ import Toolbar from './components/Toolbar';
 import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import './App.css';
-import { AppProvider, useAppContext } from './components/AppContext';
-const AppContent = () => {
+import { useAppContext } from './components/AppContext';
+
+const App = () => {
   const { panelSize } = useAppContext();
 
   /* Renders the components */
@@ -29,13 +30,5 @@ const AppContent = () => {
     </div>
   );
 };
-
-function App() {
-  return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
-  );
-}
 
 export default App;

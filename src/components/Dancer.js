@@ -13,13 +13,13 @@ import { useAppContext } from './AppContext';
 const Dancer = ({ panelId, id }) => {
   // Imports from context file
   const {
-    panels,
     selectedDancer,
     selectedHand,
     opacity,
     handleDancerSelection,
     handleHandClick,
     updateDancerState,
+    getPanelStoreById, // Access the panel store by ID
   } = useAppContext();
 
   // setting up references to different parts of the dancer
@@ -32,16 +32,14 @@ const Dancer = ({ panelId, id }) => {
   const rightLowerArmRef = useRef();
   const transformerRef = useRef();
   const handTransformerRef = useRef();
-  const handRefs = {
-    left: useRef(),
-    right: useRef(),
-  };
-
+  const handRefs = { left: useRef(), right: useRef() };
   // finding the specific dancer to render
-  const panel = panels.find((p) => p.id === panelId);
-  const dancer = panel.dancers.find((d) => d.id === id);
-  const chosenHead = panel.headShapes[panel.dancers.indexOf(dancer)];
-  const chosenHandShapes = panel.handShapes[panel.dancers.indexOf(dancer)];
+  const panelStore = getPanelStoreById(panelId);
+  const dancer = panelStore?.dancers.find((d) => d.id === id);
+  const chosenHead =
+    panelStore?.headShapes[panelStore?.dancers.indexOf(dancer)];
+  const chosenHandShapes =
+    panelStore?.handShapes[panelStore?.dancers.indexOf(dancer)];
 
   // checking if this dancer is currently selected
   const isSelected =
@@ -332,6 +330,9 @@ const Dancer = ({ panelId, id }) => {
       </Group>
     );
   };
+
+  // If the dancer is not found, do not render
+  if (!dancer) return null;
 
   // Finally, I'm returning the complete dancer component
   return (

@@ -18,28 +18,22 @@ const Toolbar = () => {
     handleHandSelection,
     selectedHand,
     selectedDancer,
-    opacity,
+    opacityDancers,
+    opacitySymbols,
     handleOpacityChange,
     handleDelete,
     selectedPanel,
     selectedShapeId,
     addPanel,
     deleteSelectedPanel,
-    panels,
   } = useAppContext();
 
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
     if (selectedDancer) {
-      const panel = panels.find((p) => p.id === selectedDancer.panelId);
-      const dancer = panel?.dancers.find(
-        (d) => d.id === selectedDancer.dancerId,
-      );
-      return dancer?.colour;
+      return selectedDancer.colour; // Directly use selectedDancer instead of drilling through panels
     } else if (selectedShapeId) {
-      const panel = panels.find((p) => p.id === selectedShapeId.panelId);
-      const shape = panel?.shapes.find((s) => s.id === selectedShapeId.shapeId);
-      return shape?.fill || shape?.stroke;
+      return selectedShapeId.fill || selectedShapeId.stroke; // Directly use selectedShapeId for color
     }
     return null;
   };
@@ -110,26 +104,22 @@ const Toolbar = () => {
           {/* Toggles the opacity of the dancers */}
           <Button
             onClick={() => handleOpacityChange('dancers')}
-            variant={
-              opacity.dancers.value === 1 ? 'outline-primary' : 'primary'
-            }
+            variant={opacityDancers.value === 1 ? 'outline-primary' : 'primary'}
             className="icon-button"
           >
             <FontAwesomeIcon
-              icon={opacity.dancers.value === 1 ? faLockOpen : faLock}
+              icon={opacityDancers.value === 1 ? faLockOpen : faLock}
             />
             <span className="button-text">Dancers</span>
           </Button>
           {/* Toggles the opacity of the shapes */}
           <Button
             onClick={() => handleOpacityChange('symbols')}
-            variant={
-              opacity.symbols.value === 1 ? 'outline-primary' : 'primary'
-            }
+            variant={opacitySymbols.value === 1 ? 'outline-primary' : 'primary'}
             className="icon-button"
           >
             <FontAwesomeIcon
-              icon={opacity.symbols.value === 1 ? faLockOpen : faLock}
+              icon={opacitySymbols.value === 1 ? faLockOpen : faLock}
             />
             <span className="button-text">Symbols</span>
           </Button>
