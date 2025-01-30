@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react'
+import React, { useRef, useEffect, useCallback } from 'react';
 import {
   Group,
   Line,
@@ -7,8 +7,8 @@ import {
   Arc,
   Circle,
   Transformer,
-} from 'react-konva'
-import { useAppContext } from './AppContext'
+} from 'react-konva';
+import { useAppContext } from './AppContext';
 
 const Dancer = ({ panelId, id }) => {
   // Imports from context file
@@ -20,98 +20,98 @@ const Dancer = ({ panelId, id }) => {
     handleDancerSelection,
     handleHandClick,
     updateDancerState,
-  } = useAppContext()
+  } = useAppContext();
 
   // setting up references to different parts of the dancer
-  const dancerRef = useRef()
-  const headRef = useRef()
-  const bodyRef = useRef()
-  const leftUpperArmRef = useRef()
-  const leftLowerArmRef = useRef()
-  const rightUpperArmRef = useRef()
-  const rightLowerArmRef = useRef()
-  const transformerRef = useRef()
-  const handTransformerRef = useRef()
+  const dancerRef = useRef();
+  const headRef = useRef();
+  const bodyRef = useRef();
+  const leftUpperArmRef = useRef();
+  const leftLowerArmRef = useRef();
+  const rightUpperArmRef = useRef();
+  const rightLowerArmRef = useRef();
+  const transformerRef = useRef();
+  const handTransformerRef = useRef();
   const handRefs = {
     left: useRef(),
     right: useRef(),
-  }
+  };
 
   // finding the specific dancer to render
-  const panel = panels.find(p => p.id === panelId)
-  const dancer = panel.dancers.find(d => d.id === id)
-  const chosenHead = panel.headShapes[panel.dancers.indexOf(dancer)]
-  const chosenHandShapes = panel.handShapes[panel.dancers.indexOf(dancer)]
+  const panel = panels.find((p) => p.id === panelId);
+  const dancer = panel.dancers.find((d) => d.id === id);
+  const chosenHead = panel.headShapes[panel.dancers.indexOf(dancer)];
+  const chosenHandShapes = panel.handShapes[panel.dancers.indexOf(dancer)];
 
   // checking if this dancer is currently selected
   const isSelected =
     selectedDancer &&
     selectedDancer.panelId === panelId &&
-    selectedDancer.dancerId === id
-  const disabled = opacity.dancers.disabled //Can't select dancer if it's been disabled
+    selectedDancer.dancerId === id;
+  const disabled = opacity.dancers.disabled; //Can't select dancer if it's been disabled
 
   // Constants for body parts
-  const headSize = 30
-  const bodyWidth = 60
-  const bodyHeight = 5
+  const headSize = 30;
+  const bodyWidth = 60;
+  const bodyHeight = 5;
 
   // handles when the dancer is transformed (moved, rotated, scaled)
   const handleTransform = useCallback(
-    e => {
-      const node = e.target
+    (e) => {
+      const node = e.target;
       updateDancerState(panelId, id, {
         x: node.x(), //logs position of dancer on X axis when transformed
         y: node.y(), //logs position on Y axis
         rotation: node.rotation(), //logs rotation
         scaleX: node.scaleX(), //logs scale
         scaleY: node.scaleY(),
-      })
+      });
     },
-    [panelId, id, updateDancerState]
-  )
+    [panelId, id, updateDancerState],
+  );
 
   // This function handles when the dancer is dragged and logs position
   const handleDragEnd = useCallback(
-    e => {
-      const node = e.target
+    (e) => {
+      const node = e.target;
       if (node === dancerRef.current) {
         updateDancerState(panelId, id, {
           x: node.x(),
           y: node.y(),
-        })
+        });
       }
     },
-    [panelId, id, updateDancerState]
-  )
+    [panelId, id, updateDancerState],
+  );
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
   const handlePartDragEnd = useCallback(
-    (part, side) => e => {
-      const newPos = e.target.position()
-      updateDancerState(panelId, id, { [`${side}${part}Pos`]: newPos })
+    (part, side) => (e) => {
+      const newPos = e.target.position();
+      updateDancerState(panelId, id, { [`${side}${part}Pos`]: newPos });
     },
-    [updateDancerState, panelId, id]
-  )
+    [updateDancerState, panelId, id],
+  );
 
   // This function handles rotating a hand
   const handleHandRotation = useCallback(
-    e => {
-      const node = e.target
-      const rotation = node.rotation()
+    (e) => {
+      const node = e.target;
+      const rotation = node.rotation();
       updateDancerState(panelId, id, {
         [`${selectedHand.handSide}HandRotation`]: rotation,
-      })
+      });
     },
-    [panelId, id, selectedHand, updateDancerState]
-  )
+    [panelId, id, selectedHand, updateDancerState],
+  );
 
   // These two functions help me manage the transformer for the hands
   const resetHandTransformer = useCallback(() => {
     if (handTransformerRef.current) {
-      handTransformerRef.current.nodes([])
-      handTransformerRef.current.getLayer().batchDraw()
+      handTransformerRef.current.nodes([]);
+      handTransformerRef.current.getLayer().batchDraw();
     }
-  }, [])
+  }, []);
 
   const attachHandTransformer = useCallback(() => {
     if (
@@ -119,39 +119,39 @@ const Dancer = ({ panelId, id }) => {
       selectedHand.panelId === panelId &&
       selectedHand.dancerId === id
     ) {
-      const handNode = handRefs[selectedHand.handSide].current
+      const handNode = handRefs[selectedHand.handSide].current;
       if (handNode && handTransformerRef.current) {
-        handTransformerRef.current.nodes([handNode])
-        handTransformerRef.current.getLayer().batchDraw()
+        handTransformerRef.current.nodes([handNode]);
+        handTransformerRef.current.getLayer().batchDraw();
       }
     }
-  }, [selectedHand, panelId, id])
+  }, [selectedHand, panelId, id]);
 
   //Keeps arms tracking hands
   useEffect(() => {
-    const updateArm = side => {
+    const updateArm = (side) => {
       const upperArm =
-        side === 'left' ? leftUpperArmRef.current : rightUpperArmRef.current
+        side === 'left' ? leftUpperArmRef.current : rightUpperArmRef.current;
       const lowerArm =
-        side === 'left' ? leftLowerArmRef.current : rightLowerArmRef.current
-      const shoulderX = side === 'left' ? -bodyWidth / 2 : bodyWidth / 2
-      const elbowPos = dancer[`${side}ElbowPos`]
-      const handPos = dancer[`${side}HandPos`]
+        side === 'left' ? leftLowerArmRef.current : rightLowerArmRef.current;
+      const shoulderX = side === 'left' ? -bodyWidth / 2 : bodyWidth / 2;
+      const elbowPos = dancer[`${side}ElbowPos`];
+      const handPos = dancer[`${side}HandPos`];
 
       if (upperArm && lowerArm) {
-        upperArm.points([shoulderX, headSize / 4, elbowPos.x, elbowPos.y])
-        lowerArm.points([elbowPos.x, elbowPos.y, handPos.x, handPos.y])
+        upperArm.points([shoulderX, headSize / 4, elbowPos.x, elbowPos.y]);
+        lowerArm.points([elbowPos.x, elbowPos.y, handPos.x, handPos.y]);
       }
-    }
+    };
 
-    updateArm('left')
-    updateArm('right')
-  }, [dancer, chosenHandShapes])
+    updateArm('left');
+    updateArm('right');
+  }, [dancer, chosenHandShapes]);
 
   useEffect(() => {
     if (isSelected && dancerRef.current) {
-      transformerRef.current.nodes([dancerRef.current])
-      transformerRef.current.getLayer().batchDraw()
+      transformerRef.current.nodes([dancerRef.current]);
+      transformerRef.current.getLayer().batchDraw();
     }
 
     if (
@@ -159,9 +159,9 @@ const Dancer = ({ panelId, id }) => {
       selectedHand.panelId === panelId &&
       selectedHand.dancerId === id
     ) {
-      attachHandTransformer()
+      attachHandTransformer();
     } else {
-      resetHandTransformer()
+      resetHandTransformer();
     }
   }, [
     isSelected,
@@ -170,13 +170,13 @@ const Dancer = ({ panelId, id }) => {
     id,
     resetHandTransformer,
     attachHandTransformer,
-  ])
+  ]);
 
   useEffect(() => {
-    resetHandTransformer()
+    resetHandTransformer();
     // I'm using a timeout here to make sure the reset happens before reattaching when hand shape changed
-    setTimeout(attachHandTransformer, 0)
-  }, [chosenHandShapes, resetHandTransformer, attachHandTransformer])
+    setTimeout(attachHandTransformer, 0);
+  }, [chosenHandShapes, resetHandTransformer, attachHandTransformer]);
 
   // This function renders the head of the dancer
   const renderHead = () => {
@@ -185,7 +185,7 @@ const Dancer = ({ panelId, id }) => {
       fill: dancer.colour,
       opacity: opacity.dancers.value,
       onClick: disabled ? null : () => handleDancerSelection(panelId, id),
-    }
+    };
 
     switch (chosenHead) {
       case 'Bow':
@@ -196,7 +196,7 @@ const Dancer = ({ panelId, id }) => {
             height={bodyHeight * 2}
             x={-15}
           />
-        )
+        );
       case 'Duck':
         return (
           <Arc
@@ -207,22 +207,24 @@ const Dancer = ({ panelId, id }) => {
             y={10}
             innerRadius={0}
           />
-        )
+        );
       case 'Upright':
       default:
-        return <RegularPolygon {...baseProps} sides={3} radius={headSize / 2} />
+        return (
+          <RegularPolygon {...baseProps} sides={3} radius={headSize / 2} />
+        );
     }
-  }
+  };
 
   // This function renders the hands of the dancer
-  const renderHand = side => {
-    const handPos = dancer[`${side}HandPos`]
-    const handShape = chosenHandShapes[side]
+  const renderHand = (side) => {
+    const handPos = dancer[`${side}HandPos`];
+    const handShape = chosenHandShapes[side];
     const isHandSelected =
       selectedHand &&
       selectedHand.panelId === panelId &&
       selectedHand.dancerId === id &&
-      selectedHand.handSide === side
+      selectedHand.handSide === side;
 
     const baseProps = {
       fill: dancer.colour,
@@ -238,7 +240,7 @@ const Dancer = ({ panelId, id }) => {
       shadowColor: isHandSelected ? dancer.colour : null,
       shadowBlur: isHandSelected ? 15 : 0,
       shadowOpacity: isHandSelected ? 1 : 0,
-    }
+    };
 
     switch (handShape) {
       case 'Knee':
@@ -252,7 +254,7 @@ const Dancer = ({ panelId, id }) => {
             {/* This invisible rectangle adjusts the rotation point */}
             <Rect width={1} height={10} opacity={0} />
           </Group>
-        )
+        );
       case 'Shoulder':
         return (
           // wrapped in group so that initial rotation can be set but still change dynamically
@@ -265,11 +267,11 @@ const Dancer = ({ panelId, id }) => {
               fill={dancer.colour}
             />
           </Group>
-        )
+        );
       case 'Overhead':
         return (
           <RegularPolygon {...baseProps} sides={3} radius={7} offsetY={-1} />
-        )
+        );
       case 'Waist':
       default:
         return (
@@ -280,26 +282,26 @@ const Dancer = ({ panelId, id }) => {
             offsetX={7.5}
             offsetY={2.5}
           />
-        )
+        );
     }
-  }
+  };
   //Allows clicking of arm to change thickness
   const handleArmClick = useCallback(
-    (side, part) => e => {
-      if (disabled) return // Extra check to prevent execution when disabled
-      const currentThickness = dancer[`${side}${part}ArmThickness`]
-      const newThickness = currentThickness === 'thick' ? 'thin' : 'thick'
+    (side, part) => (e) => {
+      if (disabled) return; // Extra check to prevent execution when disabled
+      const currentThickness = dancer[`${side}${part}ArmThickness`];
+      const newThickness = currentThickness === 'thick' ? 'thin' : 'thick';
       updateDancerState(panelId, id, {
         [`${side}${part}ArmThickness`]: newThickness,
-      })
+      });
     },
-    [panelId, id, dancer, updateDancerState, disabled]
-  )
+    [panelId, id, dancer, updateDancerState, disabled],
+  );
 
   //renders the Arm
-  const renderArm = side => {
-    const upperArmThickness = dancer[`${side}UpperArmThickness`] || 'thick'
-    const lowerArmThickness = dancer[`${side}LowerArmThickness`] || 'thick'
+  const renderArm = (side) => {
+    const upperArmThickness = dancer[`${side}UpperArmThickness`] || 'thick';
+    const lowerArmThickness = dancer[`${side}LowerArmThickness`] || 'thick';
 
     return (
       <Group key={`${side}arm${dancer.id}`}>
@@ -308,14 +310,14 @@ const Dancer = ({ panelId, id }) => {
           stroke={dancer.colour}
           strokeWidth={upperArmThickness === 'thick' ? 5 : 2} //The two thickness options to toggle between
           hitStrokeWidth={10} // Consistent hitbox
-          onClick={e => handleArmClick(side, 'Upper')(e)}
+          onClick={(e) => handleArmClick(side, 'Upper')(e)}
         />
         <Line
           ref={side === 'left' ? leftLowerArmRef : rightLowerArmRef}
           stroke={dancer.colour}
           strokeWidth={lowerArmThickness === 'thick' ? 5 : 2}
           hitStrokeWidth={10} // Consistent hitbox
-          onClick={e => handleArmClick(side, 'Lower')(e)}
+          onClick={(e) => handleArmClick(side, 'Lower')(e)}
         />
         <Circle
           x={dancer[`${side}ElbowPos`].x}
@@ -328,8 +330,8 @@ const Dancer = ({ panelId, id }) => {
         />
         {renderHand(side)}
       </Group>
-    )
-  }
+    );
+  };
 
   // Finally, I'm returning the complete dancer component
   return (
@@ -355,7 +357,7 @@ const Dancer = ({ panelId, id }) => {
           y={headSize / 4}
           offsetX={bodyWidth / 2}
         />
-        {['left', 'right'].map(side => renderArm(side))}
+        {['left', 'right'].map((side) => renderArm(side))}
       </Group>
       {isSelected && (
         <Transformer
@@ -376,7 +378,7 @@ const Dancer = ({ panelId, id }) => {
           />
         )}
     </>
-  )
-}
+  );
+};
 
-export default Dancer
+export default Dancer;
