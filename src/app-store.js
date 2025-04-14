@@ -42,195 +42,202 @@ const createInitialPanel = () => ({
   ],
 });
 
-const useStore = create((set, get) => ({
-  panels: {
-    byId: {},
-    allIds: [],
-  },
-  selectedPanelId: null,
-  selectedDancer: null,
-  selectedHand: null,
-  selectedShape: null,
-  panelSize: { width: 300, height: 300 },
+const globalDefaults = {
   opacity: { dancers: 1, symbols: 1 },
   disabled: { dancers: false, symbols: false },
+  panelSize: [300, 300],
+};
 
-  initialize: () =>
-    set(() => {
-      const panel = createInitialPanel();
-      return {
-        panels: {
-          byId: { [panel.id]: panel },
-          allIds: [panel.id],
-        },
-      };
-    }),
+export const useStore = create((set, get) => {
+  const panel = createInitialPanel();
+  return {
+    panels: {
+      byId: { [panel.id]: panel },
+      allIds: [panel.id],
+    },
+    selectedPanelId: null,
+    selectedDancer: null,
+    selectedHand: null,
+    selectedShape: null,
+    panelSize: globalDefaults.panelSize,
+    opacity: globalDefaults.opacity,
+    disabled: globalDefaults.disabled,
 
-  updatePanelState: (panelId, updater) =>
-    set((state) => ({
-      panels: {
-        ...state.panels,
-        byId: {
-          ...state.panels.byId,
-          [panelId]: updater(state.panels.byId[panelId]),
-        },
-      },
-    })),
+    initialize: () =>
+      set(() => {
+        const panel = createInitialPanel();
+        return {
+          panels: {
+            byId: { [panel.id]: panel },
+            allIds: [panel.id],
+          },
+        };
+      }),
 
-  updateDancer: (panelId, dancerId, updates) => {
-    const updatePanel = (panel) => ({
-      ...panel,
-      dancers: panel.dancers.map((d) =>
-        d.id === dancerId ? { ...d, ...updates } : d,
-      ),
-    });
-    get().updatePanelState(panelId, updatePanel);
-  },
-
-  addShape: (panelId, shape) => {
-    const updatePanel = (panel) => ({
-      ...panel,
-      shapes: [...panel.shapes, { ...shape, id: uuidv4() }],
-    });
-    get().updatePanelState(panelId, updatePanel);
-  },
-
-  updateShape: (panelId, shapeId, updates) => {
-    const updatePanel = (panel) => ({
-      ...panel,
-      shapes: panel.shapes.map((s) =>
-        s.id === shapeId ? { ...s, ...updates } : s,
-      ),
-    });
-    get().updatePanelState(panelId, updatePanel);
-  },
-
-  deleteShape: (panelId, shapeId) => {
-    const updatePanel = (panel) => ({
-      ...panel,
-      shapes: panel.shapes.filter((s) => s.id !== shapeId),
-    });
-    get().updatePanelState(panelId, updatePanel);
-  },
-
-  selectPanel: (panelId) =>
-    set({
-      selectedPanelId: panelId,
-      selectedDancer: null,
-      selectedHand: null,
-      selectedShape: null,
-    }),
-
-  selectDancer: (panelId, dancer) =>
-    set((state) => ({
-      selectedPanelId: panelId,
-      selectedDancer: state.selectedDancer?.id === dancer.id ? null : dancer,
-    })),
-
-  selectHand: (panelId, dancerId, handSide) =>
-    set((state) => ({
-      selectedPanelId: panelId,
-      selectedHand:
-        state.selectedHand?.dancerId === dancerId &&
-        state.selectedHand?.handSide === handSide
-          ? null
-          : { dancerId, handSide },
-    })),
-
-  selectShape: (panelId, shape) =>
-    set((state) => ({
-      selectedPanelId: panelId,
-      selectedShape: state.selectedShape?.id === shape.id ? null : shape,
-    })),
-
-  clearSelection: () =>
-    set({
-      selectedPanelId: null,
-      selectedDancer: null,
-      selectedHand: null,
-      selectedShape: null,
-    }),
-
-  addPanel: () =>
-    set((state) => {
-      const newPanel = createInitialPanel();
-      return {
-        panels: {
-          byId: { ...state.panels.byId, [newPanel.id]: newPanel },
-          allIds: [...state.panels.allIds, newPanel.id],
-        },
-      };
-    }),
-
-  removePanel: (panelId) =>
-    set((state) => ({
-      panels: {
-        byId: Object.fromEntries(
-          Object.entries(state.panels.byId).filter(([id]) => id !== panelId),
-        ),
-        allIds: state.panels.allIds.filter((id) => id !== panelId),
-      },
-      selectedPanelId:
-        state.selectedPanelId === panelId ? null : state.selectedPanelId,
-    })),
-
-  clonePanel: (panelId) =>
-    set((state) => {
-      const panel = state.panels.byId[panelId];
-      if (!panel) return state;
-
-      const clonedPanel = {
-        ...panel,
-        id: uuidv4(),
-        dancers: panel.dancers.map((d) => ({ ...d, id: uuidv4() })),
-        shapes: panel.shapes.map((s) => ({ ...s, id: uuidv4() })),
-      };
-
-      return {
-        panels: {
-          byId: { ...state.panels.byId, [clonedPanel.id]: clonedPanel },
-          allIds: [...state.panels.allIds, clonedPanel.id],
-        },
-      };
-    }),
-
-  movePanel: (panelId, direction) =>
-    set((state) => {
-      const currentIndex = state.panels.allIds.indexOf(panelId);
-      if (currentIndex === -1) return state;
-
-      const newAllIds = [...state.panels.allIds];
-      const targetIndex =
-        direction === 'left'
-          ? Math.max(0, currentIndex - 1)
-          : Math.min(newAllIds.length - 1, currentIndex + 1);
-
-      newAllIds.splice(currentIndex, 1);
-      newAllIds.splice(targetIndex, 0, panelId);
-
-      return {
+    updatePanelState: (panelId, updater) =>
+      set((state) => ({
         panels: {
           ...state.panels,
-          allIds: newAllIds,
+          byId: {
+            ...state.panels.byId,
+            [panelId]: updater(state.panels.byId[panelId]),
+          },
         },
-      };
-    }),
+      })),
 
-  toggleOpacity: (type) =>
-    set((state) => {
-      const newOpacity = state.opacity[type] === 1 ? 0.5 : 1;
-      const newDisabled = state.opacity[type] === 1;
-      return {
-        opacity: {
-          ...state.opacity,
-          [type]: newOpacity,
+    updateDancer: (panelId, dancerId, updates) => {
+      const updatePanel = (panel) => ({
+        ...panel,
+        dancers: panel.dancers.map((d) =>
+          d.id === dancerId ? { ...d, ...updates } : d,
+        ),
+      });
+      get().updatePanelState(panelId, updatePanel);
+    },
+
+    addShape: (panelId, shape) => {
+      const updatePanel = (panel) => ({
+        ...panel,
+        shapes: [...panel.shapes, { ...shape, id: uuidv4() }],
+      });
+      get().updatePanelState(panelId, updatePanel);
+    },
+
+    updateShape: (panelId, shapeId, updates) => {
+      const updatePanel = (panel) => ({
+        ...panel,
+        shapes: panel.shapes.map((s) =>
+          s.id === shapeId ? { ...s, ...updates } : s,
+        ),
+      });
+      get().updatePanelState(panelId, updatePanel);
+    },
+
+    deleteShape: (panelId, shapeId) => {
+      const updatePanel = (panel) => ({
+        ...panel,
+        shapes: panel.shapes.filter((s) => s.id !== shapeId),
+      });
+      get().updatePanelState(panelId, updatePanel);
+    },
+
+    selectPanel: (panelId) =>
+      set({
+        selectedPanelId: panelId,
+        selectedDancer: null,
+        selectedHand: null,
+        selectedShape: null,
+      }),
+
+    selectDancer: (panelId, dancer) =>
+      set((state) => ({
+        selectedPanelId: panelId,
+        selectedDancer: state.selectedDancer?.id === dancer.id ? null : dancer,
+      })),
+
+    selectHand: (panelId, dancerId, handSide) =>
+      set((state) => ({
+        selectedPanelId: panelId,
+        selectedHand:
+          state.selectedHand?.dancerId === dancerId &&
+          state.selectedHand?.handSide === handSide
+            ? null
+            : { dancerId, handSide },
+      })),
+
+    selectShape: (panelId, shape) =>
+      set((state) => ({
+        selectedPanelId: panelId,
+        selectedShape: state.selectedShape?.id === shape.id ? null : shape,
+      })),
+
+    clearSelection: () =>
+      set({
+        selectedPanelId: null,
+        selectedDancer: null,
+        selectedHand: null,
+        selectedShape: null,
+      }),
+
+    addPanel: () =>
+      set((state) => {
+        const newPanel = createInitialPanel();
+        return {
+          panels: {
+            byId: { ...state.panels.byId, [newPanel.id]: newPanel },
+            allIds: [...state.panels.allIds, newPanel.id],
+          },
+        };
+      }),
+
+    removePanel: (panelId) =>
+      set((state) => ({
+        panels: {
+          byId: Object.fromEntries(
+            Object.entries(state.panels.byId).filter(([id]) => id !== panelId),
+          ),
+          allIds: state.panels.allIds.filter((id) => id !== panelId),
         },
-        disabled: { ...state.disabled, [type]: newDisabled },
-      };
-    }),
-}));
+        selectedPanelId:
+          state.selectedPanelId === panelId ? null : state.selectedPanelId,
+      })),
 
-useStore.getState().initialize();
+    clonePanel: (panelId) =>
+      set((state) => {
+        const panel = state.panels.byId[panelId];
+        if (!panel) return state;
+
+        const clonedPanel = {
+          ...panel,
+          id: uuidv4(),
+          dancers: panel.dancers.map((d) => ({ ...d, id: uuidv4() })),
+          shapes: panel.shapes.map((s) => ({ ...s, id: uuidv4() })),
+        };
+
+        return {
+          panels: {
+            byId: { ...state.panels.byId, [clonedPanel.id]: clonedPanel },
+            allIds: [...state.panels.allIds, clonedPanel.id],
+          },
+        };
+      }),
+
+    movePanel: (panelId, direction) =>
+      set((state) => {
+        const currentIndex = state.panels.allIds.indexOf(panelId);
+        if (currentIndex === -1) return state;
+
+        const newAllIds = [...state.panels.allIds];
+        const targetIndex =
+          direction === 'left'
+            ? Math.max(0, currentIndex - 1)
+            : Math.min(newAllIds.length - 1, currentIndex + 1);
+
+        newAllIds.splice(currentIndex, 1);
+        newAllIds.splice(targetIndex, 0, panelId);
+
+        return {
+          panels: {
+            ...state.panels,
+            allIds: newAllIds,
+          },
+        };
+      }),
+
+    toggleOpacity: (type) =>
+      set((state) => {
+        const newOpacity = state.opacity[type] === 1 ? 0.5 : 1;
+        const newDisabled = state.opacity[type] === 1;
+        return {
+          opacity: {
+            ...state.opacity,
+            [type]: newOpacity,
+          },
+          disabled: { ...state.disabled, [type]: newDisabled },
+        };
+      }),
+  };
+});
 
 // Custom hooks for components
 
@@ -251,11 +258,14 @@ export const useAppState = () => {
 };
 
 export const useGlobalSettings = () => {
-  return useStore((state) => ({
-    panelSize: state.panelSize,
-    opacity: state.opacity,
-    disabled: state.disabled,
-  }));
+  return useStore(
+    (state) => ({
+      panelSize: state.panelSize,
+      // opacity: state.opacity,
+      // disabled: state.disabled,
+    }),
+    shallow,
+  );
 };
 
 export const usePanelState = (panelId) => {

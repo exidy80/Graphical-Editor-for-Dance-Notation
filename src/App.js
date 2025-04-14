@@ -4,9 +4,9 @@ import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import './App.css';
 import { AppProvider } from './components/AppContext';
-import { useGlobalSettings } from 'app-store';
+import { useStore } from 'app-store';
 const App = () => {
-  const { panelSize } = useGlobalSettings();
+  const panelSize = useStore((state) => state.panelSize);
 
   /* Renders the components.
   The AppProvider will go once I convert all the components
