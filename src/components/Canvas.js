@@ -4,21 +4,20 @@ import Dancer from './Dancer';
 import Symbol from './Symbols';
 import { useAppContext } from './AppContext';
 
-const Canvas = ({ panelId }) => {
+const Canvas = ({ panel }) => {
   const {
-    panels,
     panelSize,
     opacity,
     handleCanvasClick,
     handleDancerSelection,
     handleHandClick,
+    handleShapeSelection,
     updateDancerState,
+    updateShapeState,
     selectedDancer,
     selectedHand,
+    selectedShapeId,
   } = useAppContext();
-
-  // Find the panel data based on the supplied ID
-  const panel = panels.find((p) => p.id === panelId);
 
   // If it's not found for some reason, don't render anything
   if (!panel) return null;
@@ -41,38 +40,53 @@ const Canvas = ({ panelId }) => {
     >
       <Layer>
         {/* Render the shapes */}
-        {shapes.map((shape) => (
-          <Symbol
-            key={shape.id}
-            shapeProps={shape}
-            panelId={panelId}
-            opacity={opacity.symbols.value} //pass opacity
-            disabled={opacity.symbols.disabled} //pass whether object is disabled
-          />
-        ))}
+        {shapes.map((shape) => {
+          const isSelected =
+            selectedShapeId && selectedShapeId.shapeId === shape.id;
+          return (
+            <Symbol
+              key={shape.id}
+              shapeProps={shape}
+              opacity={opacity.symbols.value} //pass opacity
+              disabled={opacity.symbols.disabled} //pass whether object is disabled
+              isSelected={isSelected} //pass whether the object is selected
+              handleShapeSelection={(...args) =>
+                handleShapeSelection(panel.id, ...args)
+              }
+              updateShapeState={(...args) =>
+                updateShapeState(panel.id, ...args)
+              }
+            />
+          );
+        })}
         {/* Render the dancers */}
-        {dancers.map((dancer, index) => (
-          <Dancer
-            dancer={dancer}
-            key={dancer.id}
-            chosenHead={headShapes[index]} //pass the chosen head
-            chosenHandShapes={handShapes[index]} //pass the chosen hand
-            opacity={opacity.dancers.value} //pass opacity
-            disabled={opacity.dancers.disabled} //pass whether the object is disabled
-            initialState={dancer}
-            handleDancerSelection={(...args) =>
-              handleDancerSelection(panelId, ...args)
-            }
-            handleHandClick={(...args) => handleHandClick(panelId, ...args)}
-            updateDancerState={(...args) => updateDancerState(panelId, ...args)}
-            isSelected={selectedDancer && selectedDancer.dancerId === dancer.id}
-            selectedHand={
-              selectedHand && selectedHand.dancerId === dancer.id
-                ? selectedHand
-                : null
-            }
-          />
-        ))}
+        {dancers.map((dancer, index) => {
+          const isSelected =
+            selectedDancer && selectedDancer.dancerId === dancer.id;
+          const handSelection =
+            selectedHand && selectedHand.dancerId === dancer.id
+              ? selectedHand
+              : null;
+          return (
+            <Dancer
+              dancer={dancer}
+              key={dancer.id}
+              chosenHead={headShapes[index]} //pass the chosen head
+              chosenHandShapes={handShapes[index]} //pass the chosen hand
+              opacity={opacity.dancers.value} //pass opacity
+              disabled={opacity.dancers.disabled} //pass whether the object is disabled
+              handleDancerSelection={(...args) =>
+                handleDancerSelection(panel.id, ...args)
+              }
+              handleHandClick={(...args) => handleHandClick(panel.id, ...args)}
+              updateDancerState={(...args) =>
+                updateDancerState(panel.id, ...args)
+              }
+              isSelected={isSelected}
+              selectedHand={handSelection}
+            />
+          );
+        })}
       </Layer>
     </Stage>
   );

@@ -1,27 +1,41 @@
 import React, { useRef, useEffect, useCallback } from 'react';
-import { Transformer, Arrow, Arc, Text, Rect, Circle, Image as KonvaImage, RegularPolygon } from 'react-konva';
+import {
+  Transformer,
+  Arrow,
+  Arc,
+  Text,
+  Rect,
+  Circle,
+  Image as KonvaImage,
+  RegularPolygon,
+} from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
-import { useAppContext } from './AppContext';
 
-const Symbol = ({ shapeProps, panelId}) => {
-  //Get functions and states from context
-  const { opacity, handleShapeSelection, updateShapeState, selectedShapeId } = useAppContext();
+const Symbol = ({
+  shapeProps,
+  opacity,
+  disabled,
+  handleShapeSelection,
+  updateShapeState,
+  isSelected,
+}) => {
   //Refs for shapes and transformers
   const shapeRef = useRef();
   const trRef = useRef();
   //Load image for feet symbols
   const [image] = useImage(images[shapeProps.imageKey]);
 
-  //Check if specific shape in a panel is selected
-  const isSelected = selectedShapeId && selectedShapeId.panelId === panelId && selectedShapeId.shapeId === shapeProps.id;
-  //check if it's disabled
-  const disabled = opacity.symbols.disabled;
   //check if its the stage marker
   const isStageX = shapeProps.type === 'stageX';
 
   // Generates the points for each type of spin
-  const generateSpiralPoints = (numPoints, radiusIncrement, angleIncrement, pattern) => {
+  const generateSpiralPoints = (
+    numPoints,
+    radiusIncrement,
+    angleIncrement,
+    pattern,
+  ) => {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
       const angle = i * angleIncrement;
@@ -39,20 +53,26 @@ const Symbol = ({ shapeProps, panelId}) => {
   };
 
   //Handles the end of a drag and pushes the update to the state
-  const handleDragEnd = useCallback((e) => {
-    const node = e.target;
-    updateShapeState(panelId, shapeProps.id, {
-      x: node.x(),
-      y: node.y()
-    });
-  }, [panelId, shapeProps.id, updateShapeState]);
+  const handleDragEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      updateShapeState(shapeProps.id, {
+        x: node.x(),
+        y: node.y(),
+      });
+    },
+    [shapeProps.id, updateShapeState],
+  );
 
   //Handles click on a shape
-  const handleClick = useCallback((e) => {
-    if (disabled || isStageX) return;
+  const handleClick = useCallback(
+    (e) => {
+      if (disabled || isStageX) return;
 
-    handleShapeSelection(panelId, shapeProps.id);
-  }, [disabled, isStageX, panelId, shapeProps.id, handleShapeSelection, isSelected]);
+      handleShapeSelection(shapeProps.id);
+    },
+    [disabled, isStageX, shapeProps.id, handleShapeSelection],
+  );
 
   useEffect(() => {
     if (isSelected && !isStageX && trRef.current && shapeRef.current) {
@@ -65,31 +85,34 @@ const Symbol = ({ shapeProps, panelId}) => {
     }
   }, [isSelected, isStageX, shapeProps.id]);
   //handles end of transform and updates the state
-  const handleTransformEnd = useCallback((e) => {
-    const node = shapeRef.current;
-    const newState = {
-      x: node.x(),
-      y: node.y(),
-      rotation: node.rotation(),
-      scaleX: node.scaleX(),
-      scaleY: node.scaleY(),
-    };
-    updateShapeState(panelId, shapeProps.id, newState);
-    // Force selection to remain after transform
-  }, [panelId, shapeProps.id, updateShapeState, handleShapeSelection]);
+  const handleTransformEnd = useCallback(
+    (e) => {
+      const node = shapeRef.current;
+      const newState = {
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        scaleX: node.scaleX(),
+        scaleY: node.scaleY(),
+      };
+      updateShapeState(shapeProps.id, newState);
+      // Force selection to remain after transform
+    },
+    [shapeProps.id, updateShapeState],
+  );
 
   //common properties for all shapes
   const commonProps = {
     ref: shapeRef,
     ...shapeProps,
-    opacity: opacity.symbols.value,
+    opacity,
     draggable: !disabled,
     scaleX: shapeProps.scaleX || 1,
     scaleY: shapeProps.scaleY || 1,
     rotation: shapeProps.rotation || 0,
     onClick: handleClick,
     onDragEnd: handleDragEnd,
-    strokeScaleEnabled: false
+    strokeScaleEnabled: false,
   };
 
   //Attach or detach transformer when selection changes
@@ -100,7 +123,7 @@ const Symbol = ({ shapeProps, panelId}) => {
     }
   }, [isSelected, isStageX]);
 
-  // Render the chosen shape 
+  // Render the chosen shape
   return (
     <>
       {shapeProps.type === 'spinThree' && (
@@ -213,21 +236,11 @@ const Symbol = ({ shapeProps, panelId}) => {
         />
       )}
       {shapeProps.type === 'image' && (
-        <KonvaImage
-          {...commonProps}
-          image={image}
-          scaleX={0.3}
-          scaleY={0.3}
-        />
+        <KonvaImage {...commonProps} image={image} scaleX={0.3} scaleY={0.3} />
       )}
       {shapeProps.type === 'stageX' && (
-        <Text
-          {...commonProps}
-          text='X'
-          fontSize={20}
-          fill='black'
-      />
-    )}
+        <Text {...commonProps} text="X" fontSize={20} fill="black" />
+      )}
       {shapeProps.type === 'knee' && (
         <Circle
           {...commonProps}
@@ -235,7 +248,7 @@ const Symbol = ({ shapeProps, panelId}) => {
           fill={shapeProps.fill}
           stroke={shapeProps.stroke}
           strokeWidth={3}
-          />
+        />
       )}
       {shapeProps.type === 'waist' && (
         <Rect
@@ -245,7 +258,7 @@ const Symbol = ({ shapeProps, panelId}) => {
           fill={shapeProps.fill}
           stroke={shapeProps.stroke}
           strokeWidth={3}
-          />
+        />
       )}
       {shapeProps.type === 'shoulder' && (
         <Arc
@@ -256,7 +269,7 @@ const Symbol = ({ shapeProps, panelId}) => {
           fill={shapeProps.fill}
           stroke={shapeProps.stroke}
           strokeWidth={3}
-          />
+        />
       )}
       {shapeProps.type === 'overhead' && (
         <RegularPolygon
@@ -265,7 +278,7 @@ const Symbol = ({ shapeProps, panelId}) => {
           radius={5}
           fill={shapeProps.fill}
           stroke={shapeProps.stroke}
-          />
+        />
       )}
       {/* Transformer for selected shape */}
       {isSelected && !isStageX && (

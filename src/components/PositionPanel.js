@@ -2,7 +2,11 @@ import React from 'react';
 import Canvas from './Canvas';
 import { useAppContext } from './AppContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowRight, faArrowLeft, faClone } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowRight,
+  faArrowLeft,
+  faClone,
+} from '@fortawesome/free-solid-svg-icons';
 
 const PositionPanel = () => {
   const {
@@ -11,7 +15,7 @@ const PositionPanel = () => {
     panelSize,
     handlePanelSelection,
     clonePanel,
-    movePanel
+    movePanel,
   } = useAppContext();
 
   const optionsBarHeight = 40; //size of bar at top of panel
@@ -27,25 +31,25 @@ const PositionPanel = () => {
   };
 
   const arrowButtonStyle = {
-    ...buttonStyle,//same as above
+    ...buttonStyle, //same as above
     padding: '5px',
   };
 
   return (
     <>
-      {panels.map(panel => {
-        const isSelected = selectedPanel === panel.id;//find selected panel
+      {panels.map((panel) => {
+        const isSelected = selectedPanel === panel.id; //find selected panel
 
         return (
           <div
             key={panel.id}
             className={`position-panel ${isSelected ? 'selected' : ''}`}
             onClick={() => handlePanelSelection(panel.id)}
-            style={{ 
+            style={{
               width: panelSize.width,
-              height: panelSize.height + optionsBarHeight,//calculate full size
+              height: panelSize.height + optionsBarHeight, //calculate full size
               border: `2px solid ${isSelected ? '#007bff' : '#e0e0e0'}`,
-              transition: 'border-color 0.2s ease-in-out',//glow around panel transition
+              transition: 'border-color 0.2s ease-in-out', //glow around panel transition
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
@@ -53,7 +57,7 @@ const PositionPanel = () => {
               borderRadius: '8px',
             }}
           >
-            <div 
+            <div
               className="options-bar"
               style={{
                 width: '100%',
@@ -64,43 +68,43 @@ const PositionPanel = () => {
                 alignItems: 'center',
                 padding: '0 10px',
                 boxSizing: 'border-box',
-                borderBottom: '1px solid #e0e0e0'
+                borderBottom: '1px solid #e0e0e0',
               }}
             >
-              <button 
+              <button
                 onClick={(e) => {
                   e.stopPropagation(); //Just in case parent or child elements are triggered
                   clonePanel(panel.id);
-                }} 
+                }}
                 style={buttonStyle}
                 title="Clone Panel"
               >
                 <FontAwesomeIcon icon={faClone} />
-              </button> 
+              </button>
               <div>
-                <button 
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     movePanel(panel.id, 'left');
-                  }} 
+                  }}
                   style={arrowButtonStyle}
                   title="Move Left"
                 >
-                  <FontAwesomeIcon icon={faArrowLeft}/>
-                </button>  
-                <button 
+                  <FontAwesomeIcon icon={faArrowLeft} />
+                </button>
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     movePanel(panel.id, 'right');
-                  }} 
+                  }}
                   style={arrowButtonStyle}
                   title="Move Right"
                 >
-                  <FontAwesomeIcon icon={faArrowRight}/>
-                </button>  
+                  <FontAwesomeIcon icon={faArrowRight} />
+                </button>
               </div>
             </div>
-            <Canvas panelId={panel.id} />
+            <Canvas panel={panel} />
           </div>
         );
       })}
