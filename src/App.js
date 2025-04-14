@@ -4,10 +4,7 @@ import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import './App.css';
 import { AppProvider } from './components/AppContext';
-import { useStore } from 'app-store';
 const App = () => {
-  const panelSize = useStore((state) => state.panelSize);
-
   /* Renders the components.
   The AppProvider will go once I convert all the components
   to use the app-store.
@@ -18,16 +15,7 @@ const App = () => {
         <Sidebar />
         <div className="main-content">
           <Toolbar />
-          <div
-            className="position-panels"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(auto-fill, minmax(${panelSize.width}px, 1fr))`, // Responsive grid
-              gap: '10px',
-              padding: '10px',
-              overflowY: 'auto', // Makes new panels render underneath if there is no space
-            }}
-          >
+          <div className="position-panels">
             <PositionPanel />
           </div>
         </div>

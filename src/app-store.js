@@ -45,7 +45,7 @@ const createInitialPanel = () => ({
 const globalDefaults = {
   opacity: { dancers: 1, symbols: 1 },
   disabled: { dancers: false, symbols: false },
-  panelSize: [300, 300],
+  panelSize: { width: 300, height: 300 },
 };
 
 export const useStore = create((set, get) => {
