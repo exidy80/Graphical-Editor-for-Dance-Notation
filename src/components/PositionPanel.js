@@ -1,12 +1,8 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import Canvas from './Canvas';
 import { useAppContext } from './AppContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faArrowRight,
-  faArrowLeft,
-  faClone,
-} from '@fortawesome/free-solid-svg-icons';
+import { faClone } from '@fortawesome/free-solid-svg-icons';
 
 const PositionPanel = () => {
   const {
@@ -18,7 +14,10 @@ const PositionPanel = () => {
     movePanel,
   } = useAppContext();
 
-  const optionsBarHeight = 40; //size of bar at top of panel
+  const [draggingPanelId, setDraggingPanelId] = useState(null);
+  const [dragEnabledPanelId, setDragEnabledPanelId] = useState(null);
+  const panelRefs = useRef({});
+  const optionsBarHeight = 40;
 
   const buttonStyle = {
     background: 'none',
@@ -30,9 +29,32 @@ const PositionPanel = () => {
     transition: 'color 0.2s ease-in-out',
   };
 
-  const arrowButtonStyle = {
-    ...buttonStyle, //same as above
-    padding: '5px',
+  const handleDragStart = (e, panelId) => {
+    setDraggingPanelId(panelId);
+    setDragEnabledPanelId(null); // reset
+
+    const ghost = panelRefs.current[panelId];
+    if (ghost) {
+      const clone = ghost.cloneNode(true);
+      clone.style.position = 'absolute';
+      clone.style.top = '-9999px';
+      document.body.appendChild(clone);
+      e.dataTransfer.setDragImage(clone, 0, 0);
+
+      // Remove the clone later
+      requestAnimationFrame(() => document.body.removeChild(clone));
+    }
+  };
+
+  const handleDragOver = (e, overPanelId) => {
+    e.preventDefault();
+    if (draggingPanelId === null || draggingPanelId === overPanelId) return;
+
+    movePanel(draggingPanelId, overPanelId);
+  };
+
+  const handleDragEnd = () => {
+    setDraggingPanelId(null);
   };
 
   return (
@@ -44,7 +66,12 @@ const PositionPanel = () => {
           <div
             key={panel.id}
             className={`position-panel ${isSelected ? 'selected' : ''}`}
+            ref={(el) => (panelRefs.current[panel.id] = el)}
             onClick={() => handlePanelSelection(panel.id)}
+            draggable={dragEnabledPanelId === panel.id}
+            onDragStart={(e) => handleDragStart(e, panel.id)}
+            onDragOver={(e) => handleDragOver(e, panel.id)}
+            onDragEnd={handleDragEnd}
             style={{
               width: panelSize.width,
               height: panelSize.height + optionsBarHeight, //calculate full size
@@ -69,11 +96,13 @@ const PositionPanel = () => {
                 padding: '0 10px',
                 boxSizing: 'border-box',
                 borderBottom: '1px solid #e0e0e0',
+                cursor: 'grab',
               }}
+              onMouseDown={() => setDragEnabledPanelId(panel.id)}
             >
               <button
                 onClick={(e) => {
-                  e.stopPropagation(); //Just in case parent or child elements are triggered
+                  e.stopPropagation();
                   clonePanel(panel.id);
                 }}
                 style={buttonStyle}
@@ -81,28 +110,6 @@ const PositionPanel = () => {
               >
                 <FontAwesomeIcon icon={faClone} />
               </button>
-              <div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    movePanel(panel.id, 'left');
-                  }}
-                  style={arrowButtonStyle}
-                  title="Move Left"
-                >
-                  <FontAwesomeIcon icon={faArrowLeft} />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    movePanel(panel.id, 'right');
-                  }}
-                  style={arrowButtonStyle}
-                  title="Move Right"
-                >
-                  <FontAwesomeIcon icon={faArrowRight} />
-                </button>
-              </div>
             </div>
             <Canvas panel={panel} />
           </div>

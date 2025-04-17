@@ -39,12 +39,8 @@ const Symbol = ({
     const points = [];
     for (let i = 0; i < numPoints; i++) {
       const angle = i * angleIncrement;
-      let radius;
-      if (pattern === 'circle') {
-        radius = radiusIncrement; // Fixed radius for a circle
-      } else {
-        radius = i * radiusIncrement;
-      }
+      const radius =
+        pattern === 'circle' ? radiusIncrement : i * radiusIncrement;
       const x = radius * Math.cos(angle);
       const y = radius * Math.sin(angle);
       points.push(x, y);
@@ -74,6 +70,7 @@ const Symbol = ({
     [disabled, isStageX, shapeProps.id, handleShapeSelection],
   );
 
+  //Attach or detach transformer when selection changes
   useEffect(() => {
     if (isSelected && !isStageX && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
@@ -115,172 +112,129 @@ const Symbol = ({
     strokeScaleEnabled: false,
   };
 
-  //Attach or detach transformer when selection changes
-  useEffect(() => {
-    if (isSelected && !isStageX && trRef.current && shapeRef.current) {
-      trRef.current.nodes([shapeRef.current]);
-      trRef.current.getLayer().batchDraw();
-    }
-  }, [isSelected, isStageX]);
+  const shapeRenderers = {
+    spinThree: (props) => (
+      <Arrow
+        {...props}
+        points={generateSpiralPoints(30, 1, Math.PI / 6)}
+        tension={0.5}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={2}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    spinTwo: (props) => (
+      <Arrow
+        {...props}
+        points={generateSpiralPoints(20, 1, Math.PI / 6)}
+        tension={0.5}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={2}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    spinOne: (props) => (
+      <Arrow
+        {...props}
+        points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
+        tension={0.5}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={2}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    spinHalf: (props) => (
+      <Arrow
+        {...props}
+        points={generateSpiralPoints(12, 2, Math.PI / 17)}
+        tension={0.5}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={2}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    spinQuarter: (props) => (
+      <Arrow
+        {...props}
+        points={generateSpiralPoints(8, 2, Math.PI / 20)}
+        tension={0.5}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={2}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    straightLine: (props) => (
+      <Arrow
+        {...props}
+        points={[10, 10, 75, 10]}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={3}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    curvedLine: (props) => (
+      <Arrow
+        {...props}
+        points={generateSpiralPoints(3, 30, Math.PI / 14)}
+        tension={0.5}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={3}
+        hitStrokeWidth={10}
+        dash={[10, 5]}
+      />
+    ),
+    signal: (props) => (
+      <Arrow
+        {...props}
+        points={[10, 10, 30, 10]}
+        pointerLength={5}
+        pointerWidth={5}
+        strokeWidth={3}
+        hitStrokeWidth={10}
+      />
+    ),
+    image: (props) => (
+      <KonvaImage {...props} image={image} scaleX={0.3} scaleY={0.3} />
+    ),
+    stageX: (props) => <Text {...props} text="X" fontSize={20} fill="black" />,
+    knee: (props) => <Circle {...props} radius={3} strokeWidth={3} />,
+    waist: (props) => <Rect {...props} width={12} height={2} strokeWidth={3} />,
+    shoulder: (props) => (
+      <Arc
+        {...props}
+        angle={180}
+        innerRadius={0}
+        outerRadius={6}
+        strokeWidth={3}
+      />
+    ),
+    overhead: (props) => <RegularPolygon {...props} sides={3} radius={5} />,
+  };
 
-  // Render the chosen shape
+  const renderShape = shapeRenderers[shapeProps.type];
+
   return (
     <>
-      {shapeProps.type === 'spinThree' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(30, 1, Math.PI / 6)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          stroke={shapeProps.stroke}
-          fill={shapeProps.fill}
-          strokeWidth={2}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'spinTwo' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(20, 1, Math.PI / 6)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          stroke={shapeProps.stroke}
-          fill={shapeProps.fill}
-          strokeWidth={2}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'spinOne' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={2}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'spinHalf' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(12, 2, Math.PI / 17)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={2}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'spinQuarter' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(8, 2, Math.PI / 20)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={2}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'straightLine' && (
-        <Arrow
-          {...commonProps}
-          points={[10, 10, 75, 10]}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'curvedLine' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(3, 30, Math.PI / 14)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shapeProps.type === 'signal' && (
-        <Arrow
-          {...commonProps}
-          points={[10, 10, 30, 10]}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
-        />
-      )}
-      {shapeProps.type === 'image' && (
-        <KonvaImage {...commonProps} image={image} scaleX={0.3} scaleY={0.3} />
-      )}
-      {shapeProps.type === 'stageX' && (
-        <Text {...commonProps} text="X" fontSize={20} fill="black" />
-      )}
-      {shapeProps.type === 'knee' && (
-        <Circle
-          {...commonProps}
-          radius={3}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={3}
-        />
-      )}
-      {shapeProps.type === 'waist' && (
-        <Rect
-          {...commonProps}
-          width={12}
-          height={2}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={3}
-        />
-      )}
-      {shapeProps.type === 'shoulder' && (
-        <Arc
-          {...commonProps}
-          angle={180}
-          innerRadius={0}
-          outerRadius={6}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-          strokeWidth={3}
-        />
-      )}
-      {shapeProps.type === 'overhead' && (
-        <RegularPolygon
-          {...commonProps}
-          sides={3}
-          radius={5}
-          fill={shapeProps.fill}
-          stroke={shapeProps.stroke}
-        />
-      )}
-      {/* Transformer for selected shape */}
+      {renderShape
+        ? renderShape({
+            ...commonProps,
+            fill: shapeProps.fill,
+            stroke: shapeProps.stroke,
+          })
+        : null}
       {isSelected && !isStageX && (
         <Transformer
           ref={trRef}
