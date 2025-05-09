@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
-import { shallow } from 'zustand/shallow';
+import { addEntities, removeEntities, cloneEntities } from 'utils/entityUtils';
 
 const initialDancer = {
   x: 150,
@@ -20,15 +20,30 @@ const initialDancer = {
   handShape: { left: 'Waist', right: 'Waist' },
 };
 
-const createInitialPanel = () => ({
-  id: uuidv4(),
-  dancers: [
-    { ...initialDancer, id: uuidv4(), y: 40, colour: 'red', rotation: 180 },
-    { ...initialDancer, id: uuidv4(), y: 220, colour: 'blue', rotation: 0 },
-  ],
-  shapes: [
+const createInitialPanel = () => {
+  const panelId = uuidv4();
+  const dancers = [
+    {
+      ...initialDancer,
+      panel: panelId,
+      id: uuidv4(),
+      y: 40,
+      colour: 'red',
+      rotation: 180,
+    },
+    {
+      ...initialDancer,
+      panel: panelId,
+      id: uuidv4(),
+      y: 220,
+      colour: 'blue',
+      rotation: 0,
+    },
+  ];
+  const symbols = [
     {
       id: uuidv4(),
+      panel: panelId,
       type: 'stageX',
       x: 147,
       y: 127,
@@ -39,8 +54,14 @@ const createInitialPanel = () => ({
       fontSize: 20,
       fill: 'black',
     },
-  ],
-});
+  ];
+  const panel = {
+    id: panelId,
+    dancers: dancers.map((dancer) => dancer.id),
+    shapes: symbols.map((symbol) => symbol.id),
+  };
+  return { panel, dancers, shapes: symbols };
+};
 
 const globalDefaults = {
   opacity: { dancers: 1, symbols: 1 },
@@ -49,11 +70,26 @@ const globalDefaults = {
 };
 
 export const useStore = create((set, get) => {
-  const panel = createInitialPanel();
-  return {
+  const { panel, dancers, shapes } = createInitialPanel();
+
+  const initialState = {
     panels: {
       byId: { [panel.id]: panel },
       allIds: [panel.id],
+    },
+    dancers: {
+      byId: dancers.reduce((acc, dancer) => {
+        acc[dancer.id] = dancer;
+        return acc;
+      }, {}),
+      allIds: dancers.map((d) => d.id),
+    },
+    shapes: {
+      byId: shapes.reduce((acc, shape) => {
+        acc[shape.id] = shape;
+        return acc;
+      }, {}),
+      allIds: shapes.map((s) => s.id),
     },
     selectedPanelId: null,
     selectedDancer: null,
@@ -62,18 +98,11 @@ export const useStore = create((set, get) => {
     panelSize: globalDefaults.panelSize,
     opacity: globalDefaults.opacity,
     disabled: globalDefaults.disabled,
+  };
 
-    initialize: () =>
-      set(() => {
-        const panel = createInitialPanel();
-        return {
-          panels: {
-            byId: { [panel.id]: panel },
-            allIds: [panel.id],
-          },
-        };
-      }),
-
+  return {
+    ...initialState,
+    getInitialState: () => JSON.parse(JSON.stringify(initialState)), // helps with testing
     updatePanelState: (panelId, updater) =>
       set((state) => ({
         panels: {
@@ -85,41 +114,33 @@ export const useStore = create((set, get) => {
         },
       })),
 
-    updateDancer: (panelId, dancerId, updates) => {
-      const updatePanel = (panel) => ({
-        ...panel,
-        dancers: panel.dancers.map((d) =>
-          d.id === dancerId ? { ...d, ...updates } : d,
-        ),
-      });
-      get().updatePanelState(panelId, updatePanel);
-    },
+    updateShape: (id, updates) =>
+      set((state) => ({
+        shapes: {
+          byId: {
+            ...state.shapes.byId,
+            [id]: {
+              ...state.shapes.byId[id],
+              ...updates,
+            },
+          },
+          allIds: [...state.shapes.allIds],
+        },
+      })),
 
-    addShape: (panelId, shape) => {
-      const updatePanel = (panel) => ({
-        ...panel,
-        shapes: [...panel.shapes, { ...shape, id: uuidv4() }],
-      });
-      get().updatePanelState(panelId, updatePanel);
-    },
-
-    updateShape: (panelId, shapeId, updates) => {
-      const updatePanel = (panel) => ({
-        ...panel,
-        shapes: panel.shapes.map((s) =>
-          s.id === shapeId ? { ...s, ...updates } : s,
-        ),
-      });
-      get().updatePanelState(panelId, updatePanel);
-    },
-
-    deleteShape: (panelId, shapeId) => {
-      const updatePanel = (panel) => ({
-        ...panel,
-        shapes: panel.shapes.filter((s) => s.id !== shapeId),
-      });
-      get().updatePanelState(panelId, updatePanel);
-    },
+    updateDancer: (id, updates) =>
+      set((state) => ({
+        dancers: {
+          byId: {
+            ...state.dancers.byId,
+            [id]: {
+              ...state.dancers.byId[id],
+              ...updates,
+            },
+          },
+          allIds: [...state.dancers.allIds],
+        },
+      })),
 
     selectPanel: (panelId) =>
       set({
@@ -128,28 +149,6 @@ export const useStore = create((set, get) => {
         selectedHand: null,
         selectedShape: null,
       }),
-
-    selectDancer: (panelId, dancer) =>
-      set((state) => ({
-        selectedPanelId: panelId,
-        selectedDancer: state.selectedDancer?.id === dancer.id ? null : dancer,
-      })),
-
-    selectHand: (panelId, dancerId, handSide) =>
-      set((state) => ({
-        selectedPanelId: panelId,
-        selectedHand:
-          state.selectedHand?.dancerId === dancerId &&
-          state.selectedHand?.handSide === handSide
-            ? null
-            : { dancerId, handSide },
-      })),
-
-    selectShape: (panelId, shape) =>
-      set((state) => ({
-        selectedPanelId: panelId,
-        selectedShape: state.selectedShape?.id === shape.id ? null : shape,
-      })),
 
     clearSelection: () =>
       set({
@@ -161,165 +160,94 @@ export const useStore = create((set, get) => {
 
     addPanel: () =>
       set((state) => {
-        const newPanel = createInitialPanel();
+        const { panel, dancers, shapes } = createInitialPanel();
+
         return {
-          panels: {
-            byId: { ...state.panels.byId, [newPanel.id]: newPanel },
-            allIds: [...state.panels.allIds, newPanel.id],
-          },
+          panels: addEntities(state.panels, [panel]),
+          dancers: addEntities(state.dancers, dancers),
+          shapes: addEntities(state.shapes, shapes),
         };
       }),
 
     removePanel: (panelId) =>
-      set((state) => ({
-        panels: {
-          byId: Object.fromEntries(
-            Object.entries(state.panels.byId).filter(([id]) => id !== panelId),
-          ),
-          allIds: state.panels.allIds.filter((id) => id !== panelId),
-        },
-        selectedPanelId:
-          state.selectedPanelId === panelId ? null : state.selectedPanelId,
-      })),
-
-    clonePanel: (panelId) =>
       set((state) => {
         const panel = state.panels.byId[panelId];
         if (!panel) return state;
 
-        const clonedPanel = {
-          ...panel,
-          id: uuidv4(),
-          dancers: panel.dancers.map((d) => ({ ...d, id: uuidv4() })),
-          shapes: panel.shapes.map((s) => ({ ...s, id: uuidv4() })),
-        };
+        const updatedDancers = removeEntities(state.dancers, panel.dancers);
+        const updatedShapes = removeEntities(state.shapes, panel.shapes);
+        const updatedPanels = removeEntities(state.panels, [panelId]);
+
+        const shouldClearDancer =
+          state.selectedDancer &&
+          panel.dancers.includes(state.selectedDancer.dancerId);
+
+        const shouldClearShape =
+          state.selectedShape &&
+          panel.shapes.includes(state.selectedShape.shapeId);
+
+        const shouldClearPanel = state.selectedPanelId === panelId;
 
         return {
-          panels: {
-            byId: { ...state.panels.byId, [clonedPanel.id]: clonedPanel },
-            allIds: [...state.panels.allIds, clonedPanel.id],
-          },
+          panels: updatedPanels,
+          dancers: updatedDancers,
+          shapes: updatedShapes,
+          selectedPanelId: shouldClearPanel ? null : state.selectedPanelId,
+          selectedDancer: shouldClearDancer ? null : state.selectedDancer,
+          selectedHand: shouldClearDancer ? null : state.selectedHand,
+          selectedShape: shouldClearShape ? null : state.selectedShape,
         };
       }),
 
-    movePanel: (panelId, direction) =>
+    clonePanel: (panelId) =>
       set((state) => {
-        const currentIndex = state.panels.allIds.indexOf(panelId);
-        if (currentIndex === -1) return state;
+        const original = state.panels.byId[panelId];
+        if (!original) return state;
 
-        const newAllIds = [...state.panels.allIds];
-        const targetIndex =
-          direction === 'left'
-            ? Math.max(0, currentIndex - 1)
-            : Math.min(newAllIds.length - 1, currentIndex + 1);
+        const { clones: clonedDancers, idMap: dancerIdMap } = cloneEntities(
+          state.dancers.byId,
+          original.dancers,
+        );
 
-        newAllIds.splice(currentIndex, 1);
-        newAllIds.splice(targetIndex, 0, panelId);
+        const { clones: clonedShapes, idMap: shapeIdMap } = cloneEntities(
+          state.shapes.byId,
+          original.shapes,
+        );
+
+        const newPanelId = uuidv4();
+        const clonedPanel = {
+          ...original,
+          id: newPanelId,
+          dancers: original.dancers.map((id) => dancerIdMap[id]),
+          shapes: original.shapes.map((id) => shapeIdMap[id]),
+        };
+
+        return {
+          panels: addEntities(state.panels, [clonedPanel]),
+          dancers: addEntities(state.dancers, clonedDancers),
+          shapes: addEntities(state.shapes, clonedShapes),
+        };
+      }),
+
+    movePanel: (draggedId, targetId) =>
+      set((state) => {
+        if (draggedId === targetId) return state;
+
+        const ids = state.panels.allIds;
+        const fromIndex = ids.indexOf(draggedId);
+        const toIndex = ids.indexOf(targetId);
+        if (fromIndex === -1 || toIndex === -1) return state;
+
+        const reordered = [...ids];
+        reordered.splice(fromIndex, 1);
+        reordered.splice(toIndex, 0, draggedId);
 
         return {
           panels: {
             ...state.panels,
-            allIds: newAllIds,
+            allIds: reordered,
           },
-        };
-      }),
-
-    toggleOpacity: (type) =>
-      set((state) => {
-        const newOpacity = state.opacity[type] === 1 ? 0.5 : 1;
-        const newDisabled = state.opacity[type] === 1;
-        return {
-          opacity: {
-            ...state.opacity,
-            [type]: newOpacity,
-          },
-          disabled: { ...state.disabled, [type]: newDisabled },
         };
       }),
   };
 });
-
-// Custom hooks for components
-
-export const useAppState = () => {
-  return useStore((state) => {
-    const { selectedPanelId } = state;
-    return {
-      panels: state.panels.allIds.map((id) => state.panels.byId[id]),
-      selectedPanelId,
-      selectedPanel: selectedPanelId
-        ? state.panels.byId[selectedPanelId]
-        : null,
-      selectedDancer: state.selectedDancer,
-      selectedHand: state.selectedHand,
-      selectedShape: state.selectedShape,
-    };
-  }, shallow);
-};
-
-export const useGlobalSettings = () => {
-  return useStore(
-    (state) => ({
-      panelSize: state.panelSize,
-      // opacity: state.opacity,
-      // disabled: state.disabled,
-    }),
-    shallow,
-  );
-};
-
-export const usePanelState = (panelId) => {
-  return useStore((state) => state.panels.byId[panelId]);
-};
-
-export const usePanelIds = () => {
-  return useStore((state) => state.panels.allIds);
-};
-
-export const useSelectedPanelId = () => {
-  return useStore((state) => state.selectedPanelId);
-};
-
-export const useSelectedPanel = () => {
-  const selectedPanelId = useSelectedPanelId();
-  return useStore((state) =>
-    selectedPanelId ? state.panels.byId[selectedPanelId] : null,
-  );
-};
-
-export const useSelection = () => {
-  return useStore((state) => ({
-    selectedDancer: state.selectedDancer,
-    selectedHand: state.selectedHand,
-    selectedShape: state.selectedShape,
-  }));
-};
-
-export const usePanelActions = (panelId) => {
-  const store = useStore();
-  return {
-    updateDancer: (dancerId, updates) =>
-      store.updateDancer(panelId, dancerId, updates),
-    addShape: (shape) => store.addShape(panelId, shape),
-    updateShape: (shapeId, updates) =>
-      store.updateShape(panelId, shapeId, updates),
-    deleteShape: (shapeId) => store.deleteShape(panelId, shapeId),
-    selectDancer: (dancerId) => store.selectDancer(panelId, dancerId),
-    selectHand: (dancerId, handSide) =>
-      store.selectHand(panelId, dancerId, handSide),
-    selectShape: (shapeId) => store.selectShape(panelId, shapeId),
-  };
-};
-
-export const useAppActions = () => {
-  const store = useStore();
-  return {
-    addPanel: store.addPanel,
-    removePanel: store.removePanel,
-    clonePanel: store.clonePanel,
-    movePanel: store.movePanel,
-    selectPanel: store.selectPanel,
-    clearSelection: store.clearSelection,
-    toggleOpacity: store.toggleOpacity,
-  };
-};

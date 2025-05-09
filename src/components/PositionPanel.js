@@ -16,6 +16,9 @@ const PositionPanel = () => {
 
   const [draggingPanelId, setDraggingPanelId] = useState(null);
   const [dragEnabledPanelId, setDragEnabledPanelId] = useState(null);
+  const [dragPreviewPanels, setDragPreviewPanels] = useState(null);
+  const [dropTargetId, setDropTargetId] = useState(null);
+
   const panelRefs = useRef({});
   const optionsBarHeight = 40;
 
@@ -48,18 +51,31 @@ const PositionPanel = () => {
 
   const handleDragOver = (e, overPanelId) => {
     e.preventDefault();
-    if (draggingPanelId === null || draggingPanelId === overPanelId) return;
+    if (!draggingPanelId || draggingPanelId === overPanelId) return;
 
-    movePanel(draggingPanelId, overPanelId);
+    const fromIndex = panels.findIndex((p) => p.id === draggingPanelId);
+    const toIndex = panels.findIndex((p) => p.id === overPanelId);
+    if (fromIndex === -1 || toIndex === -1) return;
+
+    const preview = [...panels];
+    const [moved] = preview.splice(fromIndex, 1);
+    preview.splice(toIndex, 0, moved);
+    setDragPreviewPanels(preview);
+    setDropTargetId(overPanelId);
   };
 
   const handleDragEnd = () => {
+    if (draggingPanelId && dropTargetId && draggingPanelId !== dropTargetId) {
+      movePanel(draggingPanelId, dropTargetId); // One single committed state change
+    }
     setDraggingPanelId(null);
+    setDropTargetId(null);
+    setDragPreviewPanels(null);
   };
 
   return (
     <>
-      {panels.map((panel) => {
+      {(dragPreviewPanels || panels).map((panel) => {
         const isSelected = selectedPanel === panel.id; //find selected panel
 
         return (
