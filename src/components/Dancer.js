@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import {
   Group,
   Line,
@@ -22,6 +22,8 @@ const Dancer = ({
   updateDancerState,
 }) => {
   // setting up references to different parts of the dancer
+  const [hoveredHand, setHoveredHand] = useState({ left: false, right: false });
+
   const dancerRef = useRef();
   const transformerRef = useRef();
   const handTransformerRef = useRef();
@@ -166,66 +168,94 @@ const Dancer = ({
     const handPos = dancer[`${side}HandPos`];
     const handShape = chosenHandShapes[side];
     const isHandSelected = selectedHand && selectedHand.handSide === side;
-
-    const baseProps = {
-      fill: dancer.colour,
-      draggable: !disabled,
-      onDragMove: handlePartDragEnd('Hand', side),
-      onDragEnd: handlePartDragEnd('Hand', side),
-      onClick: disabled ? null : () => handleHandClick(dancer.id, side),
-      x: handPos.x,
-      y: handPos.y,
-      rotation: dancer[`${side}HandRotation`] || 0,
-      ref: handRefs[side],
-      name: `${side}Hand`,
-      shadowColor: isHandSelected ? dancer.colour : null,
-      shadowBlur: isHandSelected ? 15 : 0,
-      shadowOpacity: isHandSelected ? 1 : 0,
+    const isHovered = hoveredHand[side];
+  
+    const shadowProps = {
+      shadowColor: dancer.colour,
+      shadowBlur: 5,
+      shadowOpacity: 1, 
     };
-
-    switch (handShape) {
-      case 'Knee':
-        return (
-          <Group {...baseProps}>
-            <Circle
-              fill={dancer.colour}
-              radius={5}
-              offsetY={5} // This moves the circle up by its radius
-            />
-            {/* This invisible rectangle adjusts the rotation point */}
-            <Rect width={1} height={10} opacity={0} />
-          </Group>
-        );
-      case 'Shoulder':
-        return (
-          // wrapped in group so that initial rotation can be set but still change dynamically
-          <Group {...baseProps}>
-            <Arc
-              angle={180}
-              innerRadius={0}
-              outerRadius={8}
-              rotation={180}
-              fill={dancer.colour}
-            />
-          </Group>
-        );
-      case 'Overhead':
-        return (
-          <RegularPolygon {...baseProps} sides={3} radius={7} offsetY={-1} />
-        );
-      case 'Waist':
-      default:
-        return (
-          <Rect
-            {...baseProps}
-            width={15}
-            height={5}
-            offsetX={7.5}
-            offsetY={2.5}
-          />
-        );
-    }
+    
+  
+    return (
+      <Group
+        x={handPos.x}
+        y={handPos.y}
+        rotation={dancer[`${side}HandRotation`] || 0}
+        draggable={!disabled}
+        onDragMove={handlePartDragEnd('Hand', side)}
+        onDragEnd={handlePartDragEnd('Hand', side)}
+        onClick={disabled ? null : () => handleHandClick(dancer.id, side)}
+        onMouseEnter={() =>
+          setHoveredHand((prev) => ({ ...prev, [side]: true }))
+        }
+        onMouseLeave={() =>
+          setHoveredHand((prev) => ({ ...prev, [side]: false }))
+        }
+        ref={handRefs[side]}
+        name={`${side}Hand`}
+      >
+        {(() => {
+          switch (handShape) {
+            case 'Knee':
+              return (
+                <>
+                  <Circle
+                    radius={5}
+                    offsetY={5}
+                    fill={dancer.colour}
+                    {...(isHandSelected || isHovered ? shadowProps : {})}
+                  />
+                </>
+              );
+            case 'Shoulder':
+              return (
+                <>
+                  <Arc
+                    angle={180}
+                    innerRadius={0}
+                    outerRadius={8}
+                    rotation={180}
+                    fill={dancer.colour}
+                    {...(isHandSelected || isHovered ? shadowProps : {})}
+                  />
+                </>
+              );
+            case 'Overhead':
+              return (
+                <>
+                  <RegularPolygon
+                    sides={3}
+                    radius={7}
+                    offsetY={-1}
+                    fill={dancer.colour}
+                    {...(isHandSelected || isHovered ? shadowProps : {})}
+                  />
+                </>
+              );
+            case 'Waist':
+            default:
+              return (
+                <>
+                  <Rect
+                    width={15}
+                    height={5}
+                    offsetX={7.5}
+                    offsetY={2.5}
+                    fill={dancer.colour}
+                    {...(isHandSelected || isHovered ? shadowProps : {})}
+                  />
+                </>
+              );
+          }
+        })()}
+        {/* Invisible enlarged hit area */}
+        {/* <Rect width={30} height={30} offsetX={15} offsetY={15} opacity={0} /> */}
+      </Group>
+    );
   };
+  
+  
   //Allows clicking of arm to change thickness
   const handleArmClick = useCallback(
     (side, part) => (e) => {
