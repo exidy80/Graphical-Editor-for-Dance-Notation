@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import {
   Group,
   Line,
@@ -22,8 +22,6 @@ const Dancer = ({
   updateDancerState,
 }) => {
   // setting up references to different parts of the dancer
-  const [hoveredHand, setHoveredHand] = useState({ left: false, right: false });
-
   const dancerRef = useRef();
   const transformerRef = useRef();
   const handTransformerRef = useRef();
@@ -87,6 +85,23 @@ const Dancer = ({
     },
     [dancer.id, selectedHand, updateDancerState],
   );
+
+  const handleHandMouseEnter = (e) => {
+    const shape = e.target;
+    shape.shadowColor(dancer.colour);
+    shape.shadowBlur(5);
+    shape.shadowOpacity(1);
+    shape.getLayer().batchDraw();
+  };
+  
+  const handleHandMouseLeave = (e) => {
+    const shape = e.target;
+    shape.shadowColor(null);
+    shape.shadowBlur(0);
+    shape.shadowOpacity(0);
+    shape.getLayer().batchDraw();
+  };
+  
 
   // These two functions help me manage the transformer for the hands
   const resetHandTransformer = useCallback(() => {
@@ -167,16 +182,6 @@ const Dancer = ({
   const renderHand = (side) => {
     const handPos = dancer[`${side}HandPos`];
     const handShape = chosenHandShapes[side];
-    const isHandSelected = selectedHand && selectedHand.handSide === side;
-    const isHovered = hoveredHand[side];
-  
-    const shadowProps = {
-      shadowColor: dancer.colour,
-      shadowBlur: 5,
-      shadowOpacity: 1, 
-    };
-    
-  
     return (
       <Group
         x={handPos.x}
@@ -186,12 +191,6 @@ const Dancer = ({
         onDragMove={handlePartDragEnd('Hand', side)}
         onDragEnd={handlePartDragEnd('Hand', side)}
         onClick={disabled ? null : () => handleHandClick(dancer.id, side)}
-        onMouseEnter={() =>
-          setHoveredHand((prev) => ({ ...prev, [side]: true }))
-        }
-        onMouseLeave={() =>
-          setHoveredHand((prev) => ({ ...prev, [side]: false }))
-        }
         ref={handRefs[side]}
         name={`${side}Hand`}
       >
@@ -204,7 +203,8 @@ const Dancer = ({
                     radius={5}
                     offsetY={5}
                     fill={dancer.colour}
-                    {...(isHandSelected || isHovered ? shadowProps : {})}
+                    onMouseEnter={handleHandMouseEnter}
+                    onMouseLeave={handleHandMouseLeave}
                   />
                 </>
               );
@@ -217,8 +217,9 @@ const Dancer = ({
                     outerRadius={8}
                     rotation={180}
                     fill={dancer.colour}
-                    {...(isHandSelected || isHovered ? shadowProps : {})}
-                  />
+                    onMouseEnter={handleHandMouseEnter}
+                    onMouseLeave={handleHandMouseLeave}
+                    />
                 </>
               );
             case 'Overhead':
@@ -229,8 +230,9 @@ const Dancer = ({
                     radius={7}
                     offsetY={-1}
                     fill={dancer.colour}
-                    {...(isHandSelected || isHovered ? shadowProps : {})}
-                  />
+                    onMouseEnter={handleHandMouseEnter}
+                    onMouseLeave={handleHandMouseLeave}
+                    />
                 </>
               );
             case 'Waist':
@@ -243,14 +245,13 @@ const Dancer = ({
                     offsetX={7.5}
                     offsetY={2.5}
                     fill={dancer.colour}
-                    {...(isHandSelected || isHovered ? shadowProps : {})}
-                  />
+                    onMouseEnter={handleHandMouseEnter}
+                    onMouseLeave={handleHandMouseLeave}
+                    />
                 </>
               );
           }
         })()}
-        {/* Invisible enlarged hit area */}
-        {/* <Rect width={30} height={30} offsetX={15} offsetY={15} opacity={0} /> */}
       </Group>
     );
   };
