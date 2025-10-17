@@ -110,29 +110,53 @@ export const useAppStore = create((set, get) => ({
   },
 
   // Basic setters (only those needed externally)
-  setPanels: panels => set({ panels }),
-  setSelectedPanel: selectedPanel => set({ selectedPanel }),
-  setSelectedHand: selectedHand => set({ selectedHand }),
-  setSelectedDancer: selectedDancer => set({ selectedDancer }),
-  setSelectedShapeId: selectedShapeId => set({ selectedShapeId }),
-  setOpacity: updater =>
-    set(state => ({ opacity: typeof updater === 'function' ? updater(state.opacity) : updater })),
+  setPanels: (panels) => set({ panels }),
+  setSelectedPanel: (selectedPanel) => set({ selectedPanel }),
+  setSelectedHand: (selectedHand) => set({ selectedHand }),
+  setSelectedDancer: (selectedDancer) => set({ selectedDancer }),
+  setSelectedShapeId: (selectedShapeId) => set({ selectedShapeId }),
+  setOpacity: (updater) =>
+    set((state) => ({
+      opacity: typeof updater === 'function' ? updater(state.opacity) : updater,
+    })),
   queueHandFlash: (panelId, members, duration = 500) => {
-    const entries = members.map(m => ({ panelId, dancerId: m.dancerId, side: m.side }));
-    set(state => ({ handFlash: [...state.handFlash, ...entries] }));
+    const entries = members.map((m) => ({
+      panelId,
+      dancerId: m.dancerId,
+      side: m.side,
+    }));
+    set((state) => ({ handFlash: [...state.handFlash, ...entries] }));
     // schedule removal
     setTimeout(() => {
-      set(state => ({ handFlash: state.handFlash.filter(h => !entries.some(e => e.panelId === h.panelId && e.dancerId === h.dancerId && e.side === h.side)) }));
+      set((state) => ({
+        handFlash: state.handFlash.filter(
+          (h) =>
+            !entries.some(
+              (e) =>
+                e.panelId === h.panelId &&
+                e.dancerId === h.dancerId &&
+                e.side === h.side,
+            ),
+        ),
+      }));
     }, duration);
   },
-  setLockModeActive: active => set(state => ({ lockUi: { active, selected: active ? state.lockUi.selected : [] } })),
-  clearLockSelection: () => set(state => ({ lockUi: { ...state.lockUi, selected: [] } })),
+  setLockModeActive: (active) =>
+    set((state) => ({
+      lockUi: { active, selected: active ? state.lockUi.selected : [] },
+    })),
+  clearLockSelection: () =>
+    set((state) => ({ lockUi: { ...state.lockUi, selected: [] } })),
 
   // Actions
   handleDancerSelection: (panelId, dancerId) => {
     const { selectedDancer: prevSelected } = get();
     set({ selectedPanel: panelId });
-    if (prevSelected && prevSelected.panelId === panelId && prevSelected.dancerId === dancerId) {
+    if (
+      prevSelected &&
+      prevSelected.panelId === panelId &&
+      prevSelected.dancerId === dancerId
+    ) {
       set({ selectedDancer: null });
     } else {
       set({ selectedDancer: { panelId, dancerId } });
@@ -144,17 +168,21 @@ export const useAppStore = create((set, get) => ({
     set({ selectedPanel: panelId });
     // Lock mode: toggle hand membership in group selection (same panel only)
     if (lockUi.active) {
-      set(state => {
+      set((state) => {
         if (state.selectedPanel !== panelId) {
           return state; // enforce same panel
         }
         const key = `${dancerId}:${handSide}`;
-        const exists = state.lockUi.selected.some(m => `${m.dancerId}:${m.side}` === key);
+        const exists = state.lockUi.selected.some(
+          (m) => `${m.dancerId}:${m.side}` === key,
+        );
         return {
           lockUi: {
             ...state.lockUi,
             selected: exists
-              ? state.lockUi.selected.filter(m => `${m.dancerId}:${m.side}` !== key)
+              ? state.lockUi.selected.filter(
+                  (m) => `${m.dancerId}:${m.side}` !== key,
+                )
               : [...state.lockUi.selected, { dancerId, side: handSide }],
           },
           selectedHand: { panelId, dancerId, handSide },
@@ -163,7 +191,12 @@ export const useAppStore = create((set, get) => ({
       return;
     }
     // Normal selection toggle
-    if (prevHand && prevHand.panelId === panelId && prevHand.dancerId === dancerId && prevHand.handSide === handSide) {
+    if (
+      prevHand &&
+      prevHand.panelId === panelId &&
+      prevHand.dancerId === dancerId &&
+      prevHand.handSide === handSide
+    ) {
       set({ selectedHand: null });
     } else {
       set({ selectedHand: { panelId, dancerId, handSide } });
@@ -171,11 +204,16 @@ export const useAppStore = create((set, get) => ({
   },
 
   handleCanvasClick: () => {
-    set({ selectedPanel: null, selectedHand: null, selectedDancer: null, selectedShapeId: null });
+    set({
+      selectedPanel: null,
+      selectedHand: null,
+      selectedDancer: null,
+      selectedShapeId: null,
+    });
   },
 
-  handleOpacityChange: type => {
-    set(state => ({
+  handleOpacityChange: (type) => {
+    set((state) => ({
       opacity: {
         ...state.opacity,
         [type]: {
@@ -186,13 +224,15 @@ export const useAppStore = create((set, get) => ({
     }));
   },
 
-  handleHeadSelection: shape => {
+  handleHeadSelection: (shape) => {
     const { selectedDancer } = get();
     if (!selectedDancer) return;
-    set(state => ({
-      panels: state.panels.map(panel => {
+    set((state) => ({
+      panels: state.panels.map((panel) => {
         if (panel.id === selectedDancer.panelId) {
-          const dancerIndex = panel.dancers.findIndex(d => d.id === selectedDancer.dancerId);
+          const dancerIndex = panel.dancers.findIndex(
+            (d) => d.id === selectedDancer.dancerId,
+          );
           if (dancerIndex !== -1) {
             const newHeadShapes = [...panel.headShapes];
             newHeadShapes[dancerIndex] = shape;
@@ -204,13 +244,15 @@ export const useAppStore = create((set, get) => ({
     }));
   },
 
-  handleHandSelection: shape => {
+  handleHandSelection: (shape) => {
     const { selectedHand } = get();
     if (!selectedHand) return;
-    set(state => ({
-      panels: state.panels.map(panel => {
+    set((state) => ({
+      panels: state.panels.map((panel) => {
         if (panel.id === selectedHand.panelId) {
-          const dancerIndex = panel.dancers.findIndex(d => d.id === selectedHand.dancerId);
+          const dancerIndex = panel.dancers.findIndex(
+            (d) => d.id === selectedHand.dancerId,
+          );
           const newHandShapes = [...panel.handShapes];
           newHandShapes[dancerIndex] = {
             ...newHandShapes[dancerIndex],
@@ -223,132 +265,179 @@ export const useAppStore = create((set, get) => ({
     }));
   },
 
-  handlePanelSelection: panelId => set({ selectedPanel: panelId }),
+  handlePanelSelection: (panelId) => set({ selectedPanel: panelId }),
 
   handleShapeSelection: (panelId, shapeId) => {
     const { selectedShapeId: prevSelected } = get();
     set({ selectedPanel: panelId });
-    if (prevSelected && prevSelected.panelId === panelId && prevSelected.shapeId === shapeId) {
+    if (
+      prevSelected &&
+      prevSelected.panelId === panelId &&
+      prevSelected.shapeId === shapeId
+    ) {
       set({ selectedShapeId: null });
     } else {
       set({ selectedShapeId: { panelId, shapeId } });
     }
   },
 
-  handleShapeDraw: shape => {
+  handleShapeDraw: (shape) => {
     const { selectedPanel } = get();
     if (selectedPanel === null) return;
-    set(state => ({
-      panels: state.panels.map(panel =>
-        panel.id === selectedPanel ? { ...panel, shapes: [...panel.shapes, shape] } : panel
+    set((state) => ({
+      panels: state.panels.map((panel) =>
+        panel.id === selectedPanel
+          ? { ...panel, shapes: [...panel.shapes, shape] }
+          : panel,
       ),
     }));
   },
 
-  handleDelete: selectedShape => {
+  handleDelete: (selectedShape) => {
     if (!selectedShape) return;
     const { panelId, shapeId } = selectedShape;
-    set(state => ({
-      panels: state.panels.map(panel =>
-        panel.id === panelId ? { ...panel, shapes: panel.shapes.filter(s => s.id !== shapeId) } : panel
+    set((state) => ({
+      panels: state.panels.map((panel) =>
+        panel.id === panelId
+          ? { ...panel, shapes: panel.shapes.filter((s) => s.id !== shapeId) }
+          : panel,
       ),
       selectedShapeId: null,
     }));
   },
 
-  addPanel: () => set(state => ({ panels: [...state.panels, createInitialPanel()] })),
+  addPanel: () =>
+    set((state) => ({ panels: [...state.panels, createInitialPanel()] })),
 
-  deleteSelectedPanel: panelId => {
+  deleteSelectedPanel: (panelId) => {
     const { selectedPanel } = get();
-    set(state => {
-      const newPanels = state.panels.filter(p => p.id !== panelId);
-      const deselect = selectedPanel === panelId
-        ? { selectedPanel: null, selectedDancer: null, selectedHand: null, selectedShapeId: null }
-        : {};
+    set((state) => {
+      const newPanels = state.panels.filter((p) => p.id !== panelId);
+      const deselect =
+        selectedPanel === panelId
+          ? {
+              selectedPanel: null,
+              selectedDancer: null,
+              selectedHand: null,
+              selectedShapeId: null,
+            }
+          : {};
       return { panels: newPanels, ...deselect };
     });
   },
 
   updateDancerState: (panelId, dancerId, newState) => {
-    set(state => ({
-      panels: state.panels.map(panel =>
+    set((state) => ({
+      panels: state.panels.map((panel) =>
         panel.id === panelId
           ? {
               ...panel,
-              dancers: panel.dancers.map(d => (d.id === dancerId ? { ...d, ...newState } : d)),
+              dancers: panel.dancers.map((d) =>
+                d.id === dancerId ? { ...d, ...newState } : d,
+              ),
             }
-          : panel
+          : panel,
       ),
     }));
   },
 
   // Hand-specific updates (position and rotation) with lock propagation
   updateHandPosition: (panelId, dancerId, side, newPos) => {
-    set(curr => {
-      const panel = curr.panels.find(p => p.id === panelId);
+    set((curr) => {
+      const panel = curr.panels.find((p) => p.id === panelId);
       if (!panel) return curr;
-      const sourceDancer = panel.dancers.find(d => d.id === dancerId);
+      const sourceDancer = panel.dancers.find((d) => d.id === dancerId);
       if (!sourceDancer) return curr;
       // Update source hand local
-      let dancersAfter = panel.dancers.map(d => d.id === dancerId ? { ...d, [`${side}HandPos`]: newPos } : d);
+      let dancersAfter = panel.dancers.map((d) =>
+        d.id === dancerId ? { ...d, [`${side}HandPos`]: newPos } : d,
+      );
       // Compute source absolute position (using updated local)
       const srcHandAbs = get()._localToAbsolute(
         { ...sourceDancer, [`${side}HandPos`]: newPos },
-        newPos
+        newPos,
       );
       // Find all locks that include this hand
-      const groups = (panel.locks || []).filter(lock => (lock.members || []).some(m => m.dancerId === dancerId && m.side === side));
-      groups.forEach(group => {
-        (group.members || []).forEach(member => {
+      const groups = (panel.locks || []).filter((lock) =>
+        (lock.members || []).some(
+          (m) => m.dancerId === dancerId && m.side === side,
+        ),
+      );
+      groups.forEach((group) => {
+        (group.members || []).forEach((member) => {
           if (member.dancerId === dancerId && member.side === side) return;
-          const other = dancersAfter.find(d => d.id === member.dancerId) || panel.dancers.find(d => d.id === member.dancerId);
+          const other =
+            dancersAfter.find((d) => d.id === member.dancerId) ||
+            panel.dancers.find((d) => d.id === member.dancerId);
           if (!other) return;
           const newLocal = get()._absoluteToLocal(other, srcHandAbs);
-          dancersAfter = dancersAfter.map(d => d.id === other.id ? { ...d, [`${member.side}HandPos`]: newLocal } : d);
+          dancersAfter = dancersAfter.map((d) =>
+            d.id === other.id
+              ? { ...d, [`${member.side}HandPos`]: newLocal }
+              : d,
+          );
         });
       });
-      const newPanels = curr.panels.map(p => p.id === panelId ? { ...p, dancers: dancersAfter } : p);
+      const newPanels = curr.panels.map((p) =>
+        p.id === panelId ? { ...p, dancers: dancersAfter } : p,
+      );
       return { panels: newPanels };
     });
   },
 
   updateHandRotation: (panelId, dancerId, side, rotation) => {
-    set(state => ({
-      panels: state.panels.map(panel =>
+    set((state) => ({
+      panels: state.panels.map((panel) =>
         panel.id === panelId
           ? {
               ...panel,
-              dancers: panel.dancers.map(d =>
-                d.id === dancerId ? { ...d, [`${side}HandRotation`]: rotation } : d
+              dancers: panel.dancers.map((d) =>
+                d.id === dancerId
+                  ? { ...d, [`${side}HandRotation`]: rotation }
+                  : d,
               ),
             }
-          : panel
+          : panel,
       ),
     }));
   },
 
   // Lock management (group locks)
   getLockForHand: (panelId, dancerId, side) => {
-    const panel = get().panels.find(p => p.id === panelId);
+    const panel = get().panels.find((p) => p.id === panelId);
     if (!panel) return null;
     const locks = panel.locks || [];
-    return locks.find(lock => (lock.members || []).some(m => m.dancerId === dancerId && m.side === side)) || null;
+    return (
+      locks.find((lock) =>
+        (lock.members || []).some(
+          (m) => m.dancerId === dancerId && m.side === side,
+        ),
+      ) || null
+    );
   },
   removeLockById: (panelId, lockId) => {
-    set(state => ({
-      panels: state.panels.map(p =>
-        p.id === panelId ? { ...p, locks: (p.locks || []).filter(l => l.id !== lockId) } : p
+    set((state) => ({
+      panels: state.panels.map((p) =>
+        p.id === panelId
+          ? { ...p, locks: (p.locks || []).filter((l) => l.id !== lockId) }
+          : p,
       ),
     }));
   },
-  applySelectedLock: panelId => {
+  applySelectedLock: (panelId) => {
     const { lockUi } = get();
     if (!lockUi.selected || lockUi.selected.length < 2) return;
-    set(state => ({
-      panels: state.panels.map(p =>
+    set((state) => ({
+      panels: state.panels.map((p) =>
         p.id === panelId
-          ? { ...p, locks: [...(p.locks || []), { id: uuidv4(), members: [...lockUi.selected] }] }
-          : p
+          ? {
+              ...p,
+              locks: [
+                ...(p.locks || []),
+                { id: uuidv4(), members: [...lockUi.selected] },
+              ],
+            }
+          : p,
       ),
       lockUi: { ...state.lockUi, selected: [] },
     }));
@@ -356,10 +445,10 @@ export const useAppStore = create((set, get) => ({
   },
   lockOverlappingHands: (panelId, tolerance = 12) => {
     const state = get();
-    const panel = state.panels.find(p => p.id === panelId);
+    const panel = state.panels.find((p) => p.id === panelId);
     if (!panel) return;
     const hands = [];
-    panel.dancers.forEach(d => {
+    panel.dancers.forEach((d) => {
       const left = d.leftHandPos || { x: 0, y: 0 };
       const right = d.rightHandPos || { x: 0, y: 0 };
       const leftAbs = get()._localToAbsolute(d, left);
@@ -391,7 +480,7 @@ export const useAppStore = create((set, get) => ({
       while (stack.length) {
         const v = stack.pop();
         comp.push(v);
-        adj[v].forEach(u => {
+        adj[v].forEach((u) => {
           if (!visited[u]) {
             visited[u] = true;
             stack.push(u);
@@ -401,18 +490,27 @@ export const useAppStore = create((set, get) => ({
       if (comp.length >= 2) components.push(comp);
     }
     if (!components.length) return;
-    set(curr => {
-      const newPanels = curr.panels.map(p => {
+    set((curr) => {
+      const newPanels = curr.panels.map((p) => {
         if (p.id !== panelId) return p;
         const existing = p.locks || [];
         const newLocks = [...existing];
         const flashGroups = [];
-        components.forEach(indices => {
-          const members = indices.map(idx => ({ dancerId: hands[idx].dancerId, side: hands[idx].side }));
+        components.forEach((indices) => {
+          const members = indices.map((idx) => ({
+            dancerId: hands[idx].dancerId,
+            side: hands[idx].side,
+          }));
           // Skip if a lock with the same members already exists
-          const key = (arr) => arr.map(m => `${m.dancerId}:${m.side}`).sort().join('|');
+          const key = (arr) =>
+            arr
+              .map((m) => `${m.dancerId}:${m.side}`)
+              .sort()
+              .join('|');
           const membersKey = key(members);
-          const exists = existing.some(l => key(l.members || []) === membersKey);
+          const exists = existing.some(
+            (l) => key(l.members || []) === membersKey,
+          );
           if (!exists) {
             newLocks.push({ id: uuidv4(), members });
             flashGroups.push(members);
@@ -420,7 +518,9 @@ export const useAppStore = create((set, get) => ({
         });
         // Trigger flashes after state update
         setTimeout(() => {
-          flashGroups.forEach(members => get().queueHandFlash(panelId, members));
+          flashGroups.forEach((members) =>
+            get().queueHandFlash(panelId, members),
+          );
         }, 0);
         return { ...p, locks: newLocks };
       });
@@ -431,25 +531,35 @@ export const useAppStore = create((set, get) => ({
   // Enforce coincident locks after dancer movement by aligning counterpart hands to the moved hand's absolute position
   enforceLocksForHand: (panelId, dancerId, side) => {
     const state = get();
-    const panel = state.panels.find(p => p.id === panelId);
+    const panel = state.panels.find((p) => p.id === panelId);
     if (!panel) return;
-    const dancer = panel.dancers.find(d => d.id === dancerId);
+    const dancer = panel.dancers.find((d) => d.id === dancerId);
     if (!dancer) return;
     const handLocal = dancer[`${side}HandPos`];
     const handAbs = get()._localToAbsolute(dancer, handLocal);
-    const groups = (panel.locks || []).filter(lock => (lock.members || []).some(m => m.dancerId === dancerId && m.side === side));
+    const groups = (panel.locks || []).filter((lock) =>
+      (lock.members || []).some(
+        (m) => m.dancerId === dancerId && m.side === side,
+      ),
+    );
     if (!groups.length) return;
-    set(curr => {
-      const newPanels = curr.panels.map(p => {
+    set((curr) => {
+      const newPanels = curr.panels.map((p) => {
         if (p.id !== panelId) return p;
         let dancersUpdated = p.dancers;
-        groups.forEach(g => {
-          (g.members || []).forEach(member => {
+        groups.forEach((g) => {
+          (g.members || []).forEach((member) => {
             if (member.dancerId === dancerId && member.side === side) return;
-            const other = dancersUpdated.find(d => d.id === member.dancerId) || p.dancers.find(d => d.id === member.dancerId);
+            const other =
+              dancersUpdated.find((d) => d.id === member.dancerId) ||
+              p.dancers.find((d) => d.id === member.dancerId);
             if (!other) return;
             const newLocal = get()._absoluteToLocal(other, handAbs);
-            dancersUpdated = dancersUpdated.map(d => d.id === other.id ? { ...d, [`${member.side}HandPos`]: newLocal } : d);
+            dancersUpdated = dancersUpdated.map((d) =>
+              d.id === other.id
+                ? { ...d, [`${member.side}HandPos`]: newLocal }
+                : d,
+            );
           });
         });
         return { ...p, dancers: dancersUpdated };
@@ -459,59 +569,78 @@ export const useAppStore = create((set, get) => ({
   },
   enforceLocksForDancer: (panelId, dancerId) => {
     const state = get();
-    const panel = state.panels.find(p => p.id === panelId);
+    const panel = state.panels.find((p) => p.id === panelId);
     if (!panel) return;
-    const groups = (panel.locks || []).filter(lock => (lock.members || []).some(m => m.dancerId === dancerId));
+    const groups = (panel.locks || []).filter((lock) =>
+      (lock.members || []).some((m) => m.dancerId === dancerId),
+    );
     if (!groups.length) return;
-    set(curr => {
-      const p = curr.panels.find(pp => pp.id === panelId);
+    set((curr) => {
+      const p = curr.panels.find((pp) => pp.id === panelId);
       if (!p) return curr;
       let dancersUpdated = p.dancers;
-      groups.forEach(group => {
+      groups.forEach((group) => {
         // Compute current absolute positions of each member hand based on current transforms
-        const memberAbs = (group.members || []).map(member => {
-          const d = dancersUpdated.find(dd => dd.id === member.dancerId) || p.dancers.find(dd => dd.id === member.dancerId);
-          if (!d) return null;
-          const local = d[`${member.side}HandPos`];
-          return state._localToAbsolute(d, local);
-        }).filter(Boolean);
+        const memberAbs = (group.members || [])
+          .map((member) => {
+            const d =
+              dancersUpdated.find((dd) => dd.id === member.dancerId) ||
+              p.dancers.find((dd) => dd.id === member.dancerId);
+            if (!d) return null;
+            const local = d[`${member.side}HandPos`];
+            return state._localToAbsolute(d, local);
+          })
+          .filter(Boolean);
         if (!memberAbs.length) return;
         // Target as centroid (keeps roughly halfway between bodies)
-        const centroid = memberAbs.reduce((acc, pt) => ({ x: acc.x + pt.x, y: acc.y + pt.y }), { x: 0, y: 0 });
+        const centroid = memberAbs.reduce(
+          (acc, pt) => ({ x: acc.x + pt.x, y: acc.y + pt.y }),
+          { x: 0, y: 0 },
+        );
         centroid.x /= memberAbs.length;
         centroid.y /= memberAbs.length;
         // Set each member's local position to match centroid
-        (group.members || []).forEach(member => {
-          const d = dancersUpdated.find(dd => dd.id === member.dancerId) || p.dancers.find(dd => dd.id === member.dancerId);
+        (group.members || []).forEach((member) => {
+          const d =
+            dancersUpdated.find((dd) => dd.id === member.dancerId) ||
+            p.dancers.find((dd) => dd.id === member.dancerId);
           if (!d) return;
           const newLocal = state._absoluteToLocal(d, centroid);
-          dancersUpdated = dancersUpdated.map(dd => dd.id === d.id ? { ...dd, [`${member.side}HandPos`]: newLocal } : dd);
+          dancersUpdated = dancersUpdated.map((dd) =>
+            dd.id === d.id
+              ? { ...dd, [`${member.side}HandPos`]: newLocal }
+              : dd,
+          );
         });
       });
-      const newPanels = curr.panels.map(pp => pp.id === panelId ? { ...pp, dancers: dancersUpdated } : pp);
+      const newPanels = curr.panels.map((pp) =>
+        pp.id === panelId ? { ...pp, dancers: dancersUpdated } : pp,
+      );
       return { panels: newPanels };
     });
   },
 
   updateShapeState: (panelId, shapeId, newProps) => {
-    set(state => ({
-      panels: state.panels.map(panel =>
+    set((state) => ({
+      panels: state.panels.map((panel) =>
         panel.id === panelId
           ? {
               ...panel,
-              shapes: panel.shapes.map(s => (s.id === shapeId ? { ...s, ...newProps } : s)),
+              shapes: panel.shapes.map((s) =>
+                s.id === shapeId ? { ...s, ...newProps } : s,
+              ),
             }
-          : panel
+          : panel,
       ),
     }));
   },
 
-  serializePanel: panelId => {
-    const panel = get().panels.find(p => p.id === panelId);
+  serializePanel: (panelId) => {
+    const panel = get().panels.find((p) => p.id === panelId);
     if (!panel) return null;
     return {
       ...panel,
-      dancers: panel.dancers.map(dancer => ({
+      dancers: panel.dancers.map((dancer) => ({
         id: dancer.id,
         x: dancer.x,
         y: dancer.y,
@@ -532,7 +661,7 @@ export const useAppStore = create((set, get) => ({
         rightLowerArmThickness: dancer.rightLowerArmThickness,
         rightUpperArmThickness: dancer.rightUpperArmThickness,
       })),
-      shapes: panel.shapes.map(shape => ({
+      shapes: panel.shapes.map((shape) => ({
         id: shape.id,
         type: shape.type,
         x: shape.x,
@@ -548,24 +677,33 @@ export const useAppStore = create((set, get) => ({
         fill: shape.fill,
         imageKey: shape.imageKey,
       })),
-      locks: (panel.locks || []).map(lock => ({
+      locks: (panel.locks || []).map((lock) => ({
         id: lock.id,
-        members: (lock.members || []).map(m => ({ dancerId: m.dancerId, side: m.side })),
+        members: (lock.members || []).map((m) => ({
+          dancerId: m.dancerId,
+          side: m.side,
+        })),
       })),
     };
   },
 
-  deserializePanel: serializedPanel => {
+  deserializePanel: (serializedPanel) => {
     const oldToNew = new Map();
-    const newDancers = serializedPanel.dancers.map(dancer => {
+    const newDancers = serializedPanel.dancers.map((dancer) => {
       const newId = uuidv4();
       oldToNew.set(dancer.id, newId);
       return { ...dancer, id: newId };
     });
-    const newShapes = serializedPanel.shapes.map(shape => ({ ...shape, id: uuidv4() }));
-    const newLocks = (serializedPanel.locks || []).map(lock => ({
+    const newShapes = serializedPanel.shapes.map((shape) => ({
+      ...shape,
       id: uuidv4(),
-      members: (lock.members || []).map(m => ({ dancerId: oldToNew.get(m.dancerId) || m.dancerId, side: m.side })),
+    }));
+    const newLocks = (serializedPanel.locks || []).map((lock) => ({
+      id: uuidv4(),
+      members: (lock.members || []).map((m) => ({
+        dancerId: oldToNew.get(m.dancerId) || m.dancerId,
+        side: m.side,
+      })),
     }));
     return {
       ...serializedPanel,
@@ -576,34 +714,29 @@ export const useAppStore = create((set, get) => ({
     };
   },
 
-  clonePanel: panelId => {
+  clonePanel: (panelId) => {
     const serializedPanel = get().serializePanel(panelId);
     if (!serializedPanel) return;
     const clonedPanel = get().deserializePanel(serializedPanel);
-    set(state => {
-      const index = state.panels.findIndex(p => p.id === panelId);
+    set((state) => {
+      const index = state.panels.findIndex((p) => p.id === panelId);
       const newPanels = [...state.panels];
       newPanels.splice(index + 1, 0, clonedPanel);
       return { panels: newPanels };
     });
   },
 
-  movePanel: (panelId, direction) => {
-    set(state => {
-      const panelIndex = state.panels.findIndex(p => p.id === panelId);
-      if (panelIndex === -1) return state;
-      const newPanels = [...state.panels];
-      const panel = newPanels[panelIndex];
-      if (direction === 'right' && panelIndex < newPanels.length - 1) {
-        newPanels.splice(panelIndex, 1);
-        newPanels.splice(panelIndex + 1, 0, panel);
-      } else if (direction === 'left' && panelIndex > 0) {
-        newPanels.splice(panelIndex, 1);
-        newPanels.splice(panelIndex - 1, 0, panel);
-      }
-      return { panels: newPanels };
+  movePanel: (draggedId, targetId) => {
+    set((state) => {
+      if (draggedId === targetId) return {};
+      const ids = state.panels.map((p) => p.id);
+      const fromIndex = ids.indexOf(draggedId);
+      const toIndex = ids.indexOf(targetId);
+      if (fromIndex === -1 || toIndex === -1) return {};
+      ids.splice(fromIndex, 1);
+      ids.splice(toIndex, 0, draggedId);
+      const reordered = ids.map((id) => state.panels.find((p) => p.id === id));
+      return { panels: reordered };
     });
   },
 }));
-
-
