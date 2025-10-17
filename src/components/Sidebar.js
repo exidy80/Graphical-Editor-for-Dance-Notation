@@ -4,7 +4,7 @@ import Toggle from 'react-toggle';
 import 'react-toggle/style.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoePrints, faArrowRight, faSyncAlt, faLongArrowAltRight, faArrowLeft, faHand } from '@fortawesome/free-solid-svg-icons';
-import { useAppContext } from './AppContext';
+import { useAppStore } from './useAppStore';
 
 // Map the shapes to their types 
 const shapeMapping = {
@@ -45,7 +45,8 @@ const feetButtonMapping = {
 
 const Sidebar = () => {
   // Funcs from context
-  const { handleShapeDraw, selectedPanel } = useAppContext();
+  const handleShapeDraw = useAppStore(state => state.handleShapeDraw);
+  const selectedPanel = useAppStore(state => state.selectedPanel);
   //Local states for the sidebar
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);

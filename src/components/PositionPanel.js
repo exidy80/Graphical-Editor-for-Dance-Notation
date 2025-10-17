@@ -1,18 +1,16 @@
 import React from 'react';
 import Canvas from './Canvas';
-import { useAppContext } from './AppContext';
+import { useAppStore } from './useAppStore';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowRight, faArrowLeft, faClone } from '@fortawesome/free-solid-svg-icons';
 
 const PositionPanel = () => {
-  const {
-    panels,
-    selectedPanel,
-    panelSize,
-    handlePanelSelection,
-    clonePanel,
-    movePanel
-  } = useAppContext();
+  const panels = useAppStore(state => state.panels);
+  const selectedPanel = useAppStore(state => state.selectedPanel);
+  const panelSize = useAppStore(state => state.panelSize);
+  const handlePanelSelection = useAppStore(state => state.handlePanelSelection);
+  const clonePanel = useAppStore(state => state.clonePanel);
+  const movePanel = useAppStore(state => state.movePanel);
 
   const optionsBarHeight = 40; //size of bar at top of panel
 
