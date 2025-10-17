@@ -2,11 +2,14 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import { Transformer, Arrow, Arc, Text, Rect, Circle, Image as KonvaImage, RegularPolygon } from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
-import { useAppContext } from './AppContext';
+import { useAppStore } from './useAppStore';
 
 const Symbol = ({ shapeProps, panelId}) => {
   //Get functions and states from context
-  const { opacity, handleShapeSelection, updateShapeState, selectedShapeId } = useAppContext();
+  const opacity = useAppStore(state => state.opacity);
+  const handleShapeSelection = useAppStore(state => state.handleShapeSelection);
+  const updateShapeState = useAppStore(state => state.updateShapeState);
+  const selectedShapeId = useAppStore(state => state.selectedShapeId);
   //Refs for shapes and transformers
   const shapeRef = useRef();
   const trRef = useRef();

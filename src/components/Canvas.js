@@ -2,15 +2,13 @@ import React from 'react';
 import { Stage, Layer } from 'react-konva';
 import Dancer from './Dancer';
 import Symbol from './Symbols';
-import { useAppContext } from './AppContext';
+import { useAppStore } from './useAppStore';
 
 const Canvas = ({ panelId }) => {
-  const {
-    panels,
-    panelSize,
-    opacity,
-    handleCanvasClick,
-  } = useAppContext();
+  const panels = useAppStore(state => state.panels);
+  const panelSize = useAppStore(state => state.panelSize);
+  const opacity = useAppStore(state => state.opacity);
+  const handleCanvasClick = useAppStore(state => state.handleCanvasClick);
 
   // Find the panel data based on the supplied ID
   const panel = panels.find(p => p.id === panelId);

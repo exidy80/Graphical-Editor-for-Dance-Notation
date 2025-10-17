@@ -3,11 +3,9 @@ import Toolbar from './components/Toolbar';
 import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import './App.css';
-import { AppProvider, useAppContext } from './components/AppContext';
+import { useAppStore } from './components/useAppStore';
 const AppContent = () => {
-  const { 
-    panelSize,
-  } = useAppContext(); 
+  const panelSize = useAppStore(state => state.panelSize); 
 
 
 /* Renders the components */
@@ -35,9 +33,7 @@ const AppContent = () => {
 
 function App() {
   return (
-    <AppProvider>
       <AppContent/>
-    </AppProvider>
   );
 }
 

@@ -1,10 +1,13 @@
 import React, { useRef } from 'react';
-import { useAppContext } from './AppContext';
+import { useAppStore } from './useAppStore';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faUpload } from '@fortawesome/free-solid-svg-icons';
 
 const PanelFileHandler = () => {
-  const { panels, serializePanel, deserializePanel, setPanels } = useAppContext();
+  const panels = useAppStore(state => state.panels);
+  const serializePanel = useAppStore(state => state.serializePanel);
+  const deserializePanel = useAppStore(state => state.deserializePanel);
+  const setPanels = useAppStore(state => state.setPanels);
   const fileInputRef = useRef(null);
 
   const downloadPanels = () => {

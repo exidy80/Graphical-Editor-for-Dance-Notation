@@ -8,19 +8,21 @@ import {
   Circle,
   Transformer,
 } from 'react-konva'
-import { useAppContext } from './AppContext'
+import { useAppStore } from './useAppStore'
 
 const Dancer = ({ panelId, id }) => {
   // Imports from context file
-  const {
-    panels,
-    selectedDancer,
-    selectedHand,
-    opacity,
-    handleDancerSelection,
-    handleHandClick,
-    updateDancerState,
-  } = useAppContext()
+  const panels = useAppStore(state => state.panels)
+  const selectedDancer = useAppStore(state => state.selectedDancer)
+  const selectedHand = useAppStore(state => state.selectedHand)
+  const opacity = useAppStore(state => state.opacity)
+  const handleDancerSelection = useAppStore(state => state.handleDancerSelection)
+  const handleHandClick = useAppStore(state => state.handleHandClick)
+  const updateDancerState = useAppStore(state => state.updateDancerState)
+  const updateHandPosition = useAppStore(state => state.updateHandPosition)
+  const updateHandRotation = useAppStore(state => state.updateHandRotation)
+  const enforceLocksForDancer = useAppStore(state => state.enforceLocksForDancer)
+  const handFlash = useAppStore(state => state.handFlash)
 
   // setting up references to different parts of the dancer
   const dancerRef = useRef()
@@ -66,8 +68,9 @@ const Dancer = ({ panelId, id }) => {
         scaleX: node.scaleX(), //logs scale
         scaleY: node.scaleY(),
       })
+      enforceLocksForDancer(panelId, id)
     },
-    [panelId, id, updateDancerState]
+    [panelId, id, updateDancerState, enforceLocksForDancer]
   )
 
   // This function handles when the dancer is dragged and logs position
@@ -79,18 +82,37 @@ const Dancer = ({ panelId, id }) => {
           x: node.x(),
           y: node.y(),
         })
+        enforceLocksForDancer(panelId, id)
       }
     },
-    [panelId, id, updateDancerState]
+    [panelId, id, updateDancerState, enforceLocksForDancer]
+  )
+
+  const handleDragMove = useCallback(
+    e => {
+      const node = e.target
+      if (node === dancerRef.current) {
+        updateDancerState(panelId, id, {
+          x: node.x(),
+          y: node.y(),
+        })
+        enforceLocksForDancer(panelId, id)
+      }
+    },
+    [panelId, id, updateDancerState, enforceLocksForDancer]
   )
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
   const handlePartDragEnd = useCallback(
     (part, side) => e => {
       const newPos = e.target.position()
-      updateDancerState(panelId, id, { [`${side}${part}Pos`]: newPos })
+      if (part === 'Hand') {
+        updateHandPosition(panelId, id, side, newPos)
+      } else if (part === 'Elbow') {
+        updateDancerState(panelId, id, { [`${side}${part}Pos`]: newPos })
+      }
     },
-    [updateDancerState, panelId, id]
+    [updateDancerState, updateHandPosition, panelId, id]
   )
 
   // This function handles rotating a hand
@@ -98,11 +120,11 @@ const Dancer = ({ panelId, id }) => {
     e => {
       const node = e.target
       const rotation = node.rotation()
-      updateDancerState(panelId, id, {
-        [`${selectedHand.handSide}HandRotation`]: rotation,
-      })
+      if (selectedHand) {
+        updateHandRotation(panelId, id, selectedHand.handSide, rotation)
+      }
     },
-    [panelId, id, selectedHand, updateDancerState]
+    [panelId, id, selectedHand, updateHandRotation]
   )
 
   // These two functions help me manage the transformer for the hands
@@ -224,6 +246,7 @@ const Dancer = ({ panelId, id }) => {
       selectedHand.dancerId === id &&
       selectedHand.handSide === side
 
+    const isFlashing = handFlash.some(h => h.panelId === panelId && h.dancerId === id && h.side === side)
     const baseProps = {
       fill: dancer.colour,
       draggable: !disabled,
@@ -235,9 +258,9 @@ const Dancer = ({ panelId, id }) => {
       rotation: dancer[`${side}HandRotation`] || 0,
       ref: handRefs[side],
       name: `${side}Hand`,
-      shadowColor: isHandSelected ? dancer.colour : null,
-      shadowBlur: isHandSelected ? 15 : 0,
-      shadowOpacity: isHandSelected ? 1 : 0,
+      shadowColor: (isHandSelected || isFlashing) ? dancer.colour : null,
+      shadowBlur: (isHandSelected || isFlashing) ? 15 : 0,
+      shadowOpacity: (isHandSelected || isFlashing) ? 1 : 0,
     }
 
     switch (handShape) {
@@ -343,6 +366,7 @@ const Dancer = ({ panelId, id }) => {
         opacity={opacity.dancers.value}
         draggable={!disabled}
         ref={dancerRef}
+        onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onTransform={handleTransform}
       >

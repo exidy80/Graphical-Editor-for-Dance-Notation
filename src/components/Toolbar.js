@@ -1,26 +1,31 @@
 import React from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
-import { useAppContext } from './AppContext';
+import { useAppStore } from './useAppStore';
 import PanelFileHandler from './PanelFileHandler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPlus, faMinus, faLockOpen, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faPlus, faMinus, faLockOpen, faLock, faLink, faUnlink } from '@fortawesome/free-solid-svg-icons';
 
 const Toolbar = () => {
-  const {
-    handleHeadSelection,
-    handleHandSelection,
-    selectedHand,
-    selectedDancer,
-    opacity,
-    handleOpacityChange,
-    handleDelete,
-    selectedPanel,
-    selectedShapeId, 
-    addPanel,
-    deleteSelectedPanel,
-    panels
-  } = useAppContext();
+  const handleHeadSelection = useAppStore(state => state.handleHeadSelection);
+  const handleHandSelection = useAppStore(state => state.handleHandSelection);
+  const selectedHand = useAppStore(state => state.selectedHand);
+  const selectedDancer = useAppStore(state => state.selectedDancer);
+  const opacity = useAppStore(state => state.opacity);
+  const handleOpacityChange = useAppStore(state => state.handleOpacityChange);
+  const handleDelete = useAppStore(state => state.handleDelete);
+  const selectedPanel = useAppStore(state => state.selectedPanel);
+  const selectedShapeId = useAppStore(state => state.selectedShapeId);
+  const addPanel = useAppStore(state => state.addPanel);
+  const deleteSelectedPanel = useAppStore(state => state.deleteSelectedPanel);
+  const panels = useAppStore(state => state.panels);
+  const setLockModeActive = useAppStore(state => state.setLockModeActive);
+  const lockUi = useAppStore(state => state.lockUi);
+  const getLockForHand = useAppStore(state => state.getLockForHand);
+  const removeLockById = useAppStore(state => state.removeLockById);
+  const applySelectedLock = useAppStore(state => state.applySelectedLock);
+  const clearLockSelection = useAppStore(state => state.clearLockSelection);
+  const lockOverlappingHands = useAppStore(state => state.lockOverlappingHands);
 
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
@@ -100,6 +105,55 @@ const Toolbar = () => {
           >
             <FontAwesomeIcon icon={opacity.symbols.value === 1 ? faLockOpen : faLock} />
             <span className="button-text">Symbols</span>
+          </Button>
+        </ButtonGroup>
+
+        <ButtonGroup className="custom-btn-group">
+          <Button 
+            onClick={() => {
+              if (!lockUi.active && selectedPanel) {
+                // One-click: lock any overlapping hands in current panel
+                lockOverlappingHands(selectedPanel);
+              } else {
+                setLockModeActive(!lockUi.active);
+              }
+            }}
+            variant={lockUi.active ? 'primary' : 'outline-primary'}
+            className="icon-button"
+          >
+            <FontAwesomeIcon icon={faLink} />
+            <span className="button-text">Lock Hands</span>
+          </Button>
+          <Button
+            onClick={() => selectedPanel && applySelectedLock(selectedPanel)}
+            variant={lockUi.selected && lockUi.selected.length >= 2 ? 'success' : 'outline-success'}
+            className="icon-button"
+            disabled={!selectedPanel || !lockUi.selected || lockUi.selected.length < 2}
+          >
+            <FontAwesomeIcon icon={faLink} />
+            <span className="button-text">Apply Lock</span>
+          </Button>
+          <Button
+            onClick={() => clearLockSelection()}
+            variant={lockUi.selected && lockUi.selected.length ? 'warning' : 'outline-warning'}
+            className="icon-button"
+            disabled={!lockUi.selected || lockUi.selected.length === 0}
+          >
+            <FontAwesomeIcon icon={faUnlink} />
+            <span className="button-text">Clear</span>
+          </Button>
+          <Button
+            onClick={() => {
+              if (!selectedHand) return;
+              const lock = getLockForHand(selectedHand.panelId, selectedHand.dancerId, selectedHand.handSide);
+              if (lock) removeLockById(selectedHand.panelId, lock.id);
+            }}
+            variant={selectedHand && getLockForHand(selectedHand?.panelId, selectedHand?.dancerId, selectedHand?.handSide) ? 'danger' : 'outline-danger'}
+            className="icon-button"
+            disabled={!selectedHand || !getLockForHand(selectedHand?.panelId, selectedHand?.dancerId, selectedHand?.handSide)}
+          >
+            <FontAwesomeIcon icon={faUnlink} />
+            <span className="button-text">Unlock</span>
           </Button>
         </ButtonGroup>
 
