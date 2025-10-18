@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from 'react';
 import {
   Group,
   Line,
@@ -7,8 +7,8 @@ import {
   Arc,
   Circle,
   Transformer,
-} from "react-konva";
-import { useAppStore } from "./useAppStore";
+} from 'react-konva';
+import { useAppStore } from './useAppStore';
 
 const Dancer = ({ panelId, id }) => {
   // Imports from context file
@@ -17,18 +17,17 @@ const Dancer = ({ panelId, id }) => {
   const selectedHand = useAppStore((state) => state.selectedHand);
   const opacity = useAppStore((state) => state.opacity);
   const handleDancerSelection = useAppStore(
-    (state) => state.handleDancerSelection
+    (state) => state.handleDancerSelection,
   );
   const handleHandClick = useAppStore((state) => state.handleHandClick);
   const updateDancerState = useAppStore((state) => state.updateDancerState);
   const updateHandPosition = useAppStore((state) => state.updateHandPosition);
   const updateHandRotation = useAppStore((state) => state.updateHandRotation);
   const enforceLocksForDancer = useAppStore(
-    (state) => state.enforceLocksForDancer
+    (state) => state.enforceLocksForDancer,
   );
   const handFlash = useAppStore((state) => state.handFlash);
 
-  // setting up references to different parts of the dancer
   const dancerRef = useRef();
   const headRef = useRef();
   const bodyRef = useRef();
@@ -56,7 +55,6 @@ const Dancer = ({ panelId, id }) => {
     selectedDancer.dancerId === id;
   const disabled = opacity.dancers.disabled; //Can't select dancer if it's been disabled
 
-  // Constants for body parts
   const headSize = 30;
   const bodyWidth = 60;
   const bodyHeight = 5;
@@ -74,7 +72,7 @@ const Dancer = ({ panelId, id }) => {
       });
       enforceLocksForDancer(panelId, id);
     },
-    [panelId, id, updateDancerState, enforceLocksForDancer]
+    [panelId, id, updateDancerState, enforceLocksForDancer],
   );
 
   // This function handles when the dancer is dragged and logs position
@@ -89,7 +87,7 @@ const Dancer = ({ panelId, id }) => {
         enforceLocksForDancer(panelId, id);
       }
     },
-    [panelId, id, updateDancerState, enforceLocksForDancer]
+    [panelId, id, updateDancerState, enforceLocksForDancer],
   );
 
   const handleDragMove = useCallback(
@@ -103,20 +101,20 @@ const Dancer = ({ panelId, id }) => {
         enforceLocksForDancer(panelId, id);
       }
     },
-    [panelId, id, updateDancerState, enforceLocksForDancer]
+    [panelId, id, updateDancerState, enforceLocksForDancer],
   );
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
   const handlePartDragEnd = useCallback(
     (part, side) => (e) => {
       const newPos = e.target.position();
-      if (part === "Hand") {
+      if (part === 'Hand') {
         updateHandPosition(panelId, id, side, newPos);
-      } else if (part === "Elbow") {
+      } else if (part === 'Elbow') {
         updateDancerState(panelId, id, { [`${side}${part}Pos`]: newPos });
       }
     },
-    [updateDancerState, updateHandPosition, panelId, id]
+    [updateDancerState, updateHandPosition, panelId, id],
   );
 
   // This function handles rotating a hand
@@ -128,7 +126,7 @@ const Dancer = ({ panelId, id }) => {
         updateHandRotation(panelId, id, selectedHand.handSide, rotation);
       }
     },
-    [panelId, id, selectedHand, updateHandRotation]
+    [panelId, id, selectedHand, updateHandRotation],
   );
 
   const handleHandMouseEnter = (e) => {
@@ -147,7 +145,6 @@ const Dancer = ({ panelId, id }) => {
     shape.getLayer().batchDraw();
   };
 
-  // These two functions help me manage the transformer for the hands
   const resetHandTransformer = useCallback(() => {
     if (handTransformerRef.current) {
       handTransformerRef.current.nodes([]);
@@ -173,10 +170,10 @@ const Dancer = ({ panelId, id }) => {
   useEffect(() => {
     const updateArm = (side) => {
       const upperArm =
-        side === "left" ? leftUpperArmRef.current : rightUpperArmRef.current;
+        side === 'left' ? leftUpperArmRef.current : rightUpperArmRef.current;
       const lowerArm =
-        side === "left" ? leftLowerArmRef.current : rightLowerArmRef.current;
-      const shoulderX = side === "left" ? -bodyWidth / 2 : bodyWidth / 2;
+        side === 'left' ? leftLowerArmRef.current : rightLowerArmRef.current;
+      const shoulderX = side === 'left' ? -bodyWidth / 2 : bodyWidth / 2;
       const elbowPos = dancer[`${side}ElbowPos`];
       const handPos = dancer[`${side}HandPos`];
 
@@ -186,8 +183,8 @@ const Dancer = ({ panelId, id }) => {
       }
     };
 
-    updateArm("left");
-    updateArm("right");
+    updateArm('left');
+    updateArm('right');
   }, [dancer, chosenHandShapes]);
 
   useEffect(() => {
@@ -216,11 +213,10 @@ const Dancer = ({ panelId, id }) => {
 
   useEffect(() => {
     resetHandTransformer();
-    // I'm using a timeout here to make sure the reset happens before reattaching when hand shape changed
+    // Timeout here to make sure the reset happens before reattaching when hand shape changed
     setTimeout(attachHandTransformer, 0);
   }, [chosenHandShapes, resetHandTransformer, attachHandTransformer]);
 
-  // This function renders the head of the dancer
   const renderHead = () => {
     const baseProps = {
       ref: headRef,
@@ -230,7 +226,7 @@ const Dancer = ({ panelId, id }) => {
     };
 
     switch (chosenHead) {
-      case "Bow":
+      case 'Bow':
         return (
           <Rect
             {...baseProps}
@@ -239,7 +235,7 @@ const Dancer = ({ panelId, id }) => {
             x={-15}
           />
         );
-      case "Duck":
+      case 'Duck':
         return (
           <Arc
             {...baseProps}
@@ -250,7 +246,7 @@ const Dancer = ({ panelId, id }) => {
             innerRadius={0}
           />
         );
-      case "Upright":
+      case 'Upright':
       default:
         return (
           <RegularPolygon {...baseProps} sides={3} radius={headSize / 2} />
@@ -258,7 +254,6 @@ const Dancer = ({ panelId, id }) => {
     }
   };
 
-  // This function renders the hands of the dancer
   const renderHand = (side) => {
     const handPos = dancer[`${side}HandPos`];
     const handShape = chosenHandShapes[side];
@@ -269,13 +264,13 @@ const Dancer = ({ panelId, id }) => {
       selectedHand.handSide === side;
 
     const isFlashing = handFlash.some(
-      (h) => h.panelId === panelId && h.dancerId === id && h.side === side
+      (h) => h.panelId === panelId && h.dancerId === id && h.side === side,
     );
     const baseProps = {
       fill: dancer.colour,
       draggable: !disabled,
-      onDragMove: handlePartDragEnd("Hand", side),
-      onDragEnd: handlePartDragEnd("Hand", side),
+      onDragMove: handlePartDragEnd('Hand', side),
+      onDragEnd: handlePartDragEnd('Hand', side),
       onClick: disabled ? null : () => handleHandClick(panelId, id, side),
       x: handPos.x,
       y: handPos.y,
@@ -288,7 +283,7 @@ const Dancer = ({ panelId, id }) => {
     };
 
     switch (handShape) {
-      case "Knee":
+      case 'Knee':
         return (
           <Group {...baseProps}>
             <Circle
@@ -302,7 +297,7 @@ const Dancer = ({ panelId, id }) => {
             <Rect width={1} height={10} opacity={0} />
           </Group>
         );
-      case "Shoulder":
+      case 'Shoulder':
         return (
           // wrapped in group so that initial rotation can be set but still change dynamically
           <Group {...baseProps}>
@@ -317,7 +312,7 @@ const Dancer = ({ panelId, id }) => {
             />
           </Group>
         );
-      case "Overhead":
+      case 'Overhead':
         return (
           <RegularPolygon
             {...baseProps}
@@ -328,7 +323,7 @@ const Dancer = ({ panelId, id }) => {
             onMouseLeave={handleHandMouseLeave}
           />
         );
-      case "Waist":
+      case 'Waist':
       default:
         return (
           <Rect
@@ -348,34 +343,33 @@ const Dancer = ({ panelId, id }) => {
     (side, part) => (e) => {
       if (disabled) return; // Extra check to prevent execution when disabled
       const currentThickness = dancer[`${side}${part}ArmThickness`];
-      const newThickness = currentThickness === "thick" ? "thin" : "thick";
+      const newThickness = currentThickness === 'thick' ? 'thin' : 'thick';
       updateDancerState(panelId, id, {
         [`${side}${part}ArmThickness`]: newThickness,
       });
     },
-    [panelId, id, dancer, updateDancerState, disabled]
+    [panelId, id, dancer, updateDancerState, disabled],
   );
 
-  //renders the Arm
   const renderArm = (side) => {
-    const upperArmThickness = dancer[`${side}UpperArmThickness`] || "thick";
-    const lowerArmThickness = dancer[`${side}LowerArmThickness`] || "thick";
+    const upperArmThickness = dancer[`${side}UpperArmThickness`] || 'thick';
+    const lowerArmThickness = dancer[`${side}LowerArmThickness`] || 'thick';
 
     return (
       <Group key={`${side}arm${dancer.id}`}>
         <Line
-          ref={side === "left" ? leftUpperArmRef : rightUpperArmRef}
+          ref={side === 'left' ? leftUpperArmRef : rightUpperArmRef}
           stroke={dancer.colour}
-          strokeWidth={upperArmThickness === "thick" ? 5 : 2} //The two thickness options to toggle between
+          strokeWidth={upperArmThickness === 'thick' ? 5 : 2} //The two thickness options to toggle between
           hitStrokeWidth={10} // Consistent hitbox
-          onClick={(e) => handleArmClick(side, "Upper")(e)}
+          onClick={(e) => handleArmClick(side, 'Upper')(e)}
         />
         <Line
-          ref={side === "left" ? leftLowerArmRef : rightLowerArmRef}
+          ref={side === 'left' ? leftLowerArmRef : rightLowerArmRef}
           stroke={dancer.colour}
-          strokeWidth={lowerArmThickness === "thick" ? 5 : 2}
+          strokeWidth={lowerArmThickness === 'thick' ? 5 : 2}
           hitStrokeWidth={10} // Consistent hitbox
-          onClick={(e) => handleArmClick(side, "Lower")(e)}
+          onClick={(e) => handleArmClick(side, 'Lower')(e)}
         />
         <Circle
           x={dancer[`${side}ElbowPos`].x}
@@ -383,15 +377,14 @@ const Dancer = ({ panelId, id }) => {
           radius={3}
           fill={dancer.colour}
           draggable={!disabled}
-          onDragMove={handlePartDragEnd("Elbow", side)}
-          onDragEnd={handlePartDragEnd("Elbow", side)}
+          onDragMove={handlePartDragEnd('Elbow', side)}
+          onDragEnd={handlePartDragEnd('Elbow', side)}
         />
         {renderHand(side)}
       </Group>
     );
   };
 
-  // Finally, I'm returning the complete dancer component
   return (
     <>
       <Group
@@ -416,7 +409,7 @@ const Dancer = ({ panelId, id }) => {
           y={headSize / 4}
           offsetX={bodyWidth / 2}
         />
-        {["left", "right"].map((side) => renderArm(side))}
+        {['left', 'right'].map((side) => renderArm(side))}
       </Group>
       {isSelected && (
         <Transformer

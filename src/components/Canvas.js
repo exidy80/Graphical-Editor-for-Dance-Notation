@@ -5,17 +5,14 @@ import Symbol from './Symbols';
 import { useAppStore } from './useAppStore';
 
 const Canvas = ({ panelId }) => {
-  const panels = useAppStore(state => state.panels);
-  const panelSize = useAppStore(state => state.panelSize);
-  const opacity = useAppStore(state => state.opacity);
-  const handleCanvasClick = useAppStore(state => state.handleCanvasClick);
+  const panels = useAppStore((state) => state.panels);
+  const panelSize = useAppStore((state) => state.panelSize);
+  const opacity = useAppStore((state) => state.opacity);
+  const handleCanvasClick = useAppStore((state) => state.handleCanvasClick);
 
-  // Find the panel data based on the supplied ID
-  const panel = panels.find(p => p.id === panelId);
-  
-  // If it's not found for some reason, don't render anything
+  const panel = panels.find((p) => p.id === panelId);
   if (!panel) return null;
-  // Get the data from the panel
+
   const { dancers, headShapes, handShapes, shapes } = panel;
 
   //Triggers if the user clicks on the canvas itself
@@ -27,32 +24,30 @@ const Canvas = ({ panelId }) => {
 
   //Konva stage
   return (
-    <Stage 
+    <Stage
       width={panelSize.width - 4} //Slightly smaller than container
       height={panelSize.height - 4}
       onMouseDown={handleCanvasClickInternal} // Lets you deselect the dancer/shape currently selected by clicking an empty area
     >
       <Layer>
-        {/* Render the shapes */}
         {shapes.map((shape) => (
           <Symbol
             key={shape.id}
             shapeProps={shape}
             panelId={panelId}
-            opacity={opacity.symbols.value}//pass opacity
-            disabled={opacity.symbols.disabled}//pass whether object is disabled
+            opacity={opacity.symbols.value}
+            disabled={opacity.symbols.disabled}
           />
         ))}
-        {/* Render the dancers */}
         {dancers.map((dancer, index) => (
           <Dancer
             key={dancer.id}
             id={dancer.id}
             panelId={panelId}
-            chosenHead={headShapes[index]} //pass the chosen head
-            chosenHandShapes={handShapes[index]}//pass the chosen hand
-            opacity={opacity.dancers.value}//pass opacity
-            disabled={opacity.dancers.disabled}//pass whether the object is disabled
+            chosenHead={headShapes[index]}
+            chosenHandShapes={handShapes[index]}
+            opacity={opacity.dancers.value}
+            disabled={opacity.dancers.disabled}
             initialState={dancer}
             {...dancer}
           />
