@@ -339,6 +339,16 @@ export const useAppStore = create((set, get) => ({
           : panel,
       ),
     }));
+
+    // Check if the update affects properties that require lock enforcement
+    const transformProps = ['x', 'y', 'rotation', 'scaleX', 'scaleY'];
+    const needsLockEnforcement = transformProps.some((prop) =>
+      newState.hasOwnProperty(prop),
+    );
+
+    if (needsLockEnforcement) {
+      get().enforceLocksForDancer(panelId, dancerId);
+    }
   },
 
   // Hand-specific updates (position and rotation) with lock propagation
@@ -528,45 +538,6 @@ export const useAppStore = create((set, get) => ({
     });
   },
 
-  // Enforce coincident locks after dancer movement by aligning counterpart hands to the moved hand's absolute position
-  enforceLocksForHand: (panelId, dancerId, side) => {
-    const state = get();
-    const panel = state.panels.find((p) => p.id === panelId);
-    if (!panel) return;
-    const dancer = panel.dancers.find((d) => d.id === dancerId);
-    if (!dancer) return;
-    const handLocal = dancer[`${side}HandPos`];
-    const handAbs = get()._localToAbsolute(dancer, handLocal);
-    const groups = (panel.locks || []).filter((lock) =>
-      (lock.members || []).some(
-        (m) => m.dancerId === dancerId && m.side === side,
-      ),
-    );
-    if (!groups.length) return;
-    set((curr) => {
-      const newPanels = curr.panels.map((p) => {
-        if (p.id !== panelId) return p;
-        let dancersUpdated = p.dancers;
-        groups.forEach((g) => {
-          (g.members || []).forEach((member) => {
-            if (member.dancerId === dancerId && member.side === side) return;
-            const other =
-              dancersUpdated.find((d) => d.id === member.dancerId) ||
-              p.dancers.find((d) => d.id === member.dancerId);
-            if (!other) return;
-            const newLocal = get()._absoluteToLocal(other, handAbs);
-            dancersUpdated = dancersUpdated.map((d) =>
-              d.id === other.id
-                ? { ...d, [`${member.side}HandPos`]: newLocal }
-                : d,
-            );
-          });
-        });
-        return { ...p, dancers: dancersUpdated };
-      });
-      return { panels: newPanels };
-    });
-  },
   enforceLocksForDancer: (panelId, dancerId) => {
     const state = get();
     const panel = state.panels.find((p) => p.id === panelId);

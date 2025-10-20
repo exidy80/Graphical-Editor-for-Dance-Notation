@@ -6,7 +6,28 @@ import { useAppStore } from '../useAppStore';
 test('Dancer renders without errors and uses store data', () => {
   const panel = useAppStore.getState().panels[0];
   const dancer = panel.dancers[0];
-  render(<Dancer panelId={panel.id} id={dancer.id} />);
+  const dancerIndex = panel.dancers.indexOf(dancer);
+
+  // Mock functions
+  const mockFunctions = {
+    onDancerSelect: jest.fn(),
+    onHandClick: jest.fn(),
+    onUpdateDancerState: jest.fn(),
+    onUpdateHandPosition: jest.fn(),
+    onUpdateHandRotation: jest.fn(),
+  };
+
+  render(
+    <Dancer
+      dancer={dancer}
+      chosenHead={panel.headShapes[dancerIndex]}
+      chosenHandShapes={panel.handShapes[dancerIndex]}
+      isSelected={false}
+      selectedHandSide={null}
+      handFlash={[]}
+      disabled={false}
+      opacity={1}
+      {...mockFunctions}
+    />,
+  );
 });
-
-
