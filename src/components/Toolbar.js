@@ -2,6 +2,7 @@ import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
 import { useAppStore } from './useAppStore';
+import { useUndoRedo } from './useUndoRedo';
 import PanelFileHandler from './PanelFileHandler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
@@ -12,9 +13,12 @@ import {
   faLock,
   faLink,
   faUnlink,
+  faUndo,
+  faRedo,
 } from '@fortawesome/free-solid-svg-icons';
 
 const Toolbar = () => {
+  const { undo, redo, canUndo, canRedo, undoCount, redoCount } = useUndoRedo();
   const handleHeadSelection = useAppStore((state) => state.handleHeadSelection);
   const handleHandSelection = useAppStore((state) => state.handleHandSelection);
   const selectedHand = useAppStore((state) => state.selectedHand);
@@ -112,6 +116,29 @@ const Toolbar = () => {
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
+
+        <ButtonGroup className="custom-btn-group">
+          <Button
+            onClick={undo}
+            variant={canUndo ? 'outline-primary' : 'outline-secondary'}
+            className="icon-button"
+            disabled={!canUndo}
+            title={`Undo (${undoCount} states)`}
+          >
+            <FontAwesomeIcon icon={faUndo} />
+            <span className="button-text">Undo ({undoCount})</span>
+          </Button>
+          <Button
+            onClick={redo}
+            variant={canRedo ? 'outline-primary' : 'outline-secondary'}
+            className="icon-button"
+            disabled={!canRedo}
+            title={`Redo (${redoCount} states)`}
+          >
+            <FontAwesomeIcon icon={faRedo} />
+            <span className="button-text">Redo ({redoCount})</span>
+          </Button>
+        </ButtonGroup>
 
         <ButtonGroup className="custom-btn-group">
           {/* Toggles the opacity of the dancers */}

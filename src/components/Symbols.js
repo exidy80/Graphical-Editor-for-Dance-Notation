@@ -11,6 +11,7 @@ import {
 } from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
+import { useUndoRedo } from './useUndoRedo';
 
 const Symbol = ({
   shape,
@@ -20,6 +21,7 @@ const Symbol = ({
   onShapeSelect,
   onUpdateShapeState,
 }) => {
+  const { startDragOperation, endDragOperation } = useUndoRedo();
   const shapeRef = useRef();
   const trRef = useRef();
 
@@ -52,7 +54,14 @@ const Symbol = ({
     return points;
   };
 
-  const handleDragEnd = useCallback(
+  const handleDragStart = useCallback(
+    (e) => {
+      startDragOperation('shape');
+    },
+    [startDragOperation],
+  );
+
+  const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
       onUpdateShapeState({
@@ -61,6 +70,18 @@ const Symbol = ({
       });
     },
     [onUpdateShapeState],
+  );
+
+  const handleDragEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      onUpdateShapeState({
+        x: node.x(),
+        y: node.y(),
+      });
+      endDragOperation();
+    },
+    [onUpdateShapeState, endDragOperation],
   );
 
   const handleClick = useCallback(
@@ -115,6 +136,8 @@ const Symbol = ({
     scaleY: shape.scaleY || 1,
     rotation: shape.rotation || 0,
     onClick: handleClick,
+    onDragStart: handleDragStart,
+    onDragMove: handleDragMove,
     onDragEnd: handleDragEnd,
     strokeScaleEnabled: false,
   };

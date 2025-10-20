@@ -4,19 +4,22 @@ import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import './App.css';
 import { useAppStore } from './components/useAppStore';
+import { useKeyboardShortcuts } from './components/useKeyboardShortcuts';
 const AppContent = () => {
-  const panelSize = useAppStore(state => state.panelSize); 
+  const panelSize = useAppStore((state) => state.panelSize);
 
+  // Enable keyboard shortcuts for undo/redo
+  useKeyboardShortcuts();
 
-/* Renders the components */
- return (
+  /* Renders the components */
+  return (
     <div className="App">
       <Sidebar />
       <div className="main-content">
         <Toolbar />
-        <div 
-          className="position-panels" 
-          style={{ 
+        <div
+          className="position-panels"
+          style={{
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${panelSize.width}px, 1fr))`, // Responsive grid
             gap: '10px',
@@ -24,7 +27,7 @@ const AppContent = () => {
             overflowY: 'auto', // Makes new panels render underneath if there is no space
           }}
         >
-          <PositionPanel />   
+          <PositionPanel />
         </div>
       </div>
     </div>
@@ -32,9 +35,7 @@ const AppContent = () => {
 };
 
 function App() {
-  return (
-      <AppContent/>
-  );
+  return <AppContent />;
 }
 
 export default App;

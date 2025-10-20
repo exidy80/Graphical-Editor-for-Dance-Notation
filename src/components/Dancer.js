@@ -8,6 +8,7 @@ import {
   Circle,
   Transformer,
 } from 'react-konva';
+import { useUndoRedo } from './useUndoRedo';
 
 const Dancer = ({
   dancer,
@@ -24,6 +25,7 @@ const Dancer = ({
   onUpdateHandPosition,
   onUpdateHandRotation,
 }) => {
+  const { startDragOperation, endDragOperation } = useUndoRedo();
   const dancerRef = useRef();
   const headRef = useRef();
   const bodyRef = useRef();
@@ -57,20 +59,18 @@ const Dancer = ({
     [onUpdateDancerState],
   );
 
-  // This function handles when the dancer is dragged and logs position
-  const handleDragEnd = useCallback(
+  // Handle drag start for dancer
+  const handleDragStart = useCallback(
     (e) => {
       const node = e.target;
       if (node === dancerRef.current) {
-        onUpdateDancerState({
-          x: node.x(),
-          y: node.y(),
-        }); // locks enforced automatically for position changes
+        startDragOperation('dancer');
       }
     },
-    [onUpdateDancerState],
+    [startDragOperation],
   );
 
+  // Handle drag move for live visual feedback
   const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
@@ -84,8 +84,35 @@ const Dancer = ({
     [onUpdateDancerState],
   );
 
-  // This function handles when a part of the dancer (like a hand) is dragged and logs position
-  const handlePartDragEnd = useCallback(
+  // This function handles when the dancer is dragged and logs position
+  const handleDragEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      if (node === dancerRef.current) {
+        onUpdateDancerState({
+          x: node.x(),
+          y: node.y(),
+        }); // locks enforced automatically for position changes
+        endDragOperation();
+      }
+    },
+    [onUpdateDancerState, endDragOperation],
+  );
+
+  // Handle drag start for dancer parts (hands/elbows)
+  const handlePartDragStart = useCallback(
+    (part, side) => (e) => {
+      if (part === 'Hand') {
+        startDragOperation('hand');
+      } else if (part === 'Elbow') {
+        startDragOperation('elbow');
+      }
+    },
+    [startDragOperation],
+  );
+
+  // Handle part drag move for live visual feedback
+  const handlePartDragMove = useCallback(
     (part, side) => (e) => {
       const newPos = e.target.position();
       if (part === 'Hand') {
@@ -97,6 +124,22 @@ const Dancer = ({
       }
     },
     [onUpdateDancerState, onUpdateHandPosition],
+  );
+
+  // This function handles when a part of the dancer (like a hand) is dragged and logs position
+  const handlePartDragEnd = useCallback(
+    (part, side) => (e) => {
+      const newPos = e.target.position();
+      if (part === 'Hand') {
+        onUpdateHandPosition(side, newPos);
+      } else if (part === 'Elbow') {
+        // Elbow position changes don't need lock enforcement since they
+        // don't affect transform properties (x, y, rotation, scale)
+        onUpdateDancerState({ [`${side}${part}Pos`]: newPos });
+      }
+      endDragOperation();
+    },
+    [onUpdateDancerState, onUpdateHandPosition, endDragOperation],
   );
 
   // This function handles rotating a hand
@@ -260,7 +303,8 @@ const Dancer = ({
     const baseProps = {
       fill: dancer.colour,
       draggable: !disabled,
-      onDragMove: handlePartDragEnd('Hand', side),
+      onDragStart: handlePartDragStart('Hand', side),
+      onDragMove: handlePartDragMove('Hand', side),
       onDragEnd: handlePartDragEnd('Hand', side),
       onClick: disabled ? null : () => onHandClick(side),
       x: handPos.x,
@@ -369,7 +413,8 @@ const Dancer = ({
           radius={3}
           fill={dancer.colour}
           draggable={!disabled}
-          onDragMove={handlePartDragEnd('Elbow', side)}
+          onDragStart={handlePartDragStart('Elbow', side)}
+          onDragMove={handlePartDragMove('Elbow', side)}
           onDragEnd={handlePartDragEnd('Elbow', side)}
           onMouseEnter={handleElbowMouseEnter}
           onMouseLeave={handleElbowMouseLeave}
@@ -390,6 +435,7 @@ const Dancer = ({
         opacity={opacity}
         draggable={!disabled}
         ref={dancerRef}
+        onDragStart={handleDragStart}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onTransform={handleTransform}
