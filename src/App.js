@@ -4,7 +4,7 @@ import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import AutoSaveManager from './components/AutoSaveManager';
 import './App.css';
-import { useAppStore } from './components/useAppStore';
+import { useAppStore } from './stores';
 const AppContent = () => {
   const panelSize = useAppStore((state) => state.panelSize);
 

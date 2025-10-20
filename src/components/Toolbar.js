@@ -1,7 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
-import { useAppStore } from './useAppStore';
+import { useAppStore } from '../stores';
 import PanelFileHandler from './PanelFileHandler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {

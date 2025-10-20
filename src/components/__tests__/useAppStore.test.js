@@ -1,16 +1,20 @@
 import { act } from '@testing-library/react';
-import { useAppStore } from '../useAppStore';
+import { useAppStore } from '../../stores';
 
 describe('useAppStore', () => {
   beforeEach(() => {
     const { getState, setState } = useAppStore;
     // Reset selections, clear locks, and normalize dancer/hand state for isolation
-    const panels = getState().panels.map(p => ({
+    const panels = getState().panels.map((p) => ({
       ...p,
       locks: [],
-      dancers: p.dancers.map(d => ({
+      dancers: p.dancers.map((d) => ({
         ...d,
-        x: 0, y: 0, rotation: 0, scaleX: 1, scaleY: 1,
+        x: 0,
+        y: 0,
+        rotation: 0,
+        scaleX: 1,
+        scaleY: 1,
         leftHandPos: { x: 0, y: 0 },
         rightHandPos: { x: 0, y: 0 },
         leftElbowPos: { x: -45, y: -12 },
@@ -20,19 +24,28 @@ describe('useAppStore', () => {
       })),
       shapes: p.shapes,
     }));
-    setState({
-      panelSize: { width: 300, height: 300 },
-      selectedPanel: null,
-      selectedHand: null,
-      selectedDancer: null,
-      selectedShapeId: null,
-      panels,
-      lockUi: { active: false, selected: [] },
-      opacity: { dancers: { value: 1, disabled: false }, symbols: { value: 1, disabled: false } }
-    }, false);
+    setState(
+      {
+        panelSize: { width: 300, height: 300 },
+        selectedPanel: null,
+        selectedHand: null,
+        selectedDancer: null,
+        selectedShapeId: null,
+        panels,
+        lockUi: { active: false, selected: [] },
+        opacity: {
+          dancers: { value: 1, disabled: false },
+          symbols: { value: 1, disabled: false },
+        },
+      },
+      false,
+    );
   });
 
-  const absOf = (d, side) => ({ x: (d.x || 0) + (d[`${side}HandPos`].x || 0), y: (d.y || 0) + (d[`${side}HandPos`].y || 0) });
+  const absOf = (d, side) => ({
+    x: (d.x || 0) + (d[`${side}HandPos`].x || 0),
+    y: (d.y || 0) + (d[`${side}HandPos`].y || 0),
+  });
   const expectAbsEqual = (a, b, eps = 1e-6) => {
     expect(Math.abs(a.x - b.x)).toBeLessThanOrEqual(eps);
     expect(Math.abs(a.y - b.y)).toBeLessThanOrEqual(eps);
@@ -55,7 +68,7 @@ describe('useAppStore', () => {
     act(() => getState().handleDancerSelection(panelId, dancerId));
     act(() => getState().handleHeadSelection('Bow'));
     const panel = getState().panels[0];
-    const idx = panel.dancers.findIndex(d => d.id === dancerId);
+    const idx = panel.dancers.findIndex((d) => d.id === dancerId);
     expect(panel.headShapes[idx]).toBe('Bow');
 
     act(() => getState().handleHandClick(panelId, dancerId, 'left'));
@@ -70,9 +83,9 @@ describe('useAppStore', () => {
     act(() => setState({ selectedPanel: panelId }, false));
     const shape = { id: 's1', type: 'signal', x: 0, y: 0, draggable: true };
     act(() => getState().handleShapeDraw(shape));
-    expect(getState().panels[0].shapes.some(s => s.id === 's1')).toBe(true);
+    expect(getState().panels[0].shapes.some((s) => s.id === 's1')).toBe(true);
     act(() => getState().handleDelete({ panelId, shapeId: 's1' }));
-    expect(getState().panels[0].shapes.some(s => s.id === 's1')).toBe(false);
+    expect(getState().panels[0].shapes.some((s) => s.id === 's1')).toBe(false);
   });
 
   test('apply and remove group lock, propagate hand position', () => {
@@ -88,10 +101,15 @@ describe('useAppStore', () => {
     const lock = getState().panels[0].locks[0];
     expect(lock.members).toHaveLength(2);
 
-    act(() => getState().updateHandPosition(panel.id, a.dancerId, a.side, { x: 10, y: 20 }));
+    act(() =>
+      getState().updateHandPosition(panel.id, a.dancerId, a.side, {
+        x: 10,
+        y: 20,
+      }),
+    );
     const p = getState().panels[0];
-    const da = p.dancers.find(d => d.id === a.dancerId);
-    const db = p.dancers.find(d => d.id === b.dancerId);
+    const da = p.dancers.find((d) => d.id === a.dancerId);
+    const db = p.dancers.find((d) => d.id === b.dancerId);
     expectAbsEqual(absOf(da, 'left'), absOf(db, 'right'));
 
     act(() => getState().removeLockById(panel.id, lock.id));
@@ -108,15 +126,24 @@ describe('useAppStore', () => {
     ];
     act(() => getState().setSelectedPanel(panel.id));
     act(() => getState().setLockModeActive(true));
-    members.forEach(m => act(() => getState().handleHandClick(panel.id, m.dancerId, m.side)));
+    members.forEach((m) =>
+      act(() => getState().handleHandClick(panel.id, m.dancerId, m.side)),
+    );
     act(() => getState().applySelectedLock(panel.id));
     const lock = getState().panels[0].locks[0];
     expect(lock.members.length).toBeGreaterThanOrEqual(2);
-    act(() => getState().updateHandPosition(panel.id, members[0].dancerId, members[0].side, { x: 99, y: 77 }));
+    act(() =>
+      getState().updateHandPosition(
+        panel.id,
+        members[0].dancerId,
+        members[0].side,
+        { x: 99, y: 77 },
+      ),
+    );
     const p = getState().panels[0];
-    const d0 = p.dancers.find(d => d.id === members[0].dancerId);
-    const d1 = p.dancers.find(d => d.id === members[1].dancerId);
-    const d2 = p.dancers.find(d => d.id === members[2].dancerId);
+    const d0 = p.dancers.find((d) => d.id === members[0].dancerId);
+    const d1 = p.dancers.find((d) => d.id === members[1].dancerId);
+    const d2 = p.dancers.find((d) => d.id === members[2].dancerId);
     const abs0 = absOf(d0, 'left');
     const abs1 = absOf(d1, 'right');
     const abs2 = absOf(d2, 'right');
@@ -133,19 +160,23 @@ describe('useAppStore', () => {
     ];
     act(() => getState().setSelectedPanel(panel.id));
     act(() => getState().setLockModeActive(true));
-    leftPair.forEach(m => act(() => getState().handleHandClick(panel.id, m.dancerId, m.side)));
+    leftPair.forEach((m) =>
+      act(() => getState().handleHandClick(panel.id, m.dancerId, m.side)),
+    );
     act(() => getState().applySelectedLock(panel.id));
 
     // Move dancer 0; enforceLocksForDancer should align counterpart
     const d0 = getState().panels[0].dancers[0];
     const newX = (d0.x || 0) + 20;
     const newY = (d0.y || 0) + 10;
-    act(() => getState().updateDancerState(panel.id, d0.id, { x: newX, y: newY }));
+    act(() =>
+      getState().updateDancerState(panel.id, d0.id, { x: newX, y: newY }),
+    );
     act(() => getState().enforceLocksForDancer(panel.id, d0.id));
 
     const p = getState().panels[0];
-    const da = p.dancers.find(d => d.id === leftPair[0].dancerId);
-    const db = p.dancers.find(d => d.id === leftPair[1].dancerId);
+    const da = p.dancers.find((d) => d.id === leftPair[0].dancerId);
+    const db = p.dancers.find((d) => d.id === leftPair[1].dancerId);
     expectAbsEqual(absOf(da, 'left'), absOf(db, 'right'));
   });
 
@@ -158,8 +189,12 @@ describe('useAppStore', () => {
     const targetAbs = { x: 50, y: 60 };
     act(() => getState().updateDancerState(panel.id, d0.id, { x: 0, y: 0 }));
     act(() => getState().updateDancerState(panel.id, d1.id, { x: 0, y: 0 }));
-    act(() => getState().updateHandPosition(panel.id, d0.id, 'left', targetAbs));
-    act(() => getState().updateHandPosition(panel.id, d1.id, 'right', targetAbs));
+    act(() =>
+      getState().updateHandPosition(panel.id, d0.id, 'left', targetAbs),
+    );
+    act(() =>
+      getState().updateHandPosition(panel.id, d1.id, 'right', targetAbs),
+    );
 
     act(() => getState().lockOverlappingHands(panel.id, 1));
     expect(getState().panels[0].locks.length).toBeGreaterThan(0);
@@ -169,8 +204,8 @@ describe('useAppStore', () => {
     act(() => getState().enforceLocksForDancer(panel.id, d1.id));
 
     const p = getState().panels[0];
-    const a = p.dancers.find(d => d.id === d0.id);
-    const b = p.dancers.find(d => d.id === d1.id);
+    const a = p.dancers.find((d) => d.id === d0.id);
+    const b = p.dancers.find((d) => d.id === d1.id);
     expectAbsEqual(absOf(a, 'left'), absOf(b, 'right'));
   });
 
@@ -181,10 +216,26 @@ describe('useAppStore', () => {
     const d1 = panel.dancers[1];
 
     // Place dancers apart and set hand locals at simple offsets
-    act(() => getState().updateDancerState(panel.id, d0.id, { x: 0, y: 0, rotation: 0 }));
-    act(() => getState().updateDancerState(panel.id, d1.id, { x: 100, y: 0, rotation: 0 }));
-    act(() => getState().updateHandPosition(panel.id, d0.id, 'left', { x: 0, y: 0 }));
-    act(() => getState().updateHandPosition(panel.id, d1.id, 'right', { x: 0, y: 0 }));
+    act(() =>
+      getState().updateDancerState(panel.id, d0.id, {
+        x: 0,
+        y: 0,
+        rotation: 0,
+      }),
+    );
+    act(() =>
+      getState().updateDancerState(panel.id, d1.id, {
+        x: 100,
+        y: 0,
+        rotation: 0,
+      }),
+    );
+    act(() =>
+      getState().updateHandPosition(panel.id, d0.id, 'left', { x: 0, y: 0 }),
+    );
+    act(() =>
+      getState().updateHandPosition(panel.id, d1.id, 'right', { x: 0, y: 0 }),
+    );
 
     // Lock these two hands
     act(() => getState().setSelectedPanel(panel.id));
@@ -199,8 +250,8 @@ describe('useAppStore', () => {
     act(() => getState().enforceLocksForDancer(panel.id, d0.id));
 
     const p = getState().panels[0];
-    const a = p.dancers.find(dd => dd.id === d0.id);
-    const b = p.dancers.find(dd => dd.id === d1.id);
+    const a = p.dancers.find((dd) => dd.id === d0.id);
+    const b = p.dancers.find((dd) => dd.id === d1.id);
     const absA = absOf(a, 'left');
     const absB = absOf(b, 'right');
     expectAbsEqual(absA, absB);
@@ -228,8 +279,8 @@ describe('useAppStore', () => {
     expect(cloned.locks.length).toBeGreaterThanOrEqual(1);
     // Ensure cloned lock refers to cloned dancer IDs, not originals
     const clonedLock = cloned.locks[0];
-    const idSet = new Set(cloned.dancers.map(d => d.id));
-    clonedLock.members.forEach(m => expect(idSet.has(m.dancerId)).toBe(true));
+    const idSet = new Set(cloned.dancers.map((d) => d.id));
+    clonedLock.members.forEach((m) => expect(idSet.has(m.dancerId)).toBe(true));
   });
 
   test('handleCanvasClick clears all selections', () => {
@@ -245,5 +296,3 @@ describe('useAppStore', () => {
     expect(getState().selectedShapeId).toBeNull();
   });
 });
-
-

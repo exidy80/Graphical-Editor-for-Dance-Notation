@@ -1,5 +1,5 @@
 import { renderHook, act } from '@testing-library/react';
-import { useAppStore } from '../useAppStore';
+import { useAppStore } from '../../stores';
 
 // Mock localStorage
 const localStorageMock = {

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAppStore } from './useAppStore';
+import { useAppStore } from '../stores';
 
 const AutoSaveManager = () => {
   const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);

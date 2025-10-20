@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { useAppStore } from './useAppStore';
+import { useAppStore } from '../stores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faDownload, faUpload } from '@fortawesome/free-solid-svg-icons';
 
