@@ -8,26 +8,22 @@ import {
   Circle,
   Transformer,
 } from 'react-konva';
-import { useAppStore } from './useAppStore';
 
-const Dancer = ({ panelId, id }) => {
-  // Imports from context file
-  const panels = useAppStore((state) => state.panels);
-  const selectedDancer = useAppStore((state) => state.selectedDancer);
-  const selectedHand = useAppStore((state) => state.selectedHand);
-  const opacity = useAppStore((state) => state.opacity);
-  const handleDancerSelection = useAppStore(
-    (state) => state.handleDancerSelection,
-  );
-  const handleHandClick = useAppStore((state) => state.handleHandClick);
-  const updateDancerState = useAppStore((state) => state.updateDancerState);
-  const updateHandPosition = useAppStore((state) => state.updateHandPosition);
-  const updateHandRotation = useAppStore((state) => state.updateHandRotation);
-  const enforceLocksForDancer = useAppStore(
-    (state) => state.enforceLocksForDancer,
-  );
-  const handFlash = useAppStore((state) => state.handFlash);
-
+const Dancer = ({
+  dancer,
+  chosenHead,
+  chosenHandShapes,
+  isSelected,
+  selectedHandSide,
+  handFlash,
+  disabled,
+  opacity,
+  onDancerSelect,
+  onHandClick,
+  onUpdateDancerState,
+  onUpdateHandPosition,
+  onUpdateHandRotation,
+}) => {
   const dancerRef = useRef();
   const headRef = useRef();
   const bodyRef = useRef();
@@ -42,19 +38,6 @@ const Dancer = ({ panelId, id }) => {
     right: useRef(),
   };
 
-  // finding the specific dancer to render
-  const panel = panels.find((p) => p.id === panelId);
-  const dancer = panel.dancers.find((d) => d.id === id);
-  const chosenHead = panel.headShapes[panel.dancers.indexOf(dancer)];
-  const chosenHandShapes = panel.handShapes[panel.dancers.indexOf(dancer)];
-
-  // checking if this dancer is currently selected
-  const isSelected =
-    selectedDancer &&
-    selectedDancer.panelId === panelId &&
-    selectedDancer.dancerId === id;
-  const disabled = opacity.dancers.disabled; //Can't select dancer if it's been disabled
-
   const headSize = 30;
   const bodyWidth = 60;
   const bodyHeight = 5;
@@ -63,16 +46,15 @@ const Dancer = ({ panelId, id }) => {
   const handleTransform = useCallback(
     (e) => {
       const node = e.target;
-      updateDancerState(panelId, id, {
+      onUpdateDancerState({
         x: node.x(), //logs position of dancer on X axis when transformed
         y: node.y(), //logs position on Y axis
         rotation: node.rotation(), //logs rotation
         scaleX: node.scaleX(), //logs scale
         scaleY: node.scaleY(),
-      });
-      enforceLocksForDancer(panelId, id);
+      }); // locks enforced automatically for transform properties
     },
-    [panelId, id, updateDancerState, enforceLocksForDancer],
+    [onUpdateDancerState],
   );
 
   // This function handles when the dancer is dragged and logs position
@@ -80,28 +62,26 @@ const Dancer = ({ panelId, id }) => {
     (e) => {
       const node = e.target;
       if (node === dancerRef.current) {
-        updateDancerState(panelId, id, {
+        onUpdateDancerState({
           x: node.x(),
           y: node.y(),
-        });
-        enforceLocksForDancer(panelId, id);
+        }); // locks enforced automatically for position changes
       }
     },
-    [panelId, id, updateDancerState, enforceLocksForDancer],
+    [onUpdateDancerState],
   );
 
   const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
       if (node === dancerRef.current) {
-        updateDancerState(panelId, id, {
+        onUpdateDancerState({
           x: node.x(),
           y: node.y(),
-        });
-        enforceLocksForDancer(panelId, id);
+        }); // locks enforced automatically for position changes
       }
     },
-    [panelId, id, updateDancerState, enforceLocksForDancer],
+    [onUpdateDancerState],
   );
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
@@ -109,12 +89,14 @@ const Dancer = ({ panelId, id }) => {
     (part, side) => (e) => {
       const newPos = e.target.position();
       if (part === 'Hand') {
-        updateHandPosition(panelId, id, side, newPos);
+        onUpdateHandPosition(side, newPos);
       } else if (part === 'Elbow') {
-        updateDancerState(panelId, id, { [`${side}${part}Pos`]: newPos });
+        // Elbow position changes don't need lock enforcement since they
+        // don't affect transform properties (x, y, rotation, scale)
+        onUpdateDancerState({ [`${side}${part}Pos`]: newPos });
       }
     },
-    [updateDancerState, updateHandPosition, panelId, id],
+    [onUpdateDancerState, onUpdateHandPosition],
   );
 
   // This function handles rotating a hand
@@ -122,18 +104,20 @@ const Dancer = ({ panelId, id }) => {
     (e) => {
       const node = e.target;
       const rotation = node.rotation();
-      if (selectedHand) {
-        updateHandRotation(panelId, id, selectedHand.handSide, rotation);
+      if (selectedHandSide) {
+        onUpdateHandRotation(selectedHandSide, rotation);
       }
     },
-    [panelId, id, selectedHand, updateHandRotation],
+    [selectedHandSide, onUpdateHandRotation],
   );
 
   const handleHandMouseEnter = (e) => {
     const shape = e.target;
     shape.shadowColor(dancer.colour);
-    shape.shadowBlur(5);
+    shape.shadowBlur(10);
     shape.shadowOpacity(1);
+    shape.shadowOffsetX(0);
+    shape.shadowOffsetY(0);
     shape.getLayer().batchDraw();
   };
 
@@ -142,6 +126,28 @@ const Dancer = ({ panelId, id }) => {
     shape.shadowColor(null);
     shape.shadowBlur(0);
     shape.shadowOpacity(0);
+    shape.shadowOffsetX(0);
+    shape.shadowOffsetY(0);
+    shape.getLayer().batchDraw();
+  };
+
+  const handleElbowMouseEnter = (e) => {
+    const shape = e.target;
+    shape.shadowColor(dancer.colour);
+    shape.shadowBlur(10);
+    shape.shadowOpacity(1);
+    shape.shadowOffsetX(0);
+    shape.shadowOffsetY(0);
+    shape.getLayer().batchDraw();
+  };
+
+  const handleElbowMouseLeave = (e) => {
+    const shape = e.target;
+    shape.shadowColor(null);
+    shape.shadowBlur(0);
+    shape.shadowOpacity(0);
+    shape.shadowOffsetX(0);
+    shape.shadowOffsetY(0);
     shape.getLayer().batchDraw();
   };
 
@@ -153,18 +159,15 @@ const Dancer = ({ panelId, id }) => {
   }, []);
 
   const attachHandTransformer = useCallback(() => {
-    if (
-      selectedHand &&
-      selectedHand.panelId === panelId &&
-      selectedHand.dancerId === id
-    ) {
-      const handNode = handRefs[selectedHand.handSide].current;
+    if (selectedHandSide) {
+      const handNode = handRefs[selectedHandSide].current;
       if (handNode && handTransformerRef.current) {
         handTransformerRef.current.nodes([handNode]);
         handTransformerRef.current.getLayer().batchDraw();
       }
     }
-  }, [selectedHand, panelId, id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedHandSide]);
 
   //Keeps arms tracking hands
   useEffect(() => {
@@ -193,20 +196,14 @@ const Dancer = ({ panelId, id }) => {
       transformerRef.current.getLayer().batchDraw();
     }
 
-    if (
-      selectedHand &&
-      selectedHand.panelId === panelId &&
-      selectedHand.dancerId === id
-    ) {
+    if (selectedHandSide) {
       attachHandTransformer();
     } else {
       resetHandTransformer();
     }
   }, [
     isSelected,
-    selectedHand,
-    panelId,
-    id,
+    selectedHandSide,
     resetHandTransformer,
     attachHandTransformer,
   ]);
@@ -221,8 +218,8 @@ const Dancer = ({ panelId, id }) => {
     const baseProps = {
       ref: headRef,
       fill: dancer.colour,
-      opacity: opacity.dancers.value,
-      onClick: disabled ? null : () => handleDancerSelection(panelId, id),
+      opacity: opacity,
+      onClick: disabled ? null : onDancerSelect,
     };
 
     switch (chosenHead) {
@@ -257,21 +254,15 @@ const Dancer = ({ panelId, id }) => {
   const renderHand = (side) => {
     const handPos = dancer[`${side}HandPos`];
     const handShape = chosenHandShapes[side];
-    const isHandSelected =
-      selectedHand &&
-      selectedHand.panelId === panelId &&
-      selectedHand.dancerId === id &&
-      selectedHand.handSide === side;
+    const isHandSelected = selectedHandSide === side;
 
-    const isFlashing = handFlash.some(
-      (h) => h.panelId === panelId && h.dancerId === id && h.side === side,
-    );
+    const isFlashing = handFlash.some((h) => h.side === side);
     const baseProps = {
       fill: dancer.colour,
       draggable: !disabled,
       onDragMove: handlePartDragEnd('Hand', side),
       onDragEnd: handlePartDragEnd('Hand', side),
-      onClick: disabled ? null : () => handleHandClick(panelId, id, side),
+      onClick: disabled ? null : () => onHandClick(side),
       x: handPos.x,
       y: handPos.y,
       rotation: dancer[`${side}HandRotation`] || 0,
@@ -344,11 +335,12 @@ const Dancer = ({ panelId, id }) => {
       if (disabled) return; // Extra check to prevent execution when disabled
       const currentThickness = dancer[`${side}${part}ArmThickness`];
       const newThickness = currentThickness === 'thick' ? 'thin' : 'thick';
-      updateDancerState(panelId, id, {
+      // Arm thickness changes automatically don't trigger lock enforcement
+      onUpdateDancerState({
         [`${side}${part}ArmThickness`]: newThickness,
       });
     },
-    [panelId, id, dancer, updateDancerState, disabled],
+    [dancer, onUpdateDancerState, disabled],
   );
 
   const renderArm = (side) => {
@@ -379,6 +371,8 @@ const Dancer = ({ panelId, id }) => {
           draggable={!disabled}
           onDragMove={handlePartDragEnd('Elbow', side)}
           onDragEnd={handlePartDragEnd('Elbow', side)}
+          onMouseEnter={handleElbowMouseEnter}
+          onMouseLeave={handleElbowMouseLeave}
         />
         {renderHand(side)}
       </Group>
@@ -393,7 +387,7 @@ const Dancer = ({ panelId, id }) => {
         rotation={dancer.rotation}
         scaleX={dancer.scaleX || 1}
         scaleY={dancer.scaleY || 1}
-        opacity={opacity.dancers.value}
+        opacity={opacity}
         draggable={!disabled}
         ref={dancerRef}
         onDragMove={handleDragMove}
@@ -420,15 +414,13 @@ const Dancer = ({ panelId, id }) => {
           onTransform={handleTransform}
         />
       )}
-      {selectedHand &&
-        selectedHand.panelId === panelId &&
-        selectedHand.dancerId === id && (
-          <Transformer
-            ref={handTransformerRef}
-            resizeEnabled={false}
-            onTransform={handleHandRotation}
-          />
-        )}
+      {selectedHandSide && (
+        <Transformer
+          ref={handTransformerRef}
+          resizeEnabled={false}
+          onTransform={handleHandRotation}
+        />
+      )}
     </>
   );
 };
