@@ -7,5 +7,3 @@ test('renders save and import buttons', () => {
   expect(screen.getByText(/Save Dance/i)).toBeInTheDocument();
   expect(screen.getByText(/Import Dance/i)).toBeInTheDocument();
 });
-
-
