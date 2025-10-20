@@ -1,7 +1,7 @@
 import React from 'react';
 import { render } from '@testing-library/react';
 import Dancer from '../Dancer';
-import { useAppStore } from '../useAppStore';
+import { useAppStore } from '../../stores';
 
 test('Dancer renders without errors and uses store data', () => {
   const panel = useAppStore.getState().panels[0];

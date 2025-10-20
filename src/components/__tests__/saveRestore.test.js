@@ -1,5 +1,5 @@
 // Comprehensive Save/Restore functionality tests
-import { useAppStore } from '../useAppStore';
+import { useAppStore } from '../../stores';
 
 // Mock file download/upload functionality for tests
 global.URL = {

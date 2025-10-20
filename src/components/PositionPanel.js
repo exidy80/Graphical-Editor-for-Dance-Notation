@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Canvas from './Canvas';
-import { useAppStore } from './useAppStore';
+import { useAppStore } from '../stores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faClone } from '@fortawesome/free-solid-svg-icons';
 

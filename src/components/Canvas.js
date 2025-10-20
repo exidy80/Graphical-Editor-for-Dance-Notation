@@ -2,7 +2,7 @@ import React from 'react';
 import { Stage, Layer } from 'react-konva';
 import Dancer from './Dancer';
 import Symbol from './Symbols';
-import { useAppStore } from './useAppStore';
+import { useAppStore } from '../stores';
 
 const Canvas = ({ panelId }) => {
   const panels = useAppStore((state) => state.panels);

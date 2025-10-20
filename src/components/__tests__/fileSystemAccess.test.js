@@ -1,5 +1,5 @@
 // Test for the improved file dialog functionality
-import { useAppStore } from '../useAppStore';
+import { useAppStore } from '../../stores';
 
 // Mock File System Access API
 const mockFileHandle = {
