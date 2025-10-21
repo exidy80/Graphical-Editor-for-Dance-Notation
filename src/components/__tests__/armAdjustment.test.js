@@ -1,6 +1,11 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
-import { getSegmentLength, getArmRatio, getElbowAngleFromStraight, getShoulderPosition } from '../../stores/armAdjustment.js';
+import {
+  getSegmentLength,
+  getArmRatio,
+  getElbowAngleFromStraight,
+  getShoulderPosition,
+} from '../../stores/armAdjustment.js';
 
 describe('Arm Adjustment with Locked Hands', () => {
   beforeEach(() => {

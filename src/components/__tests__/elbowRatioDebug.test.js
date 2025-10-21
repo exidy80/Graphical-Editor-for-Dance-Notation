@@ -1,6 +1,9 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
-import { getSegmentLength, getShoulderPosition } from '../../stores/armAdjustment.js';
+import {
+  getSegmentLength,
+  getShoulderPosition,
+} from '../../stores/armAdjustment.js';
 
 describe('Elbow Position Ratio Preservation', () => {
   beforeEach(() => {
