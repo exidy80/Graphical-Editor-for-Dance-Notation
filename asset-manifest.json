@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/Graphical-Editor-for-Dance-Notation/static/css/main.61691e93.css",
-    "main.js": "/Graphical-Editor-for-Dance-Notation/static/js/main.ded59a66.js",
+    "main.js": "/Graphical-Editor-for-Dance-Notation/static/js/main.69df064b.js",
     "index.html": "/Graphical-Editor-for-Dance-Notation/index.html",
     "main.61691e93.css.map": "/Graphical-Editor-for-Dance-Notation/static/css/main.61691e93.css.map",
-    "main.ded59a66.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/main.ded59a66.js.map"
+    "main.69df064b.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/main.69df064b.js.map"
   },
   "entrypoints": [
     "static/css/main.61691e93.css",
-    "static/js/main.ded59a66.js"
+    "static/js/main.69df064b.js"
   ]
 }
