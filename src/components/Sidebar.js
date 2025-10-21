@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import Toggle from 'react-toggle';
-import 'react-toggle/style.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faShoePrints,
@@ -9,7 +7,6 @@ import {
   faSyncAlt,
   faLongArrowAltRight,
   faArrowLeft,
-  faHand,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
 
@@ -22,7 +19,7 @@ const shapeMapping = {
   '1 Spin': { type: 'spinOne' },
   'Half Spin': { type: 'spinHalf' },
   'Quarter Spin': { type: 'spinQuarter' },
-  Signal: { type: 'signal' },
+  Direction: { type: 'signal' },
   'Left Foot Basic': {
     type: 'image',
     imageKeyRed: 'leftFootBasicRed',
@@ -100,11 +97,10 @@ const Sidebar = () => {
   //Local states for the sidebar
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [isRed, setIsRed] = useState(true);
 
   //Categories and the shapes in them
   const categories = {
-    movement: {
+    motion: {
       icon: <FontAwesomeIcon icon={faArrowRight} style={{ color: 'white' }} />,
       items: ['Straight Line', 'Curved Line'],
     },
@@ -119,20 +115,16 @@ const Sidebar = () => {
           style={{ color: 'white' }}
         />
       ),
-      items: ['Signal'],
+      items: ['Direction', 'Knee', 'Waist', 'Shoulder', 'Overhead'],
     },
     feet: {
       icon: <FontAwesomeIcon icon={faShoePrints} style={{ color: 'white' }} />,
       items: ['Basic', 'Heel', 'Ball', 'Whole', 'Hover'],
     },
-    hands: {
-      icon: <FontAwesomeIcon icon={faHand} style={{ color: 'white' }} />,
-      items: ['Knee', 'Waist', 'Shoulder', 'Overhead'],
-    },
   };
 
   //Handle clicking on a shape in the sidebar
-  const handleItemClick = (item, side = null) => {
+  const handleItemClick = (item, side = null, color = 'red') => {
     let shapeKey = item;
     if (selectedCategory === 'feet' && side) {
       //SPecial case for the feet
@@ -140,9 +132,8 @@ const Sidebar = () => {
       const shapeProps = shapeMapping[shapeKey];
       if (selectedPanel !== null) {
         //Make sure a panel is selected
-        const imageKey = isRed
-          ? shapeProps.imageKeyRed
-          : shapeProps.imageKeyBlue; //display colour based on toggle
+        const imageKey =
+          color === 'red' ? shapeProps.imageKeyRed : shapeProps.imageKeyBlue; //display colour based on color parameter
         handleShapeDraw({
           id: uuidv4(),
           ...shapeProps,
@@ -157,12 +148,11 @@ const Sidebar = () => {
       const shapeProps = shapeMapping[shapeKey];
       if (selectedPanel !== null) {
         //Make sure a panel is selected
-        const colour = isRed ? 'red' : 'blue'; //Colour based on toggle
         handleShapeDraw({
           id: uuidv4(),
           ...shapeProps,
-          stroke: colour,
-          fill: colour,
+          stroke: color,
+          fill: color,
           x: 50,
           y: 50,
           draggable: true,
@@ -180,27 +170,139 @@ const Sidebar = () => {
   //different feet layout (grid)
   const renderFeetButtons = () => {
     return (
+      <div>
+        {/* Red buttons section */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ width: '48%' }}>
+              <h3
+                style={{
+                  color: 'black',
+                  textAlign: 'center',
+                  marginBottom: '10px',
+                }}
+              >
+                Left
+              </h3>
+              {categories.feet.items.map((item) => (
+                <button
+                  key={`red-left-${item}`}
+                  onClick={() => handleItemClick(item, 'left', 'red')}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '8px',
+                    marginBottom: '5px',
+                    backgroundColor: 'red',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <div style={{ width: '48%' }}>
+              <h3
+                style={{
+                  color: 'black',
+                  textAlign: 'center',
+                  marginBottom: '10px',
+                }}
+              >
+                Right
+              </h3>
+              {categories.feet.items.map((item) => (
+                <button
+                  key={`red-right-${item}`}
+                  onClick={() => handleItemClick(item, 'right', 'red')}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '8px',
+                    marginBottom: '5px',
+                    backgroundColor: 'red',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Blue buttons section */}
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ width: '48%' }}>
+              {categories.feet.items.map((item) => (
+                <button
+                  key={`blue-left-${item}`}
+                  onClick={() => handleItemClick(item, 'left', 'blue')}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '8px',
+                    marginBottom: '5px',
+                    backgroundColor: 'blue',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <div style={{ width: '48%' }}>
+              {categories.feet.items.map((item) => (
+                <button
+                  key={`blue-right-${item}`}
+                  onClick={() => handleItemClick(item, 'right', 'blue')}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    padding: '8px',
+                    marginBottom: '5px',
+                    backgroundColor: 'blue',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render buttons for other categories (motion, spin, signal) with red and blue side by side
+  const renderCategoryButtons = () => {
+    return (
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ width: '48%' }}>
-          <h3
-            style={{
-              color: 'black',
-              textAlign: 'center',
-              marginBottom: '10px',
-            }}
-          >
-            Left
-          </h3>
-          {categories.feet.items.map((item) => (
+          {categories[selectedCategory].items.map((item) => (
             <button
-              key={item}
-              onClick={() => handleItemClick(item, 'left')}
+              key={`red-${item}`}
+              onClick={() => handleItemClick(item, null, 'red')}
               style={{
                 display: 'block',
                 width: '100%',
-                padding: '10px',
+                padding: '5px',
                 marginBottom: '5px',
-                backgroundColor: isRed ? 'red' : 'blue',
+                backgroundColor: 'red',
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
@@ -212,25 +314,16 @@ const Sidebar = () => {
           ))}
         </div>
         <div style={{ width: '48%' }}>
-          <h3
-            style={{
-              color: 'black',
-              textAlign: 'center',
-              marginBottom: '10px',
-            }}
-          >
-            Right
-          </h3>
-          {categories.feet.items.map((item) => (
+          {categories[selectedCategory].items.map((item) => (
             <button
-              key={item}
-              onClick={() => handleItemClick(item, 'right')}
+              key={`blue-${item}`}
+              onClick={() => handleItemClick(item, null, 'blue')}
               style={{
                 display: 'block',
                 width: '100%',
-                padding: '10px',
+                padding: '5px',
                 marginBottom: '5px',
-                backgroundColor: isRed ? 'red' : 'blue',
+                backgroundColor: 'blue',
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
@@ -288,6 +381,7 @@ const Sidebar = () => {
             padding: '20px',
             backgroundColor: '#E2E2E2',
             position: 'relative',
+            overflowY: 'auto',
           }}
         >
           <button
@@ -306,40 +400,11 @@ const Sidebar = () => {
           >
             <FontAwesomeIcon icon={faArrowLeft} />
           </button>
-          <h2>{selectedCategory}</h2>
-          <div style={{ marginBottom: '20px' }}>
-            {/* Toggle button */}
-            <Toggle
-              checked={isRed}
-              icons={false}
-              onChange={() => setIsRed(!isRed)}
-              className="colour-toggle"
-            />
-          </div>
+          <h2 style={{ marginBottom: '40px' }}>{selectedCategory}</h2>
+          {selectedCategory === 'feet' && renderFeetButtons()}
           {selectedCategory &&
             selectedCategory !== 'feet' &&
-            categories[selectedCategory].items.map((item) => (
-              /* Buttons for selected category */
-              <button
-                key={item}
-                onClick={() => handleItemClick(item)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '10px',
-                  marginBottom: '5px',
-                  backgroundColor: isRed ? 'red' : 'blue',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                {item}
-              </button>
-            ))}
-          {selectedCategory === 'feet' && renderFeetButtons()}{' '}
-          {/* Feet version */}
+            renderCategoryButtons()}
         </div>
       )}
     </div>
