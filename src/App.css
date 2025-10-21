@@ -110,6 +110,10 @@
 
 .file-handler {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .colour-toggle.react-toggle--checked .react-toggle-track {

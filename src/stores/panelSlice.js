@@ -51,6 +51,24 @@ const createPanelSlice = (set, get) => ({
     });
   },
 
+  resetDancers: () => {
+    // Clear any pending auto-save
+    const { clearAutoSave } = get();
+    if (clearAutoSave) {
+      clearAutoSave();
+    }
+
+    // Reset to initial state with one panel containing two dancers in default positions
+    set({
+      panels: [createInitialPanel()],
+      selectedPanel: null,
+      selectedDancer: null,
+      selectedHand: null,
+      selectedShapeId: null,
+      lockUi: { active: false, selected: [] },
+    });
+  },
+
   handlePanelSelection: (panelId) => set({ selectedPanel: panelId }),
 });
 
