@@ -343,7 +343,7 @@ const Sidebar = () => {
       {/* Sidebar */}
       <div
         style={{
-          width: isExpanded ? '250px' : '60px', //Sizes for both states
+          width: isExpanded ? '140px' : '60px', //Sizes for both states
           height: '100vh',
           backgroundColor: '#333',
           transition: 'width 0.3s', //Go to and from current size to new size in 0.3s
@@ -377,7 +377,7 @@ const Sidebar = () => {
       {isExpanded && (
         <div
           style={{
-            width: '200px',
+            width: '220px',
             padding: '20px',
             backgroundColor: '#E2E2E2',
             position: 'relative',
