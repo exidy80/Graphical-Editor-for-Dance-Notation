@@ -12,6 +12,7 @@ import {
   faLock,
   faLink,
   faUnlink,
+  faRefresh,
 } from '@fortawesome/free-solid-svg-icons';
 
 const Toolbar = () => {
@@ -34,6 +35,7 @@ const Toolbar = () => {
   const lockOverlappingHands = useAppStore(
     (state) => state.lockOverlappingHands,
   );
+  const resetDancers = useAppStore((state) => state.resetDancers);
 
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
@@ -229,6 +231,25 @@ const Toolbar = () => {
       </div>
 
       <div className="file-handler">
+        {/* Reset to default state */}
+        <Button
+          onClick={() => {
+            if (
+              window.confirm(
+                'Reset all dancers to default state? This will clear all panels and dancers.',
+              )
+            ) {
+              resetDancers();
+            }
+          }}
+          variant="outline-danger"
+          className="icon-button"
+          style={{ marginLeft: '15px' }}
+          title="Reset all dancers to default state"
+        >
+          <FontAwesomeIcon icon={faRefresh} />
+          <span className="button-text">Reset Dancers</span>
+        </Button>
         {/* Renders the save/load component */}
         <PanelFileHandler />
       </div>
