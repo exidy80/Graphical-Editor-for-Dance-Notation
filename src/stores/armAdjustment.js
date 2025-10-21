@@ -72,17 +72,9 @@ const getElbowAngleFromStraight = (dancer, side) => {
  * @param {Object} dancer - The dancer object
  * @param {string} side - 'left' or 'right'
  * @param {Object} newHandPos - New hand position {x, y}
- * @param {number} originalRatio - Original ratio of upper to lower arm length (unused now)
- * @param {number} originalAngle - Original elbow angle from straight line
  * @returns {Object} - New elbow position {x, y}
  */
-const calculateAdjustedElbowPosition = (
-  dancer,
-  side,
-  newHandPos,
-  originalRatio,
-  originalAngle,
-) => {
+const calculateAdjustedElbowPosition = (dancer, side, newHandPos) => {
   const shoulder = getShoulderPosition(side);
 
   // Get original elbow position to calculate its ratio along the straight arm line
@@ -94,7 +86,6 @@ const calculateAdjustedElbowPosition = (
 
   // If the original total arm length is too small, keep the original elbow position
   if (originalTotalStraightLength < 1) {
-    console.log(`  Total length too small, returning original elbow`);
     return dancer[`${side}ElbowPos`];
   }
 
@@ -179,17 +170,11 @@ const adjustElbowsForProportionalArms = (
 
   sidesToAdjust.forEach((side) => {
     try {
-      // Get original arm configuration
-      const originalRatio = getArmRatio(originalDancer, side);
-      const originalAngle = getElbowAngleFromStraight(originalDancer, side);
-
       // Calculate new elbow position
       const newElbowPos = calculateAdjustedElbowPosition(
         originalDancer,
         side,
         dancer[`${side}HandPos`],
-        originalRatio,
-        originalAngle,
       );
 
       // Update the elbow position

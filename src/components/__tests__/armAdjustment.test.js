@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
+import { getSegmentLength, getArmRatio, getElbowAngleFromStraight, getShoulderPosition } from '../../stores/armAdjustment.js';
 
 describe('Arm Adjustment with Locked Hands', () => {
   beforeEach(() => {
@@ -42,47 +43,18 @@ describe('Arm Adjustment with Locked Hands', () => {
     );
   });
 
-  // Helper functions
-  const shoulderPos = (side) => ({ x: side === 'left' ? -30 : 30, y: 7.5 }); // bodyWidth/2 = 30, headSize/4 = 7.5
-
+  // Helper function for arm segment length calculation
   const getArmSegmentLength = (dancer, side, segment) => {
-    const shoulder = shoulderPos(side);
+    const shoulder = getShoulderPosition(side);
     const elbow = dancer[`${side}ElbowPos`];
     const hand = dancer[`${side}HandPos`];
 
     if (segment === 'upper') {
-      const dx = elbow.x - shoulder.x;
-      const dy = elbow.y - shoulder.y;
-      return Math.sqrt(dx * dx + dy * dy);
+      return getSegmentLength(shoulder, elbow);
     } else if (segment === 'lower') {
-      const dx = hand.x - elbow.x;
-      const dy = hand.y - elbow.y;
-      return Math.sqrt(dx * dx + dy * dy);
+      return getSegmentLength(elbow, hand);
     }
     return 0;
-  };
-
-  const getArmRatio = (dancer, side) => {
-    const upperLength = getArmSegmentLength(dancer, side, 'upper');
-    const lowerLength = getArmSegmentLength(dancer, side, 'lower');
-    return upperLength / lowerLength;
-  };
-
-  const getElbowAngleFromStraight = (dancer, side) => {
-    const shoulder = shoulderPos(side);
-    const elbow = dancer[`${side}ElbowPos`];
-    const hand = dancer[`${side}HandPos`];
-
-    // Vector from shoulder to hand (straight line)
-    const straightVec = { x: hand.x - shoulder.x, y: hand.y - shoulder.y };
-    // Vector from shoulder to elbow
-    const elbowVec = { x: elbow.x - shoulder.x, y: elbow.y - shoulder.y };
-
-    // Calculate angle between vectors
-    const dot = straightVec.x * elbowVec.x + straightVec.y * elbowVec.y;
-    const crossZ = straightVec.x * elbowVec.y - straightVec.y * elbowVec.x;
-
-    return Math.atan2(crossZ, dot);
   };
 
   const expectArmProportionsPreserved = (

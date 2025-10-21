@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
+import { getSegmentLength, getShoulderPosition } from '../../stores/armAdjustment.js';
 
 describe('Elbow Position Ratio Preservation', () => {
   beforeEach(() => {
@@ -42,17 +43,9 @@ describe('Elbow Position Ratio Preservation', () => {
     );
   });
 
-  // Helper functions
-  const shoulderPos = (side) => ({ x: side === 'left' ? -30 : 30, y: 7.5 });
-
-  const getSegmentLength = (p1, p2) => {
-    const dx = p2.x - p1.x;
-    const dy = p2.y - p1.y;
-    return Math.sqrt(dx * dx + dy * dy);
-  };
-
+  // Helper function for calculating elbow position ratio along arm
   const getElbowRatioAlongArm = (dancer, side) => {
-    const shoulder = shoulderPos(side);
+    const shoulder = getShoulderPosition(side);
     const elbow = dancer[`${side}ElbowPos`];
     const hand = dancer[`${side}HandPos`];
 
@@ -95,13 +88,13 @@ describe('Elbow Position Ratio Preservation', () => {
     const originalRatioD1 = getElbowRatioAlongArm(originalD1, 'right');
 
     console.log('Original d0 left arm:');
-    console.log('  Shoulder:', shoulderPos('left'));
+    console.log('  Shoulder:', getShoulderPosition('left'));
     console.log('  Elbow:', originalD0.leftElbowPos);
     console.log('  Hand:', originalD0.leftHandPos);
     console.log('  Elbow ratio along arm:', originalRatioD0);
 
     console.log('Original d1 right arm:');
-    console.log('  Shoulder:', shoulderPos('right'));
+    console.log('  Shoulder:', getShoulderPosition('right'));
     console.log('  Elbow:', originalD1.rightElbowPos);
     console.log('  Hand:', originalD1.rightHandPos);
     console.log('  Elbow ratio along arm:', originalRatioD1);
@@ -129,13 +122,13 @@ describe('Elbow Position Ratio Preservation', () => {
     const updatedRatioD1 = getElbowRatioAlongArm(updatedD1, 'right');
 
     console.log('Updated d0 left arm:');
-    console.log('  Shoulder:', shoulderPos('left'));
+    console.log('  Shoulder:', getShoulderPosition('left'));
     console.log('  Elbow:', updatedD0.leftElbowPos);
     console.log('  Hand:', updatedD0.leftHandPos);
     console.log('  Elbow ratio along arm:', updatedRatioD0);
 
     console.log('Updated d1 right arm:');
-    console.log('  Shoulder:', shoulderPos('right'));
+    console.log('  Shoulder:', getShoulderPosition('right'));
     console.log('  Elbow:', updatedD1.rightElbowPos);
     console.log('  Hand:', updatedD1.rightHandPos);
     console.log('  Elbow ratio along arm:', updatedRatioD1);
@@ -179,7 +172,7 @@ describe('Elbow Position Ratio Preservation', () => {
     const originalDancer = getState().panels[0].dancers.find(
       (d) => d.id === d0.id,
     );
-    const shoulder = shoulderPos('left');
+    const shoulder = getShoulderPosition('left');
 
     const originalUpperLength = getSegmentLength(
       shoulder,
