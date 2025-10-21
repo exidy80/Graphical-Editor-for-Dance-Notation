@@ -1,4 +1,6 @@
 // Dancer interaction slice - handles dancer selection, state updates, and hand interactions
+import { adjustElbowsForProportionalArms } from './armAdjustment.js';
+
 const createDancerSlice = (set, get) => ({
   // Actions
   updateDancerState: (panelId, dancerId, newState) => {
@@ -34,6 +36,12 @@ const createDancerSlice = (set, get) => ({
       const sourceDancer = panel.dancers.find((d) => d.id === dancerId);
       if (!sourceDancer) return curr;
 
+      // Store original dancer states before hand position changes for elbow adjustment
+      const originalDancerStates = {};
+      panel.dancers.forEach((d) => {
+        originalDancerStates[d.id] = { ...d };
+      });
+
       // Update source hand local
       let dancersAfter = panel.dancers.map((d) =>
         d.id === dancerId ? { ...d, [`${side}HandPos`]: newPos } : d,
@@ -52,6 +60,8 @@ const createDancerSlice = (set, get) => ({
         ),
       );
 
+      const affectedDancers = new Set([dancerId]);
+
       groups.forEach((group) => {
         (group.members || []).forEach((member) => {
           if (member.dancerId === dancerId && member.side === side) return;
@@ -65,7 +75,46 @@ const createDancerSlice = (set, get) => ({
               ? { ...d, [`${member.side}HandPos`]: newLocal }
               : d,
           );
+          affectedDancers.add(member.dancerId);
         });
+      });
+
+      // After updating hand positions, adjust elbows to maintain arm proportions
+      dancersAfter = dancersAfter.map((dancer) => {
+        if (!affectedDancers.has(dancer.id)) return dancer;
+
+        const originalDancer = originalDancerStates[dancer.id];
+        if (!originalDancer) return dancer;
+
+        // Find which sides were affected for this dancer
+        const affectedSides = [];
+
+        // Check if this dancer's hand was directly moved
+        if (dancer.id === dancerId) {
+          affectedSides.push(side);
+        }
+
+        // Check if this dancer's hands were affected by locks
+        groups.forEach((group) => {
+          group.members.forEach((member) => {
+            if (
+              member.dancerId === dancer.id &&
+              !affectedSides.includes(member.side)
+            ) {
+              affectedSides.push(member.side);
+            }
+          });
+        });
+
+        if (affectedSides.length > 0) {
+          return adjustElbowsForProportionalArms(
+            dancer,
+            originalDancer,
+            affectedSides,
+          );
+        }
+
+        return dancer;
       });
 
       const newPanels = curr.panels.map((p) =>

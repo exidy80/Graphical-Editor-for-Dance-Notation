@@ -1,4 +1,6 @@
 // Lock system slice - handles hand-locking mechanism for synchronized movement
+import { adjustElbowsForProportionalArms } from './armAdjustment.js';
+
 const createLockSlice = (set, get) => ({
   // Lock management (group locks)
   getLockForHand: (panelId, dancerId, side) => {
@@ -217,6 +219,12 @@ const createLockSlice = (set, get) => ({
 
       let dancersUpdated = p.dancers;
 
+      // Store original dancer states before hand position changes for elbow adjustment
+      const originalDancerStates = {};
+      p.dancers.forEach((d) => {
+        originalDancerStates[d.id] = { ...d };
+      });
+
       groups.forEach((group) => {
         // Compute current absolute positions of each member hand based on current transforms
         const memberAbs = (group.members || [])
@@ -254,6 +262,33 @@ const createLockSlice = (set, get) => ({
               : dd,
           );
         });
+      });
+
+      // After updating hand positions, adjust elbows to maintain arm proportions
+      dancersUpdated = dancersUpdated.map((dancer) => {
+        const originalDancer = originalDancerStates[dancer.id];
+        if (!originalDancer) return dancer;
+
+        // Check which hands were affected by locks
+        const affectedSides = [];
+        groups.forEach((group) => {
+          group.members.forEach((member) => {
+            if (member.dancerId === dancer.id) {
+              affectedSides.push(member.side);
+            }
+          });
+        });
+
+        if (affectedSides.length > 0) {
+          // Adjust elbows for the affected sides
+          return adjustElbowsForProportionalArms(
+            dancer,
+            originalDancer,
+            affectedSides,
+          );
+        }
+
+        return dancer;
       });
 
       const newPanels = curr.panels.map((pp) =>
