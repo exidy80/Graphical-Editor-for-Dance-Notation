@@ -11,6 +11,8 @@ import createShapeSlice from './shapeSlice.js';
 import createUISlice from './uiSlice.js';
 import createLockSlice from './lockSlice.js';
 import createSerializationSlice from './serializationSlice.js';
+import createKeystrokeSlice from './keystrokeSlice.js';
+import { UI_DIMENSIONS } from '../utils/dimensions.js';
 
 // Create initial store with auto-save functionality
 const initialState = () => {
@@ -25,7 +27,7 @@ const initialState = () => {
   ) {
     console.log('Restoring from auto-save...');
     return {
-      panelSize: savedData.panelSize || { width: 300, height: 300 },
+      panelSize: savedData.panelSize || UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
       selectedPanel: null, // Reset UI state
       selectedHand: null,
       selectedDancer: null,
@@ -46,7 +48,7 @@ const initialState = () => {
 
   // Default initial state
   return {
-    panelSize: { width: 300, height: 300 },
+    panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
     selectedPanel: null,
     selectedHand: null,
     selectedDancer: null,
@@ -85,6 +87,7 @@ export const useAppStore = create(
       ...createUISlice(set, get),
       ...createLockSlice(set, get),
       ...createSerializationSlice(set, get),
+      ...createKeystrokeSlice(set, get),
     };
   }),
 );
