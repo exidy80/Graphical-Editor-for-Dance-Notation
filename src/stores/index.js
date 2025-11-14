@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { temporal } from 'zundo';
 import {
   autoSaveMiddleware,
   loadFromLocalStorage,
@@ -12,6 +13,7 @@ import createUISlice from './uiSlice.js';
 import createLockSlice from './lockSlice.js';
 import createSerializationSlice from './serializationSlice.js';
 import createKeystrokeSlice from './keystrokeSlice.js';
+import createHistorySlice from './historySlice.js';
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
 
 // Create initial store with auto-save functionality
@@ -68,26 +70,47 @@ const initialState = () => {
 };
 
 export const useAppStore = create(
-  autoSaveMiddleware((set, get) => {
-    // Initialize state with auto-save recovery
-    const state = initialState();
+  temporal(
+    autoSaveMiddleware((set, get) => {
+      // Initialize state with auto-save recovery
+      const state = initialState();
 
-    return {
-      // Start with the initial state
-      ...state,
+      return {
+        // Start with the initial state
+        ...state,
 
-      // Include coordinate transform utilities
-      _localToAbsolute: coordinateTransforms.localToAbsolute,
-      _absoluteToLocal: coordinateTransforms.absoluteToLocal,
+        // Include coordinate transform utilities
+        _localToAbsolute: coordinateTransforms.localToAbsolute,
+        _absoluteToLocal: coordinateTransforms.absoluteToLocal,
 
-      // Combine all slices
-      ...createPanelSlice(set, get),
-      ...createDancerSlice(set, get),
-      ...createShapeSlice(set, get),
-      ...createUISlice(set, get),
-      ...createLockSlice(set, get),
-      ...createSerializationSlice(set, get),
-      ...createKeystrokeSlice(set, get),
-    };
-  }),
+        // Combine all slices
+        ...createPanelSlice(set, get),
+        ...createDancerSlice(set, get),
+        ...createShapeSlice(set, get),
+        ...createUISlice(set, get),
+        ...createLockSlice(set, get),
+        ...createSerializationSlice(set, get),
+        ...createKeystrokeSlice(set, get),
+        ...createHistorySlice(set, get),
+      };
+    }),
+    {
+      // Temporal middleware configuration
+      limit: 50,
+
+      // Only track state changes to 'panels' for undo/redo
+      partialize: (state) => ({
+        panels: state.panels,
+      }),
+
+      // Custom equality function to avoid saving every tiny change
+      equality: (pastState, currentState) => {
+        // Only create new history state if panels actually changed
+        return (
+          JSON.stringify(pastState.panels) ===
+          JSON.stringify(currentState.panels)
+        );
+      },
+    },
+  ),
 );

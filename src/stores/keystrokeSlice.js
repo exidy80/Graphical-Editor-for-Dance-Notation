@@ -270,10 +270,10 @@ const createKeystrokeSlice = (set, get) => ({
     registerKeystroke('Escape', {
       description: 'Deselect all objects',
       handler: (event, context) => {
-        set({ 
+        set({
           selectedDancer: null,
           selectedHand: null,
-          selectedShapeId: null
+          selectedShapeId: null,
         });
       },
       context: 'global',
@@ -281,12 +281,17 @@ const createKeystrokeSlice = (set, get) => ({
     });
 
     // Space key - toggle rotation center maintenance for selected object
-    registerKeystroke(' ', {  // Space key
+    registerKeystroke(' ', {
+      // Space key
       description: 'Toggle rotation center maintenance',
       handler: (event, context) => {
         const { maintainRotationCenter, setMaintainRotationCenter } = get();
         setMaintainRotationCenter(!maintainRotationCenter);
-        console.log(`Rotation center maintenance: ${!maintainRotationCenter ? 'enabled' : 'disabled'}`);
+        console.log(
+          `Rotation center maintenance: ${
+            !maintainRotationCenter ? 'enabled' : 'disabled'
+          }`,
+        );
       },
       context: 'global',
       priority: 1,
@@ -296,17 +301,25 @@ const createKeystrokeSlice = (set, get) => ({
     registerKeystroke('r', {
       description: 'Reset rotation to starting position',
       handler: (event, context) => {
-        const { selectedDancer, selectedShapeId, updateDancerState, updateShapeState, panels } = get();
-        
+        const {
+          selectedDancer,
+          selectedShapeId,
+          updateDancerState,
+          updateShapeState,
+          panels,
+        } = get();
+
         if (selectedDancer) {
           const { panelId, dancerId } = selectedDancer;
-          const panel = panels.find(p => p.id === panelId);
+          const panel = panels.find((p) => p.id === panelId);
           if (panel) {
-            const dancer = panel.dancers.find(d => d.id === dancerId);
+            const dancer = panel.dancers.find((d) => d.id === dancerId);
             if (dancer) {
               // Reset to original starting rotation based on dancer color
               const originalRotation = dancer.colour === 'red' ? 180 : 0;
-              updateDancerState(panelId, dancerId, { rotation: originalRotation });
+              updateDancerState(panelId, dancerId, {
+                rotation: originalRotation,
+              });
             }
           }
         } else if (selectedShapeId) {
@@ -316,6 +329,50 @@ const createKeystrokeSlice = (set, get) => ({
         }
       },
       context: 'global',
+      priority: 1,
+    });
+
+    // Cmd+Z (Ctrl+Z) - Undo last action
+    registerKeystroke('z', {
+      description: 'Undo last action',
+      handler: (event, context) => {
+        try {
+          const { useAppStore } = require('../stores/index.js');
+          const temporalState = useAppStore.temporal?.getState();
+          if (temporalState && temporalState.pastStates.length > 0) {
+            temporalState.undo();
+            console.log('Undo performed');
+          } else {
+            console.log('Nothing to undo');
+          }
+        } catch (error) {
+          console.warn('Undo failed:', error);
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true },
+      priority: 1,
+    });
+
+    // Cmd+Y (Ctrl+Y) - Redo last undone action
+    registerKeystroke('y', {
+      description: 'Redo last undone action',
+      handler: (event, context) => {
+        try {
+          const { useAppStore } = require('../stores/index.js');
+          const temporalState = useAppStore.temporal?.getState();
+          if (temporalState && temporalState.futureStates.length > 0) {
+            temporalState.redo();
+            console.log('Redo performed');
+          } else {
+            console.log('Nothing to redo');
+          }
+        } catch (error) {
+          console.warn('Redo failed:', error);
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true },
       priority: 1,
     });
   },
@@ -379,14 +436,14 @@ const createKeystrokeSlice = (set, get) => ({
             // for the visual shift that occurs when changing the rotation center
             if (shape.offsetX === undefined && shape.offsetY === undefined) {
               // When we set offset for the first time, Konva changes the rotation center
-              // from top-left (0,0) to the offset point. To keep the shape visually in the 
+              // from top-left (0,0) to the offset point. To keep the shape visually in the
               // same place, we need to move the shape's x,y coordinates by the offset amount.
               updateShapeState(panelId, shapeId, {
                 rotation: newRotation,
                 offsetX: offsetX,
                 offsetY: offsetY,
-                x: shape.x + offsetX,  // Compensate for offset change
-                y: shape.y + offsetY   // Compensate for offset change
+                x: shape.x + offsetX, // Compensate for offset change
+                y: shape.y + offsetY, // Compensate for offset change
               });
             } else {
               // Just update rotation, offsets already set
