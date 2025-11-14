@@ -245,6 +245,79 @@ const createKeystrokeSlice = (set, get) => ({
       modifiers: { shift: true },
       priority: 2,
     });
+
+    // Delete key configurations - shared between Delete and Backspace
+    const deleteKeyConfig = {
+      description: 'Delete selected symbol',
+      handler: (event, context) => {
+        const { selectedShapeId, handleDelete } = get();
+        if (selectedShapeId) {
+          handleDelete(selectedShapeId);
+        }
+        // Note: Does nothing if no symbol is selected - dancers cannot be deleted
+      },
+      context: 'symbol',
+      priority: 1,
+    };
+
+    // Delete key - remove selected symbol (only works for symbols, not dancers)
+    registerKeystroke('Delete', deleteKeyConfig);
+
+    // Backspace key - alternative delete key (common on Mac)
+    registerKeystroke('Backspace', deleteKeyConfig);
+
+    // Escape key - deselect everything (global context)
+    registerKeystroke('Escape', {
+      description: 'Deselect all objects',
+      handler: (event, context) => {
+        set({ 
+          selectedDancer: null,
+          selectedHand: null,
+          selectedShapeId: null
+        });
+      },
+      context: 'global',
+      priority: 1,
+    });
+
+    // Space key - toggle rotation center maintenance for selected object
+    registerKeystroke(' ', {  // Space key
+      description: 'Toggle rotation center maintenance',
+      handler: (event, context) => {
+        const { maintainRotationCenter, setMaintainRotationCenter } = get();
+        setMaintainRotationCenter(!maintainRotationCenter);
+        console.log(`Rotation center maintenance: ${!maintainRotationCenter ? 'enabled' : 'disabled'}`);
+      },
+      context: 'global',
+      priority: 1,
+    });
+
+    // R key - reset rotation of selected object to original starting rotation
+    registerKeystroke('r', {
+      description: 'Reset rotation to starting position',
+      handler: (event, context) => {
+        const { selectedDancer, selectedShapeId, updateDancerState, updateShapeState, panels } = get();
+        
+        if (selectedDancer) {
+          const { panelId, dancerId } = selectedDancer;
+          const panel = panels.find(p => p.id === panelId);
+          if (panel) {
+            const dancer = panel.dancers.find(d => d.id === dancerId);
+            if (dancer) {
+              // Reset to original starting rotation based on dancer color
+              const originalRotation = dancer.colour === 'red' ? 180 : 0;
+              updateDancerState(panelId, dancerId, { rotation: originalRotation });
+            }
+          }
+        } else if (selectedShapeId) {
+          const { panelId, shapeId } = selectedShapeId;
+          // Shapes always reset to 0
+          updateShapeState(panelId, shapeId, { rotation: 0 });
+        }
+      },
+      context: 'global',
+      priority: 1,
+    });
   },
 
   // Internal rotation helper
@@ -277,9 +350,7 @@ const createKeystrokeSlice = (set, get) => ({
                 rotation: newRotation,
                 offsetX: offsetX,
                 offsetY: offsetY,
-                // DON'T adjust x,y - let the object stay where the user placed it
-                // x: dancer.x + offsetX,  <-- This was causing the jump!
-                // y: dancer.y + offsetY   <-- This was causing the jump!
+                // DON'T adjust x,y - dancers were working correctly before
               });
             } else {
               // Just update rotation, offsets already set
@@ -304,16 +375,18 @@ const createKeystrokeSlice = (set, get) => ({
             // Use centralized dimension calculation for center-based rotation
             const { offsetX, offsetY } = getCenterOffset(shape, 'shape');
 
-            // If this is the first time setting offsets, just set them without adjusting position
-            // The offset tells Konva where the rotation point is within the object
+            // If this is the first time setting offsets, we need to adjust position to compensate
+            // for the visual shift that occurs when changing the rotation center
             if (shape.offsetX === undefined && shape.offsetY === undefined) {
+              // When we set offset for the first time, Konva changes the rotation center
+              // from top-left (0,0) to the offset point. To keep the shape visually in the 
+              // same place, we need to move the shape's x,y coordinates by the offset amount.
               updateShapeState(panelId, shapeId, {
                 rotation: newRotation,
                 offsetX: offsetX,
                 offsetY: offsetY,
-                // DON'T adjust x,y - let the object stay where the user placed it
-                // x: shape.x + offsetX,  <-- This was causing the jump!
-                // y: shape.y + offsetY   <-- This was causing the jump!
+                x: shape.x + offsetX,  // Compensate for offset change
+                y: shape.y + offsetY   // Compensate for offset change
               });
             } else {
               // Just update rotation, offsets already set

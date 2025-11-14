@@ -395,6 +395,68 @@ describe('Keystroke Framework', () => {
       expect(finalState.rotation).toBe(0);
     });
 
+    test('should not move symbol position on first rotation (anti-jump test)', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleShapeDraw, handleShapeSelection } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Add a shape EXACTLY like Sidebar does - without explicit rotation, offsetX, or offsetY
+      const shapeId = 'no-jump-test-shape';
+      const initialX = 150;
+      const initialY = 120;
+      
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: shapeId,
+          type: 'signal',
+          x: initialX,
+          y: initialY,
+          // NOTE: No rotation, offsetX, or offsetY properties - mimicking real Sidebar behavior
+          fill: 'red',
+          stroke: 'black',
+          draggable: true
+        });
+        handleShapeSelection(panelId, shapeId);
+        initializeDefaultKeystrokes();
+      });
+      
+      const beforeRotation = useAppStore.getState().panels[0].shapes.find(s => s.id === shapeId);
+      expect(beforeRotation.x).toBe(initialX);
+      expect(beforeRotation.y).toBe(initialY);
+      expect(beforeRotation.rotation).toBeUndefined(); // Should be undefined like real shapes
+      expect(beforeRotation.offsetX).toBeUndefined(); // Should be undefined initially
+      expect(beforeRotation.offsetY).toBeUndefined(); // Should be undefined initially
+      
+      // Calculate expected position after offset compensation
+      // For 'signal' type: width=75, height=20, so center offset is (37.5, 10)
+      const expectedX = initialX + SHAPE_DIMENSIONS.signal.width / 2; // 150 + 37.5 = 187.5
+      const expectedY = initialY + SHAPE_DIMENSIONS.signal.height / 2; // 120 + 10 = 130
+      
+      // First rotation - offsets get set and position gets compensated
+      act(() => {
+        handleKeystroke('ArrowRight', { key: 'ArrowRight' });
+      });
+      
+      const afterFirstRotation = useAppStore.getState().panels[0].shapes.find(s => s.id === shapeId);
+      
+      // The rotation should change and position should be compensated to maintain visual position
+      expect(afterFirstRotation.rotation).toBe(15);
+      expect(afterFirstRotation.x).toBe(expectedX); // Position compensated for offset
+      expect(afterFirstRotation.y).toBe(expectedY); // Position compensated for offset
+      expect(afterFirstRotation.offsetX).toBeDefined(); // Should now have offset set
+      expect(afterFirstRotation.offsetY).toBeDefined(); // Should now have offset set
+      
+      // Second rotation should NOT change position (offsets already set)
+      act(() => {
+        handleKeystroke('ArrowRight', { key: 'ArrowRight' });
+      });
+      
+      const afterSecondRotation = useAppStore.getState().panels[0].shapes.find(s => s.id === shapeId);
+      expect(afterSecondRotation.rotation).toBe(30);
+      expect(afterSecondRotation.x).toBe(expectedX); // Should stay at compensated position
+      expect(afterSecondRotation.y).toBe(expectedY); // Should stay at compensated position
+    });
+
     test('should properly handle center-preserving rotation with scaled objects', () => {
       const {
         initializeDefaultKeystrokes,
@@ -524,23 +586,15 @@ describe('Keystroke Framework', () => {
       expect(rotatedState.offsetX).toBeCloseTo(expectedOffsetX, 1);
       expect(rotatedState.offsetY).toBeCloseTo(expectedOffsetY, 1);
 
-      // The visual center should be preserved. With offsets set, the visual center is now:
-      // Initial center (before offset): initialState.x + width/2, initialState.y + height/2
-      // After setting offset, the object position stays the same but represents the rotation point
-      const originalCenterX = initialState.x + initialWidth / 2;
-      const originalCenterY = initialState.y + initialHeight / 2;
-
-      // After rotation with offsets, the visual center should be at the same location
-      // The rotated center is at: rotatedState.x + offsetX, rotatedState.y + offsetY
-      const rotatedCenterX = rotatedState.x + (rotatedState.offsetX || 0);
-      const rotatedCenterY = rotatedState.y + (rotatedState.offsetY || 0);
-
-      // The centers should be close (the object should rotate around the same visual point)
-      const centerXDiff = Math.abs(rotatedCenterX - originalCenterX);
-      const centerYDiff = Math.abs(rotatedCenterY - originalCenterY);
-
-      expect(centerXDiff).toBeLessThan(0.1);
-      expect(centerYDiff).toBeLessThan(0.1);
+      // The visual appearance should be preserved. The position compensation should
+      // make the shape appear in the same visual location despite the coordinate changes.
+      // Since we moved the shape by (+offsetX, +offsetY) to compensate for the offset change,
+      // the shape should now be at the original position + the offset values.
+      const expectedX = initialState.x + expectedOffsetX;
+      const expectedY = initialState.y + expectedOffsetY;
+      
+      expect(rotatedState.x).toBeCloseTo(expectedX, 1);
+      expect(rotatedState.y).toBeCloseTo(expectedY, 1);
     });
 
     test('should maintain dancer center within margin of error during multiple rotations', () => {
@@ -603,23 +657,10 @@ describe('Keystroke Framework', () => {
       expect(rotatedState.offsetX).toBeCloseTo(expectedOffsetX, 1);
       expect(rotatedState.offsetY).toBeCloseTo(expectedOffsetY, 1);
 
-      // With offsets set, check that the object rotates around its original visual center
-      // Original center (before any offset): use actual visual center calculation
-      const originalCenterX = initialState.x + initialWidth / 2;
-      const originalCenterY =
-        initialState.y +
-        DANCER_DIMENSIONS.VISUAL_CENTER_Y * (initialState.scaleY || 1);
-
-      // After rotation with offsets, the visual center is at: position + offset
-      const rotatedVisualCenterX = rotatedState.x + (rotatedState.offsetX || 0);
-      const rotatedVisualCenterY = rotatedState.y + (rotatedState.offsetY || 0);
-
-      // The visual centers should be the same (object rotates around same point)
-      const centerXDiff = Math.abs(rotatedVisualCenterX - originalCenterX);
-      const centerYDiff = Math.abs(rotatedVisualCenterY - originalCenterY);
-
-      expect(centerXDiff).toBeLessThan(0.1);
-      expect(centerYDiff).toBeLessThan(0.1);
+      // Dancers should maintain their original position when offsets are set (no compensation needed)
+      // Position should remain unchanged from initial state
+      expect(rotatedState.x).toBe(initialState.x);
+      expect(rotatedState.y).toBe(initialState.y);
 
       // Perform another rotation to test that subsequent rotations don't change center
       const beforeSecondRotationX = rotatedState.x;
@@ -724,6 +765,260 @@ describe('Keystroke Framework', () => {
       const currentRotation =
         useAppStore.getState().panels[0].dancers[0].rotation;
       expect(currentRotation).toBe(initialRotation - 1); // Fine rotation step
+    });
+
+    test('should delete selected symbol with delete key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleShapeDraw, handleShapeSelection } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Add a shape to test deletion
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: 'delete-test-shape',
+          type: 'signal',
+          x: 100,
+          y: 100,
+          fill: 'red',
+          stroke: 'black'
+        });
+        initializeDefaultKeystrokes();
+      });
+      
+      // Verify shape was added
+      let shapes = useAppStore.getState().panels[0].shapes;
+      expect(shapes.some(s => s.id === 'delete-test-shape')).toBe(true);
+      
+      // Select the shape
+      act(() => {
+        handleShapeSelection(panelId, 'delete-test-shape');
+      });
+      
+      // Verify shape is selected
+      const selectedShape = useAppStore.getState().selectedShapeId;
+      expect(selectedShape?.shapeId).toBe('delete-test-shape');
+      
+      // Delete with Delete key
+      act(() => {
+        handleKeystroke('Delete', { key: 'Delete' });
+      });
+      
+      // Verify shape was deleted
+      shapes = useAppStore.getState().panels[0].shapes;
+      expect(shapes.some(s => s.id === 'delete-test-shape')).toBe(false);
+      expect(useAppStore.getState().selectedShapeId).toBeNull();
+    });
+
+    test('should delete selected symbol with backspace key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleShapeDraw, handleShapeSelection } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Add a shape to test deletion
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: 'backspace-test-shape',
+          type: 'spinOne',
+          x: 150,
+          y: 150,
+          fill: 'blue',
+          stroke: 'blue'
+        });
+        handleShapeSelection(panelId, 'backspace-test-shape');
+        initializeDefaultKeystrokes();
+      });
+      
+      // Verify shape exists and is selected
+      let shapes = useAppStore.getState().panels[0].shapes;
+      expect(shapes.some(s => s.id === 'backspace-test-shape')).toBe(true);
+      expect(useAppStore.getState().selectedShapeId?.shapeId).toBe('backspace-test-shape');
+      
+      // Delete with Backspace key
+      act(() => {
+        handleKeystroke('Backspace', { key: 'Backspace' });
+      });
+      
+      // Verify shape was deleted
+      shapes = useAppStore.getState().panels[0].shapes;
+      expect(shapes.some(s => s.id === 'backspace-test-shape')).toBe(false);
+      expect(useAppStore.getState().selectedShapeId).toBeNull();
+    });
+
+    test('should do nothing when delete key pressed with no symbol selected', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleShapeDraw } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Add a shape but don't select it
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: 'no-delete-shape',
+          type: 'curvedLine',
+          x: 200,
+          y: 200,
+          fill: 'green',
+          stroke: 'green'
+        });
+        initializeDefaultKeystrokes();
+      });
+      
+      const initialShapeCount = useAppStore.getState().panels[0].shapes.length;
+      
+      // Ensure no shape is selected
+      act(() => {
+        useAppStore.setState({ selectedShapeId: null });
+      });
+      
+      // Try to delete with no selection
+      act(() => {
+        handleKeystroke('Delete', { key: 'Delete' });
+      });
+      
+      // Verify no shapes were deleted
+      const finalShapeCount = useAppStore.getState().panels[0].shapes.length;
+      expect(finalShapeCount).toBe(initialShapeCount);
+      expect(useAppStore.getState().panels[0].shapes.some(s => s.id === 'no-delete-shape')).toBe(true);
+    });
+
+    test('should do nothing when delete key pressed with dancer selected', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleDancerSelection } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      const dancerId = useAppStore.getState().panels[0].dancers[0].id;
+      
+      // Select a dancer
+      act(() => {
+        handleDancerSelection(panelId, dancerId);
+        initializeDefaultKeystrokes();
+      });
+      
+      const initialDancerCount = useAppStore.getState().panels[0].dancers.length;
+      
+      // Verify dancer is selected (not shape)
+      expect(useAppStore.getState().selectedDancer).toEqual({ panelId, dancerId });
+      expect(useAppStore.getState().selectedShapeId).toBeNull();
+      
+      // Try to delete - should do nothing since dancers can't be deleted
+      act(() => {
+        handleKeystroke('Delete', { key: 'Delete' });
+      });
+      
+      // Verify dancers are unchanged
+      const finalDancerCount = useAppStore.getState().panels[0].dancers.length;
+      expect(finalDancerCount).toBe(initialDancerCount);
+      expect(useAppStore.getState().panels[0].dancers.some(d => d.id === dancerId)).toBe(true);
+    });
+
+    test('should reset rotation with r key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleShapeDraw, handleShapeSelection, updateShapeState } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Add a rotated shape
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: 'rotation-reset-shape',
+          type: 'signal',
+          x: 100,
+          y: 100,
+          rotation: 45,
+          fill: 'red',
+          stroke: 'black'
+        });
+        handleShapeSelection(panelId, 'rotation-reset-shape');
+        initializeDefaultKeystrokes();
+      });
+      
+      // Verify shape has rotation
+      let shape = useAppStore.getState().panels[0].shapes.find(s => s.id === 'rotation-reset-shape');
+      expect(shape.rotation).toBe(45);
+      
+      // Reset rotation with 'r' key
+      act(() => {
+        handleKeystroke('r', { key: 'r' });
+      });
+      
+      // Verify rotation was reset
+      shape = useAppStore.getState().panels[0].shapes.find(s => s.id === 'rotation-reset-shape');
+      expect(shape.rotation).toBe(0);
+    });
+
+    test('should reset dancer rotation to original starting rotation with r key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleDancerSelection, updateDancerState } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Test red dancer (should reset to 180)
+      const redDancerId = useAppStore.getState().panels[0].dancers[0].id;
+      act(() => {
+        updateDancerState(panelId, redDancerId, { rotation: 90 }); // Change from original
+        handleDancerSelection(panelId, redDancerId);
+        initializeDefaultKeystrokes();
+      });
+      
+      // Verify red dancer has modified rotation
+      let redDancer = useAppStore.getState().panels[0].dancers.find(d => d.id === redDancerId);
+      expect(redDancer.rotation).toBe(90);
+      
+      // Reset rotation with 'r' key
+      act(() => {
+        handleKeystroke('r', { key: 'r' });
+      });
+      
+      // Verify red dancer was reset to 180 (original starting rotation)
+      redDancer = useAppStore.getState().panels[0].dancers.find(d => d.id === redDancerId);
+      expect(redDancer.rotation).toBe(180);
+      
+      // Test blue dancer (should reset to 0)
+      const blueDancerId = useAppStore.getState().panels[0].dancers[1].id;
+      act(() => {
+        updateDancerState(panelId, blueDancerId, { rotation: 270 }); // Change from original
+        handleDancerSelection(panelId, blueDancerId);
+      });
+      
+      // Verify blue dancer has modified rotation
+      let blueDancer = useAppStore.getState().panels[0].dancers.find(d => d.id === blueDancerId);
+      expect(blueDancer.rotation).toBe(270);
+      
+      // Reset rotation with 'r' key
+      act(() => {
+        handleKeystroke('r', { key: 'r' });
+      });
+      
+      // Verify blue dancer was reset to 0 (original starting rotation)
+      blueDancer = useAppStore.getState().panels[0].dancers.find(d => d.id === blueDancerId);
+      expect(blueDancer.rotation).toBe(0);
+    });
+
+    test('should deselect all objects with escape key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, handleShapeDraw, handleShapeSelection } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      
+      // Add and select a shape
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: 'escape-test-shape',
+          type: 'signal',
+          x: 100,
+          y: 100,
+          fill: 'red',
+          stroke: 'black'
+        });
+        handleShapeSelection(panelId, 'escape-test-shape');
+        initializeDefaultKeystrokes();
+      });
+      
+      // Verify shape is selected
+      expect(useAppStore.getState().selectedShapeId?.shapeId).toBe('escape-test-shape');
+      
+      // Press escape to deselect
+      act(() => {
+        handleKeystroke('Escape', { key: 'Escape' });
+      });
+      
+      // Verify nothing is selected
+      expect(useAppStore.getState().selectedShapeId).toBeNull();
+      expect(useAppStore.getState().selectedDancer).toBeNull();
+      expect(useAppStore.getState().selectedHand).toBeNull();
     });
   });
 
