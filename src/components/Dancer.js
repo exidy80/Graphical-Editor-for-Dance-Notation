@@ -8,6 +8,12 @@ import {
   Circle,
   Transformer,
 } from 'react-konva';
+import {
+  DANCER_DIMENSIONS,
+  HAND_DIMENSIONS,
+  ARM_THICKNESS,
+  UI_DIMENSIONS,
+} from '../utils/dimensions';
 
 const Dancer = ({
   dancer,
@@ -38,9 +44,9 @@ const Dancer = ({
     right: useRef(),
   };
 
-  const headSize = 30;
-  const bodyWidth = 60;
-  const bodyHeight = 5;
+  const headSize = DANCER_DIMENSIONS.HEAD_SIZE;
+  const bodyWidth = DANCER_DIMENSIONS.BODY_WIDTH;
+  const bodyHeight = DANCER_DIMENSIONS.BODY_HEIGHT;
 
   // handles when the dancer is transformed (moved, rotated, scaled)
   const handleTransform = useCallback(
@@ -319,8 +325,8 @@ const Dancer = ({
         return (
           <Rect
             {...baseProps}
-            width={15}
-            height={5}
+            width={HAND_DIMENSIONS.WIDTH}
+            height={HAND_DIMENSIONS.HEIGHT}
             offsetX={7.5}
             offsetY={2.5}
             onMouseEnter={handleHandMouseEnter}
@@ -352,15 +358,23 @@ const Dancer = ({
         <Line
           ref={side === 'left' ? leftUpperArmRef : rightUpperArmRef}
           stroke={dancer.colour}
-          strokeWidth={upperArmThickness === 'thick' ? 5 : 2} //The two thickness options to toggle between
-          hitStrokeWidth={10} // Consistent hitbox
+          strokeWidth={
+            upperArmThickness === 'thick'
+              ? ARM_THICKNESS.THICK
+              : ARM_THICKNESS.THIN
+          } //The two thickness options to toggle between
+          hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH} // Consistent hitbox
           onClick={(e) => handleArmClick(side, 'Upper')(e)}
         />
         <Line
           ref={side === 'left' ? leftLowerArmRef : rightLowerArmRef}
           stroke={dancer.colour}
-          strokeWidth={lowerArmThickness === 'thick' ? 5 : 2}
-          hitStrokeWidth={10} // Consistent hitbox
+          strokeWidth={
+            lowerArmThickness === 'thick'
+              ? ARM_THICKNESS.THICK
+              : ARM_THICKNESS.THIN
+          }
+          hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH} // Consistent hitbox
           onClick={(e) => handleArmClick(side, 'Lower')(e)}
         />
         <Circle
@@ -409,7 +423,10 @@ const Dancer = ({
         <Transformer
           ref={transformerRef}
           boundBoxFunc={(oldBox, newBox) =>
-            newBox.width < 5 || newBox.height < 5 ? oldBox : newBox
+            newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+            newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+              ? oldBox
+              : newBox
           }
           onTransform={handleTransform}
         />

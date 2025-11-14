@@ -11,6 +11,7 @@ import {
 } from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
+import { SHAPE_DIMENSIONS, SHAPE_STYLE } from '../utils/dimensions';
 
 const Symbol = ({
   shape,
@@ -128,11 +129,11 @@ const Symbol = ({
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
           tension={0.5}
           pointerLength={5}
-          pointerWidth={5}
+          pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
           stroke={shape.stroke}
           fill={shape.fill}
-          strokeWidth={2}
-          hitStrokeWidth={10}
+          strokeWidth={SHAPE_STYLE.STROKE_WIDTH_THIN}
+          hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
           dash={[10, 5]}
         />
       )}
@@ -195,13 +196,13 @@ const Symbol = ({
       {shape.type === 'straightLine' && (
         <Arrow
           {...commonProps}
-          points={[10, 10, 75, 10]}
+          points={[10, 10, SHAPE_DIMENSIONS.straightLine.width, 10]}
           pointerLength={5}
-          pointerWidth={5}
+          pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
           fill={shape.fill}
           stroke={shape.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
+          strokeWidth={SHAPE_STYLE.STROKE_WIDTH_THICK}
+          hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
           dash={[10, 5]}
         />
       )}
@@ -232,7 +233,12 @@ const Symbol = ({
         />
       )}
       {shape.type === 'image' && (
-        <KonvaImage {...commonProps} image={image} scaleX={0.3} scaleY={0.3} />
+        <KonvaImage
+          {...commonProps}
+          image={image}
+          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
+          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
+        />
       )}
       {shape.type === 'stageX' && (
         <Text {...commonProps} text="X" fontSize={20} fill="black" />
