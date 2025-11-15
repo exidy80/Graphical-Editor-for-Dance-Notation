@@ -8,7 +8,6 @@ import {
   Circle,
   Transformer,
 } from 'react-konva';
-import { useAppStore } from '../stores';
 import {
   DANCER_DIMENSIONS,
   HAND_DIMENSIONS,
@@ -30,16 +29,11 @@ const Dancer = ({
   onUpdateDancerState,
   onUpdateHandPosition,
   onUpdateHandRotation,
+  onDragStart,
+  onDragEnd,
+  onTransformStart,
+  onTransformEnd,
 }) => {
-  // Get drag mode functions from store
-  const startDragMode = useAppStore((state) => state.startDragMode);
-  const endDragMode = useAppStore((state) => state.endDragMode);
-  const updateDancerState = useAppStore((state) => state.updateDancerState);
-
-  // Panel ID from context (assuming it's available in the store or passed down)
-  const currentPanelId = useAppStore(
-    (state) => state.currentPanelId || (state.panels && state.panels[0]?.id),
-  );
 
   const dancerRef = useRef();
   const headRef = useRef();
@@ -63,7 +57,7 @@ const Dancer = ({
   const handleTransform = useCallback(
     (e) => {
       const node = e.target;
-      updateDancerState(currentPanelId, dancer.id, {
+      onUpdateDancerState({
         x: node.x(),
         y: node.y(),
         rotation: node.rotation(),
@@ -71,31 +65,31 @@ const Dancer = ({
         scaleY: node.scaleY(),
       });
     },
-    [updateDancerState, currentPanelId, dancer.id],
+    [onUpdateDancerState],
   );
 
   // handles when the dancer drag starts
   const handleDragStart = useCallback(() => {
-    startDragMode();
-  }, [startDragMode]);
+    onDragStart();
+  }, [onDragStart]);
 
   // handles when the dancer transform starts
   const handleTransformStart = useCallback(() => {
-    startDragMode();
-  }, [startDragMode]);
+    onTransformStart();
+  }, [onTransformStart]);
 
   // handles when the dancer is being dragged
   const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
       if (node === dancerRef.current) {
-        updateDancerState(currentPanelId, dancer.id, {
+        onUpdateDancerState({
           x: node.x(),
           y: node.y(),
         });
       }
     },
-    [updateDancerState, currentPanelId, dancer.id],
+    [onUpdateDancerState],
   );
 
   // handles when the dancer drag is complete
@@ -103,24 +97,20 @@ const Dancer = ({
     (e) => {
       const node = e.target;
       if (node === dancerRef.current) {
-        endDragMode();
-        // The temporal middleware will now allow history creation
-        updateDancerState(currentPanelId, dancer.id, {
+        onDragEnd({
           x: node.x(),
           y: node.y(),
         });
       }
     },
-    [updateDancerState, endDragMode, currentPanelId, dancer.id],
+    [onDragEnd],
   );
 
   // handles when the dancer transform is complete
   const handleTransformEnd = useCallback(
     (e) => {
       const node = e.target;
-      endDragMode();
-      // The temporal middleware will now allow history creation
-      updateDancerState(currentPanelId, dancer.id, {
+      onTransformEnd({
         x: node.x(),
         y: node.y(),
         rotation: node.rotation(),
@@ -128,7 +118,7 @@ const Dancer = ({
         scaleY: node.scaleY(),
       });
     },
-    [updateDancerState, endDragMode, currentPanelId, dancer.id],
+    [onTransformEnd],
   );
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
