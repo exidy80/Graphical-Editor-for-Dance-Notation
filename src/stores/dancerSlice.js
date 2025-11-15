@@ -28,6 +28,17 @@ const createDancerSlice = (set, get) => ({
     }
   },
 
+  // Flag to track drag mode
+  _isDragMode: false,
+
+  startDragMode: () => {
+    set((curr) => ({ ...curr, _isDragMode: true }));
+  },
+
+  endDragMode: () => {
+    set((curr) => ({ ...curr, _isDragMode: false }));
+  },
+
   // Hand-specific updates (position and rotation) with lock propagation
   updateHandPosition: (panelId, dancerId, side, newPos) => {
     set((curr) => {

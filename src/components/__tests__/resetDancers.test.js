@@ -192,4 +192,42 @@ describe('Reset Dancers Functionality', () => {
     expect(resetPanel.dancers[0].rotation).toBe(180);
     expect(resetPanel.locks).toEqual([]);
   });
+
+  test('resetDancers clears temporal history after timeout', async () => {
+    const { getState } = useAppStore;
+
+    // Create some history entries
+    act(() => getState().addPanel());
+    const panel = getState().panels[0];
+
+    act(() =>
+      getState().updateDancerState(panel.id, panel.dancers[0].id, {
+        x: 200,
+        y: 100,
+      }),
+    );
+    act(() =>
+      getState().updateDancerState(panel.id, panel.dancers[0].id, {
+        x: 300,
+        y: 150,
+      }),
+    );
+
+    // Check we have history before reset
+    expect(useAppStore.temporal.getState().pastStates.length).toBeGreaterThan(
+      0,
+    );
+
+    // Reset dancers
+    act(() => getState().resetDancers());
+
+    // Wait for the setTimeout to execute
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    });
+
+    // Check that history was cleared
+    expect(useAppStore.temporal.getState().pastStates.length).toBe(0);
+    expect(useAppStore.temporal.getState().futureStates.length).toBe(0);
+  });
 });

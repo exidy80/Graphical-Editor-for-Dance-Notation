@@ -8,6 +8,7 @@ import {
   Circle,
   Transformer,
 } from 'react-konva';
+import { useAppStore } from '../stores';
 import {
   DANCER_DIMENSIONS,
   HAND_DIMENSIONS,
@@ -30,6 +31,16 @@ const Dancer = ({
   onUpdateHandPosition,
   onUpdateHandRotation,
 }) => {
+  // Get drag mode functions from store
+  const startDragMode = useAppStore((state) => state.startDragMode);
+  const endDragMode = useAppStore((state) => state.endDragMode);
+  const updateDancerState = useAppStore((state) => state.updateDancerState);
+
+  // Panel ID from context (assuming it's available in the store or passed down)
+  const currentPanelId = useAppStore(
+    (state) => state.currentPanelId || (state.panels && state.panels[0]?.id),
+  );
+
   const dancerRef = useRef();
   const headRef = useRef();
   const bodyRef = useRef();
@@ -52,42 +63,72 @@ const Dancer = ({
   const handleTransform = useCallback(
     (e) => {
       const node = e.target;
-      onUpdateDancerState({
-        x: node.x(), //logs position of dancer on X axis when transformed
-        y: node.y(), //logs position on Y axis
-        rotation: node.rotation(), //logs rotation
-        scaleX: node.scaleX(), //logs scale
+      updateDancerState(currentPanelId, dancer.id, {
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        scaleX: node.scaleX(),
         scaleY: node.scaleY(),
-      }); // locks enforced automatically for transform properties
+      });
     },
-    [onUpdateDancerState],
+    [updateDancerState, currentPanelId, dancer.id],
   );
 
-  // This function handles when the dancer is dragged and logs position
-  const handleDragEnd = useCallback(
-    (e) => {
-      const node = e.target;
-      if (node === dancerRef.current) {
-        onUpdateDancerState({
-          x: node.x(),
-          y: node.y(),
-        }); // locks enforced automatically for position changes
-      }
-    },
-    [onUpdateDancerState],
-  );
+  // handles when the dancer drag starts
+  const handleDragStart = useCallback(() => {
+    startDragMode();
+  }, [startDragMode]);
 
+  // handles when the dancer transform starts
+  const handleTransformStart = useCallback(() => {
+    startDragMode();
+  }, [startDragMode]);
+
+  // handles when the dancer is being dragged
   const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
       if (node === dancerRef.current) {
-        onUpdateDancerState({
+        updateDancerState(currentPanelId, dancer.id, {
           x: node.x(),
           y: node.y(),
-        }); // locks enforced automatically for position changes
+        });
       }
     },
-    [onUpdateDancerState],
+    [updateDancerState, currentPanelId, dancer.id],
+  );
+
+  // handles when the dancer drag is complete
+  const handleDragEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      if (node === dancerRef.current) {
+        endDragMode();
+        // The temporal middleware will now allow history creation
+        updateDancerState(currentPanelId, dancer.id, {
+          x: node.x(),
+          y: node.y(),
+        });
+      }
+    },
+    [updateDancerState, endDragMode, currentPanelId, dancer.id],
+  );
+
+  // handles when the dancer transform is complete
+  const handleTransformEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      endDragMode();
+      // The temporal middleware will now allow history creation
+      updateDancerState(currentPanelId, dancer.id, {
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        scaleX: node.scaleX(),
+        scaleY: node.scaleY(),
+      });
+    },
+    [updateDancerState, endDragMode, currentPanelId, dancer.id],
   );
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
@@ -404,9 +445,11 @@ const Dancer = ({
         opacity={opacity}
         draggable={!disabled}
         ref={dancerRef}
+        onDragStart={handleDragStart}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onTransform={handleTransform}
+        onTransformEnd={handleTransformEnd}
       >
         {renderHead()}
         <Rect
@@ -428,7 +471,9 @@ const Dancer = ({
               ? oldBox
               : newBox
           }
+          onTransformStart={handleTransformStart}
           onTransform={handleTransform}
+          onTransformEnd={handleTransformEnd}
         />
       )}
       {selectedHandSide && (

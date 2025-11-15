@@ -103,9 +103,8 @@ export const useAppStore = create(
         panels: state.panels,
       }),
 
-      // Custom equality function to avoid saving every tiny change
+      // Simple equality check
       equality: (pastState, currentState) => {
-        // Only create new history state if panels actually changed
         return (
           JSON.stringify(pastState.panels) ===
           JSON.stringify(currentState.panels)

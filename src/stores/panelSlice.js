@@ -67,6 +67,18 @@ const createPanelSlice = (set, get) => ({
       selectedShapeId: null,
       lockUi: { active: false, selected: [] },
     });
+
+    // Clear undo/redo history AFTER the state reset to avoid the reset itself being in history
+    setTimeout(() => {
+      // Import useAppStore directly to access temporal
+      const { useAppStore } = require('./index.js');
+      const temporal = useAppStore.temporal;
+
+      if (temporal) {
+        const temporalState = temporal.getState();
+        temporalState.clear();
+      }
+    }, 0);
   },
 
   handlePanelSelection: (panelId) => set({ selectedPanel: panelId }),
