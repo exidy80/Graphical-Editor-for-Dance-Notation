@@ -435,6 +435,9 @@ describe('Undo/Redo Functionality', () => {
     test('should handle undo when no history exists', () => {
       const { getState } = useAppStore;
 
+      const numberOfPanels = getState().panels.length;
+      console.log('PRE redo panels:', getState().panels.length);
+
       // Try to undo when no history exists
       act(() => {
         getState().initializeDefaultKeystrokes();
@@ -445,8 +448,11 @@ describe('Undo/Redo Functionality', () => {
         });
       });
 
+      console.log('POST redo panels:', getState().panels.length);
+      console.log('after undo attempt, panels:', getState().panels);
+
       // Should not crash and state should remain the same
-      expect(getState().panels.length).toBe(1);
+      expect(getState().panels.length).toBe(numberOfPanels);
     });
 
     test('should handle redo when no future states exist', () => {

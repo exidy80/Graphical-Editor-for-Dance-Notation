@@ -71,8 +71,7 @@ const initialState = () => {
 
 export const useAppStore = create(
   temporal(
-    autoSaveMiddleware((set, get) => {
-      // Initialize state with auto-save recovery
+    autoSaveMiddleware((set, get, api) => {
       const state = initialState();
 
       return {
@@ -84,14 +83,14 @@ export const useAppStore = create(
         _absoluteToLocal: coordinateTransforms.absoluteToLocal,
 
         // Combine all slices
-        ...createPanelSlice(set, get),
-        ...createDancerSlice(set, get),
-        ...createShapeSlice(set, get),
-        ...createUISlice(set, get),
-        ...createLockSlice(set, get),
-        ...createSerializationSlice(set, get),
-        ...createKeystrokeSlice(set, get),
-        ...createHistorySlice(set, get),
+        ...createPanelSlice(set, get, api),
+        ...createDancerSlice(set, get, api),
+        ...createShapeSlice(set, get, api),
+        ...createUISlice(set, get, api),
+        ...createLockSlice(set, get, api),
+        ...createSerializationSlice(set, get, api),
+        ...createKeystrokeSlice(set, get, api),
+        ...createHistorySlice(set, get, api),
       };
     }),
     {
@@ -102,14 +101,9 @@ export const useAppStore = create(
       partialize: (state) => ({
         panels: state.panels,
       }),
-
-      // Simple equality check
-      equality: (pastState, currentState) => {
-        return (
-          JSON.stringify(pastState.panels) ===
-          JSON.stringify(currentState.panels)
-        );
-      },
+      equality: (pastState, currentState) =>
+        JSON.stringify(pastState.panels) ===
+        JSON.stringify(currentState.panels),
     },
   ),
 );

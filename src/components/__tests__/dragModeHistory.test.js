@@ -1,4 +1,3 @@
-import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
 
 describe('Drag Mode History Test', () => {
@@ -12,9 +11,7 @@ describe('Drag Mode History Test', () => {
     }
 
     // Reset to initial state for each test
-    act(() => {
-      getState().resetDancers();
-    });
+    getState().resetDancers();
   });
 
   test('drag mode flags work correctly', () => {
@@ -22,15 +19,11 @@ describe('Drag Mode History Test', () => {
 
     expect(getState()._isDragMode).toBe(false);
 
-    act(() => {
-      getState().startDragMode();
-    });
+    getState().startDragMode();
 
     expect(getState()._isDragMode).toBe(true);
 
-    act(() => {
-      getState().endDragMode();
-    });
+    getState().endDragMode();
 
     expect(getState()._isDragMode).toBe(false);
   });
@@ -48,16 +41,12 @@ describe('Drag Mode History Test', () => {
     const initialY = initialDancer.y;
 
     // Start drag mode
-    act(() => {
-      getState().startDragMode();
-    });
+    getState().startDragMode();
 
     // Update dancer position during drag (simulating continuous updates)
-    act(() => {
-      getState().updateDancerState(panelId, dancerId, {
-        x: initialX + 50,
-        y: initialY + 25,
-      });
+    getState().updateDancerState(panelId, dancerId, {
+      x: initialX + 50,
+      y: initialY + 25,
     });
 
     // Verify position updated
@@ -68,16 +57,12 @@ describe('Drag Mode History Test', () => {
     expect(duringDragDancer.y).toBe(initialY + 25);
 
     // End drag mode
-    act(() => {
-      getState().endDragMode();
-    });
+    getState().endDragMode();
 
     // Final update (simulating drag end)
-    act(() => {
-      getState().updateDancerState(panelId, dancerId, {
-        x: initialX + 100,
-        y: initialY + 50,
-      });
+    getState().updateDancerState(panelId, dancerId, {
+      x: initialX + 100,
+      y: initialY + 50,
     });
 
     // Verify final position
@@ -94,18 +79,14 @@ describe('Drag Mode History Test', () => {
     const dancerId = getState().panels[0].dancers[0].id;
 
     // First, create some history by updating a dancer
-    act(() => {
-      getState().updateDancerState(panelId, dancerId, { x: 200, y: 200 });
-    });
+    getState().updateDancerState(panelId, dancerId, { x: 200, y: 200 });
 
     // Check if history was created
     const historyAfterUpdate = getState().temporal?.pastStates?.length || 0;
     console.log('History after dancer update:', historyAfterUpdate);
 
     // Now reset dancers
-    act(() => {
-      getState().resetDancers();
-    });
+    getState().resetDancers();
 
     // Wait a bit for any async operations
     setTimeout(() => {

@@ -1,7 +1,7 @@
 // Keystroke management slice - handles keyboard shortcuts and key bindings
 import { getCenterOffset } from '../utils/dimensions.js';
 
-const createKeystrokeSlice = (set, get) => ({
+const createKeystrokeSlice = (set, get, api) => ({
   // State
   keystrokes: {},
 
@@ -336,17 +336,17 @@ const createKeystrokeSlice = (set, get) => ({
     registerKeystroke('z', {
       description: 'Undo last action',
       handler: (event, context) => {
-        try {
-          const { useAppStore } = require('../stores/index.js');
-          const temporalState = useAppStore.temporal?.getState();
-          if (temporalState && temporalState.pastStates.length > 0) {
-            temporalState.undo();
-            console.log('Undo performed');
-          } else {
-            console.log('Nothing to undo');
-          }
-        } catch (error) {
-          console.warn('Undo failed:', error);
+        const temporalStore = api?.temporal;
+        if (!temporalStore) {
+          console.warn('Undo failed: temporal store not available');
+          return;
+        }
+        const temporalState = temporalStore.getState();
+        if (temporalState.pastStates.length > 0) {
+          temporalState.undo();
+          console.log('Undo performed');
+        } else {
+          console.log('Nothing to undo');
         }
       },
       context: 'global',
@@ -358,17 +358,17 @@ const createKeystrokeSlice = (set, get) => ({
     registerKeystroke('y', {
       description: 'Redo last undone action',
       handler: (event, context) => {
-        try {
-          const { useAppStore } = require('../stores/index.js');
-          const temporalState = useAppStore.temporal?.getState();
-          if (temporalState && temporalState.futureStates.length > 0) {
-            temporalState.redo();
-            console.log('Redo performed');
-          } else {
-            console.log('Nothing to redo');
-          }
-        } catch (error) {
-          console.warn('Redo failed:', error);
+        const temporalStore = api?.temporal;
+        if (!temporalStore) {
+          console.warn('Redo failed: temporal store not available');
+          return;
+        }
+        const temporalState = temporalStore.getState();
+        if (temporalState.futureStates.length > 0) {
+          temporalState.redo();
+          console.log('Redo performed');
+        } else {
+          console.log('Nothing to redo');
         }
       },
       context: 'global',

@@ -2,7 +2,7 @@
 import { temporal } from 'zundo';
 
 // History slice that provides methods to interact with the temporal store
-const createHistorySlice = (set, get) => ({
+const createHistorySlice = (set, get, api) => ({
   // History configuration
   historyConfig: {
     // Limit the number of history states to prevent memory issues
@@ -81,50 +81,18 @@ const createHistorySlice = (set, get) => ({
 
   // Helper to check if undo/redo is available
   canUndo: () => {
-    const temporal = get().temporal;
-    return temporal ? temporal.pastStates.length > 0 : false;
+    const temporalStore = api?.temporal;
+    if (!temporalStore) return false;
+    const { pastStates } = temporalStore.getState();
+    return pastStates.length > 0;
   },
 
   canRedo: () => {
-    const temporal = get().temporal;
-    return temporal ? temporal.futureStates.length > 0 : false;
+    const temporalStore = api?.temporal;
+    if (!temporalStore) return false;
+    const { futureStates } = temporalStore.getState();
+    return futureStates.length > 0;
   },
 });
 
 export default createHistorySlice;
-
-// Export temporal middleware configurator for use in main store
-export const createTemporalStore = (storeConfig) => {
-  return temporal(storeConfig, {
-    limit: 50,
-
-    // Equality function to determine when to save state
-    equality: (pastState, currentState) => {
-      // Define tracked properties for history
-      const trackedProperties = ['panels'];
-
-      for (const prop of trackedProperties) {
-        if (
-          JSON.stringify(pastState[prop]) !== JSON.stringify(currentState[prop])
-        ) {
-          return false;
-        }
-      }
-
-      return true;
-    },
-
-    // Handle batching - group rapid state changes within this time window
-    handleSet: (handleSet) => (fn) => {
-      // For now, use default behavior
-      // Later we can add custom batching logic for drag operations
-      return handleSet(fn);
-    },
-
-    // Only track specific properties
-    partialize: (state) => {
-      const { panels } = state;
-      return { panels };
-    },
-  });
-};
