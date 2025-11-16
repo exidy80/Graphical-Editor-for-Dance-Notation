@@ -5,9 +5,6 @@ import { temporal } from 'zundo';
 const createHistorySlice = (set, get, api) => ({
   // History configuration
   historyConfig: {
-    // Limit the number of history states to prevent memory issues
-    limit: 50,
-
     // Properties to track in history - only include data that should be undoable
     trackedProperties: [
       'panels', // Track panel changes (symbols, dancers)
