@@ -12,8 +12,8 @@ _These shortcuts work when a symbol/shape is selected_
 
 | Key                | Action                          |
 | ------------------ | ------------------------------- |
-| ← →                | Rotate symbol left/right by 15° |
-| Shift + ← →        | Fine rotate left/right by 1°    |
+| ← →                | Rotate symbol left/right by 45° |
+| Shift + ← →        | Fine rotate left/right by 5°    |
 | Delete / Backspace | Delete selected symbol          |
 | R                  | Reset rotation to 0°            |
 
@@ -23,8 +23,8 @@ _These shortcuts work when a dancer is selected_
 
 | Key         | Action                          |
 | ----------- | ------------------------------- |
-| ← →         | Rotate dancer left/right by 15° |
-| Shift + ← → | Fine rotate left/right by 1°    |
+| ← →         | Rotate dancer left/right by 45° |
+| Shift + ← → | Fine rotate left/right by 5°    |
 | R           | Reset rotation to 0°            |
 
 ### Global Context

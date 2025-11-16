@@ -95,7 +95,7 @@ export const useAppStore = create(
     }),
     {
       // Temporal middleware configuration
-      limit: 50,
+      limit: 100,
 
       // Only track state changes to 'panels' for undo/redo
       partialize: (state) => ({

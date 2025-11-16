@@ -9,7 +9,7 @@ export const DANCER_DIMENSIONS = {
   // Actual visual center calculation based on dancer layout:
   // Head triangle: -15px to +15px, Body rectangle: +7.5px to +12.5px
   // Visual center: (-15 + 12.5) / 2 = -1.25px
-  VISUAL_CENTER_Y: -1.25,
+  VISUAL_CENTER_Y: -200,
 };
 
 // Hand selector dimensions
@@ -81,31 +81,6 @@ export const getActualDimensions = (object, objectType) => {
     return {
       width: baseDimensions.width * scaleX,
       height: baseDimensions.height * scaleY,
-    };
-  }
-};
-
-/**
- * Calculate the center offset for an object (distance from top-left corner to center)
- * @param {Object} object - The dancer or shape object
- * @param {string} objectType - 'dancer' or 'shape'
- * @returns {Object} {offsetX, offsetY} - Offset to center
- */
-export const getCenterOffset = (object, objectType) => {
-  const { width, height } = getActualDimensions(object, objectType);
-
-  if (objectType === 'dancer') {
-    // For dancers, use the actual visual center based on head+body layout
-    const scaleY = object.scaleY || 1;
-    return {
-      offsetX: width / 2,
-      offsetY: DANCER_DIMENSIONS.VISUAL_CENTER_Y * scaleY,
-    };
-  } else {
-    // For shapes, use standard geometric center
-    return {
-      offsetX: width / 2,
-      offsetY: height / 2,
     };
   }
 };
