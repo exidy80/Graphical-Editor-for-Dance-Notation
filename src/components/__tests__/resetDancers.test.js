@@ -1,4 +1,3 @@
-import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
 
 describe('Reset Dancers Functionality', () => {
@@ -34,7 +33,7 @@ describe('Reset Dancers Functionality', () => {
     expect(getState().panels).toHaveLength(0);
 
     // Call resetDancers
-    act(() => getState().resetDancers());
+    getState().resetDancers();
 
     const state = getState();
 
@@ -87,29 +86,25 @@ describe('Reset Dancers Functionality', () => {
     const { getState } = useAppStore;
 
     // Set up some state first
-    act(() => getState().resetDancers()); // Get initial panel
+    getState().resetDancers(); // Get initial panel
     const initialPanel = getState().panels[0];
 
     // Set various selections
-    act(() => getState().handlePanelSelection(initialPanel.id));
-    act(() =>
-      getState().setSelectedDancer({
-        panelId: initialPanel.id,
-        dancerId: initialPanel.dancers[0].id,
-      }),
-    );
-    act(() =>
-      getState().setSelectedHand({
-        panelId: initialPanel.id,
-        dancerId: initialPanel.dancers[0].id,
-        handSide: 'left',
-      }),
-    );
-    act(() => getState().setLockModeActive(true));
+    getState().handlePanelSelection(initialPanel.id);
+    getState().setSelectedDancer({
+      panelId: initialPanel.id,
+      dancerId: initialPanel.dancers[0].id,
+    });
+    getState().setSelectedHand({
+      panelId: initialPanel.id,
+      dancerId: initialPanel.dancers[0].id,
+      handSide: 'left',
+    });
+    getState().setLockModeActive(true);
 
     // Add more panels
-    act(() => getState().addPanel());
-    act(() => getState().addPanel());
+    getState().addPanel();
+    getState().addPanel();
 
     expect(getState().panels).toHaveLength(3);
     expect(getState().selectedPanel).toBe(initialPanel.id);
@@ -118,7 +113,7 @@ describe('Reset Dancers Functionality', () => {
     expect(getState().lockUi.active).toBe(true);
 
     // Now reset
-    act(() => getState().resetDancers());
+    getState().resetDancers();
 
     const state = getState();
 
@@ -140,36 +135,30 @@ describe('Reset Dancers Functionality', () => {
     const { getState } = useAppStore;
 
     // Start with a panel and modify it significantly
-    act(() => getState().addPanel());
+    getState().addPanel();
     const panel = getState().panels[0];
 
     // Modify dancer positions and properties
-    act(() =>
-      getState().updateDancerState(panel.id, panel.dancers[0].id, {
-        x: 100,
-        y: 100,
-        colour: 'green',
-        rotation: 45,
-        leftHandPos: { x: -100, y: -100 },
-        rightHandPos: { x: 100, y: -100 },
-        leftElbowPos: { x: -75, y: -50 },
-        rightElbowPos: { x: 75, y: -50 },
-      }),
-    );
+    getState().updateDancerState(panel.id, panel.dancers[0].id, {
+      x: 100,
+      y: 100,
+      colour: 'green',
+      rotation: 45,
+      leftHandPos: { x: -100, y: -100 },
+      rightHandPos: { x: 100, y: -100 },
+      leftElbowPos: { x: -75, y: -50 },
+      rightElbowPos: { x: 75, y: -50 },
+    });
 
     // Add locks
-    act(() => getState().setLockModeActive(true));
-    act(() =>
-      getState().handleHandClick(panel.id, panel.dancers[0].id, 'left'),
-    );
-    act(() =>
-      getState().handleHandClick(panel.id, panel.dancers[1].id, 'right'),
-    );
-    act(() => getState().applySelectedLock(panel.id));
+    getState().setLockModeActive(true);
+    getState().handleHandClick(panel.id, panel.dancers[0].id, 'left');
+    getState().handleHandClick(panel.id, panel.dancers[1].id, 'right');
+    getState().applySelectedLock(panel.id);
 
     // Add more panels
-    act(() => getState().addPanel());
-    act(() => getState().addPanel());
+    getState().addPanel();
+    getState().addPanel();
 
     // Verify the modified state
     expect(getState().panels).toHaveLength(3);
@@ -178,7 +167,7 @@ describe('Reset Dancers Functionality', () => {
     expect(getState().panels[0].locks).toHaveLength(1);
 
     // Reset dancers
-    act(() => getState().resetDancers());
+    getState().resetDancers();
 
     const state = getState();
 
@@ -191,5 +180,37 @@ describe('Reset Dancers Functionality', () => {
     expect(resetPanel.dancers[0].colour).toBe('red');
     expect(resetPanel.dancers[0].rotation).toBe(180);
     expect(resetPanel.locks).toEqual([]);
+  });
+
+  test('resetDancers clears temporal history after timeout', async () => {
+    const { getState } = useAppStore;
+
+    // Create some history entries
+    getState().addPanel();
+    const panel = getState().panels[0];
+
+    getState().updateDancerState(panel.id, panel.dancers[0].id, {
+      x: 200,
+      y: 100,
+    });
+    getState().updateDancerState(panel.id, panel.dancers[0].id, {
+      x: 300,
+      y: 150,
+    });
+
+    // Check we have history before reset
+    expect(useAppStore.temporal.getState().pastStates.length).toBeGreaterThan(
+      0,
+    );
+
+    // Reset dancers
+    getState().resetDancers();
+
+    // Wait for the setTimeout to execute
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    // Check that history was cleared
+    expect(useAppStore.temporal.getState().pastStates.length).toBe(0);
+    expect(useAppStore.temporal.getState().futureStates.length).toBe(0);
   });
 });

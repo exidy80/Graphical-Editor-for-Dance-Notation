@@ -19,6 +19,8 @@ const Canvas = ({ panelId }) => {
   const updateDancerState = useAppStore((state) => state.updateDancerState);
   const updateHandPosition = useAppStore((state) => state.updateHandPosition);
   const updateHandRotation = useAppStore((state) => state.updateHandRotation);
+  const startDragMode = useAppStore((state) => state.startDragMode);
+  const endDragMode = useAppStore((state) => state.endDragMode);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const handleShapeSelection = useAppStore(
     (state) => state.handleShapeSelection,
@@ -83,6 +85,20 @@ const Canvas = ({ panelId }) => {
           const boundHandleHandClick = (handSide) =>
             handleHandClick(panelId, dancer.id, handSide);
 
+          // Drag mode handlers
+          const handleDancerDragStart = () => startDragMode();
+          const handleDancerDragEnd = (finalState) => {
+            endDragMode();
+            // Final update with history tracking enabled
+            updateDancerState(panelId, dancer.id, finalState);
+          };
+          const handleDancerTransformStart = () => startDragMode();
+          const handleDancerTransformEnd = (finalState) => {
+            endDragMode();
+            // Final update with history tracking enabled
+            updateDancerState(panelId, dancer.id, finalState);
+          };
+
           // Check if this dancer is selected
           const isSelected =
             selectedDancer &&
@@ -118,6 +134,10 @@ const Canvas = ({ panelId }) => {
               onUpdateDancerState={boundUpdateDancerState}
               onUpdateHandPosition={boundUpdateHandPosition}
               onUpdateHandRotation={boundUpdateHandRotation}
+              onDragStart={handleDancerDragStart}
+              onDragEnd={handleDancerDragEnd}
+              onTransformStart={handleDancerTransformStart}
+              onTransformEnd={handleDancerTransformEnd}
             />
           );
         })}

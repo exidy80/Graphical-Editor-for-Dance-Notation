@@ -25,6 +25,7 @@
     "sidebar": "^1.0.2",
     "toggle": "^1.0.1",
     "web-vitals": "^2.1.4",
+    "zundo": "^2.3.0",
     "zustand": "^5.0.3"
   },
   "scripts": {

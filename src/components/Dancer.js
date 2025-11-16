@@ -29,7 +29,12 @@ const Dancer = ({
   onUpdateDancerState,
   onUpdateHandPosition,
   onUpdateHandRotation,
+  onDragStart,
+  onDragEnd,
+  onTransformStart,
+  onTransformEnd,
 }) => {
+
   const dancerRef = useRef();
   const headRef = useRef();
   const bodyRef = useRef();
@@ -53,30 +58,27 @@ const Dancer = ({
     (e) => {
       const node = e.target;
       onUpdateDancerState({
-        x: node.x(), //logs position of dancer on X axis when transformed
-        y: node.y(), //logs position on Y axis
-        rotation: node.rotation(), //logs rotation
-        scaleX: node.scaleX(), //logs scale
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        scaleX: node.scaleX(),
         scaleY: node.scaleY(),
-      }); // locks enforced automatically for transform properties
+      });
     },
     [onUpdateDancerState],
   );
 
-  // This function handles when the dancer is dragged and logs position
-  const handleDragEnd = useCallback(
-    (e) => {
-      const node = e.target;
-      if (node === dancerRef.current) {
-        onUpdateDancerState({
-          x: node.x(),
-          y: node.y(),
-        }); // locks enforced automatically for position changes
-      }
-    },
-    [onUpdateDancerState],
-  );
+  // handles when the dancer drag starts
+  const handleDragStart = useCallback(() => {
+    onDragStart();
+  }, [onDragStart]);
 
+  // handles when the dancer transform starts
+  const handleTransformStart = useCallback(() => {
+    onTransformStart();
+  }, [onTransformStart]);
+
+  // handles when the dancer is being dragged
   const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
@@ -84,10 +86,39 @@ const Dancer = ({
         onUpdateDancerState({
           x: node.x(),
           y: node.y(),
-        }); // locks enforced automatically for position changes
+        });
       }
     },
     [onUpdateDancerState],
+  );
+
+  // handles when the dancer drag is complete
+  const handleDragEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      if (node === dancerRef.current) {
+        onDragEnd({
+          x: node.x(),
+          y: node.y(),
+        });
+      }
+    },
+    [onDragEnd],
+  );
+
+  // handles when the dancer transform is complete
+  const handleTransformEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      onTransformEnd({
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+        scaleX: node.scaleX(),
+        scaleY: node.scaleY(),
+      });
+    },
+    [onTransformEnd],
   );
 
   // This function handles when a part of the dancer (like a hand) is dragged and logs position
@@ -404,9 +435,11 @@ const Dancer = ({
         opacity={opacity}
         draggable={!disabled}
         ref={dancerRef}
+        onDragStart={handleDragStart}
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         onTransform={handleTransform}
+        onTransformEnd={handleTransformEnd}
       >
         {renderHead()}
         <Rect
@@ -428,7 +461,9 @@ const Dancer = ({
               ? oldBox
               : newBox
           }
+          onTransformStart={handleTransformStart}
           onTransform={handleTransform}
+          onTransformEnd={handleTransformEnd}
         />
       )}
       {selectedHandSide && (

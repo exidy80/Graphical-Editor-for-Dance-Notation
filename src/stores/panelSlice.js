@@ -1,7 +1,8 @@
+// panelSlice.js
 import createInitialPanel from './panelFactory.js';
 
 // Panel management slice - handles panel CRUD operations and panel-level state
-const createPanelSlice = (set, get) => ({
+const createPanelSlice = (set, get, api) => ({
   // Actions (initial state for panels and panelSize is set in index.js)
   setPanels: (panels) => set({ panels }),
 
@@ -67,6 +68,15 @@ const createPanelSlice = (set, get) => ({
       selectedShapeId: null,
       lockUi: { active: false, selected: [] },
     });
+
+    // Clear undo/redo history via zundo temporal store
+    const temporalStore = api?.temporal;
+    if (temporalStore) {
+      const { clear } = temporalStore.getState();
+      if (typeof clear === 'function') {
+        clear();
+      }
+    }
   },
 
   handlePanelSelection: (panelId) => set({ selectedPanel: panelId }),

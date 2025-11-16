@@ -1,7 +1,6 @@
 // Keystroke management slice - handles keyboard shortcuts and key bindings
-import { getCenterOffset } from '../utils/dimensions.js';
 
-const createKeystrokeSlice = (set, get) => ({
+const createKeystrokeSlice = (set, get, api) => ({
   // State
   keystrokes: {},
 
@@ -123,9 +122,8 @@ const createKeystrokeSlice = (set, get) => ({
   },
 
   // Configuration
-  maintainRotationCenter: true, // Set to false to disable center-maintaining rotation
-  rotationStep: 15, // Default rotation step in degrees
-  fineRotationStep: 1, // Fine rotation step with modifier keys
+  rotationStep: 45, // Default rotation step in degrees
+  fineRotationStep: 5, // Fine rotation step with modifier keys
 
   // Helper function to calculate new position that maintains visual center during rotation
   _calculateCenterPreservingPosition: (object, objectType, rotationDegrees) => {
@@ -144,10 +142,6 @@ const createKeystrokeSlice = (set, get) => ({
 
   setFineRotationStep: (step) => {
     set({ fineRotationStep: step });
-  },
-
-  setMaintainRotationCenter: (maintain) => {
-    set({ maintainRotationCenter: maintain });
   },
 
   // Default keystroke initialization
@@ -270,23 +264,11 @@ const createKeystrokeSlice = (set, get) => ({
     registerKeystroke('Escape', {
       description: 'Deselect all objects',
       handler: (event, context) => {
-        set({ 
+        set({
           selectedDancer: null,
           selectedHand: null,
-          selectedShapeId: null
+          selectedShapeId: null,
         });
-      },
-      context: 'global',
-      priority: 1,
-    });
-
-    // Space key - toggle rotation center maintenance for selected object
-    registerKeystroke(' ', {  // Space key
-      description: 'Toggle rotation center maintenance',
-      handler: (event, context) => {
-        const { maintainRotationCenter, setMaintainRotationCenter } = get();
-        setMaintainRotationCenter(!maintainRotationCenter);
-        console.log(`Rotation center maintenance: ${!maintainRotationCenter ? 'enabled' : 'disabled'}`);
       },
       context: 'global',
       priority: 1,
@@ -296,17 +278,25 @@ const createKeystrokeSlice = (set, get) => ({
     registerKeystroke('r', {
       description: 'Reset rotation to starting position',
       handler: (event, context) => {
-        const { selectedDancer, selectedShapeId, updateDancerState, updateShapeState, panels } = get();
-        
+        const {
+          selectedDancer,
+          selectedShapeId,
+          updateDancerState,
+          updateShapeState,
+          panels,
+        } = get();
+
         if (selectedDancer) {
           const { panelId, dancerId } = selectedDancer;
-          const panel = panels.find(p => p.id === panelId);
+          const panel = panels.find((p) => p.id === panelId);
           if (panel) {
-            const dancer = panel.dancers.find(d => d.id === dancerId);
+            const dancer = panel.dancers.find((d) => d.id === dancerId);
             if (dancer) {
               // Reset to original starting rotation based on dancer color
               const originalRotation = dancer.colour === 'red' ? 180 : 0;
-              updateDancerState(panelId, dancerId, { rotation: originalRotation });
+              updateDancerState(panelId, dancerId, {
+                rotation: originalRotation,
+              });
             }
           }
         } else if (selectedShapeId) {
@@ -318,6 +308,50 @@ const createKeystrokeSlice = (set, get) => ({
       context: 'global',
       priority: 1,
     });
+
+    // Cmd+Z (Ctrl+Z) - Undo last action
+    registerKeystroke('z', {
+      description: 'Undo last action',
+      handler: (event, context) => {
+        const temporalStore = api?.temporal;
+        if (!temporalStore) {
+          console.warn('Undo failed: temporal store not available');
+          return;
+        }
+        const temporalState = temporalStore.getState();
+        if (temporalState.pastStates.length > 0) {
+          temporalState.undo();
+          console.log('Undo performed');
+        } else {
+          console.log('Nothing to undo');
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true },
+      priority: 1,
+    });
+
+    // Cmd+Y (Ctrl+Y) - Redo last undone action
+    registerKeystroke('y', {
+      description: 'Redo last undone action',
+      handler: (event, context) => {
+        const temporalStore = api?.temporal;
+        if (!temporalStore) {
+          console.warn('Redo failed: temporal store not available');
+          return;
+        }
+        const temporalState = temporalStore.getState();
+        if (temporalState.futureStates.length > 0) {
+          temporalState.redo();
+          console.log('Redo performed');
+        } else {
+          console.log('Nothing to redo');
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true },
+      priority: 1,
+    });
   },
 
   // Internal rotation helper
@@ -327,7 +361,6 @@ const createKeystrokeSlice = (set, get) => ({
       selectedShapeId,
       updateDancerState,
       updateShapeState,
-      maintainRotationCenter,
     } = get();
 
     if (selectedDancer) {
@@ -339,27 +372,7 @@ const createKeystrokeSlice = (set, get) => ({
           const currentRotation = dancer.rotation || 0;
           const newRotation = currentRotation + degrees;
 
-          if (maintainRotationCenter) {
-            // Use centralized dimension calculation for center-based rotation
-            const { offsetX, offsetY } = getCenterOffset(dancer, 'dancer');
-
-            // If this is the first time setting offsets, just set them without adjusting position
-            // The offset tells Konva where the rotation point is within the object
-            if (dancer.offsetX === undefined && dancer.offsetY === undefined) {
-              updateDancerState(panelId, dancerId, {
-                rotation: newRotation,
-                offsetX: offsetX,
-                offsetY: offsetY,
-                // DON'T adjust x,y - dancers were working correctly before
-              });
-            } else {
-              // Just update rotation, offsets already set
-              updateDancerState(panelId, dancerId, { rotation: newRotation });
-            }
-          } else {
-            // Simple rotation without position adjustment
-            updateDancerState(panelId, dancerId, { rotation: newRotation });
-          }
+          updateDancerState(panelId, dancerId, { rotation: newRotation });
         }
       }
     } else if (selectedShapeId) {
@@ -371,31 +384,7 @@ const createKeystrokeSlice = (set, get) => ({
           const currentRotation = shape.rotation || 0;
           const newRotation = currentRotation + degrees;
 
-          if (maintainRotationCenter) {
-            // Use centralized dimension calculation for center-based rotation
-            const { offsetX, offsetY } = getCenterOffset(shape, 'shape');
-
-            // If this is the first time setting offsets, we need to adjust position to compensate
-            // for the visual shift that occurs when changing the rotation center
-            if (shape.offsetX === undefined && shape.offsetY === undefined) {
-              // When we set offset for the first time, Konva changes the rotation center
-              // from top-left (0,0) to the offset point. To keep the shape visually in the 
-              // same place, we need to move the shape's x,y coordinates by the offset amount.
-              updateShapeState(panelId, shapeId, {
-                rotation: newRotation,
-                offsetX: offsetX,
-                offsetY: offsetY,
-                x: shape.x + offsetX,  // Compensate for offset change
-                y: shape.y + offsetY   // Compensate for offset change
-              });
-            } else {
-              // Just update rotation, offsets already set
-              updateShapeState(panelId, shapeId, { rotation: newRotation });
-            }
-          } else {
-            // Simple rotation without position adjustment
-            updateShapeState(panelId, shapeId, { rotation: newRotation });
-          }
+          updateShapeState(panelId, shapeId, { rotation: newRotation });
         }
       }
     }
