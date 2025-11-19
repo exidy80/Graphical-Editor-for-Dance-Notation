@@ -1,11 +1,11 @@
 // Dancer interaction slice - handles dancer selection, state updates, and hand interactions
 import { adjustElbowsForProportionalArms } from './armAdjustment.js';
 
-const createDancerSlice = (set, get) => ({
+const createDancerSlice = (set, get, api) => ({
   // Actions
   updateDancerState: (panelId, dancerId, newState) => {
-    set((state) => ({
-      panels: state.panels.map((panel) =>
+    set((state) => {
+      const newPanels = state.panels.map((panel) =>
         panel.id === panelId
           ? {
               ...panel,
@@ -14,8 +14,12 @@ const createDancerSlice = (set, get) => ({
               ),
             }
           : panel,
-      ),
-    }));
+      );
+      return {
+        ...state,
+        panels: newPanels,
+      };
+    });
 
     // Check if the update affects properties that require lock enforcement
     const transformProps = ['x', 'y', 'rotation', 'scaleX', 'scaleY'];
@@ -28,16 +32,10 @@ const createDancerSlice = (set, get) => ({
     }
   },
 
-  // Flag to track drag mode
-  _isDragMode: false,
-
-  startDragMode: () => {
-    set((curr) => ({ ...curr, _isDragMode: true }));
-  },
-
-  endDragMode: () => {
-    set((curr) => ({ ...curr, _isDragMode: false }));
-  },
+  // Drag mode functions - actual pause/resume happens in index.js wrapper
+  // These are no-ops to avoid state changes and batching issues
+  startDragMode: () => {},
+  endDragMode: () => {},
 
   // Hand-specific updates (position and rotation) with lock propagation
   updateHandPosition: (panelId, dancerId, side, newPos) => {

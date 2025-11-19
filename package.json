@@ -1,6 +1,6 @@
 {
-  "name": "graphical-editor",
-  "version": "0.1.0",
+  "name": "dancemarks",
+  "version": "0.2.0",
   "private": true,
   "homepage": "https://exidy80.github.io/Graphical-Editor-for-Dance-Notation",
   "dependencies": {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import Toolbar from './components/Toolbar';
 import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
@@ -8,6 +8,9 @@ import './App.css';
 import { useAppStore } from './stores';
 const AppContent = () => {
   const panelSize = useAppStore((state) => state.panelSize);
+  useEffect(() => {
+    document.title = 'DanceMarks';
+  }, []);
 
   /* Renders the components */
   return (

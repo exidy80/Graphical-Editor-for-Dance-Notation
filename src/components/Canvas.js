@@ -85,20 +85,6 @@ const Canvas = ({ panelId }) => {
           const boundHandleHandClick = (handSide) =>
             handleHandClick(panelId, dancer.id, handSide);
 
-          // Drag mode handlers
-          const handleDancerDragStart = () => startDragMode();
-          const handleDancerDragEnd = (finalState) => {
-            endDragMode();
-            // Final update with history tracking enabled
-            updateDancerState(panelId, dancer.id, finalState);
-          };
-          const handleDancerTransformStart = () => startDragMode();
-          const handleDancerTransformEnd = (finalState) => {
-            endDragMode();
-            // Final update with history tracking enabled
-            updateDancerState(panelId, dancer.id, finalState);
-          };
-
           // Check if this dancer is selected
           const isSelected =
             selectedDancer &&
@@ -134,10 +120,8 @@ const Canvas = ({ panelId }) => {
               onUpdateDancerState={boundUpdateDancerState}
               onUpdateHandPosition={boundUpdateHandPosition}
               onUpdateHandRotation={boundUpdateHandRotation}
-              onDragStart={handleDancerDragStart}
-              onDragEnd={handleDancerDragEnd}
-              onTransformStart={handleDancerTransformStart}
-              onTransformEnd={handleDancerTransformEnd}
+              onDragStart={startDragMode}
+              onDragEnd={endDragMode}
             />
           );
         })}
