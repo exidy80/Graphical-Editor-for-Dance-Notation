@@ -31,10 +31,7 @@ const Dancer = ({
   onUpdateHandRotation,
   onDragStart,
   onDragEnd,
-  onTransformStart,
-  onTransformEnd,
 }) => {
-
   const dancerRef = useRef();
   const headRef = useRef();
   const bodyRef = useRef();
@@ -75,8 +72,8 @@ const Dancer = ({
 
   // handles when the dancer transform starts
   const handleTransformStart = useCallback(() => {
-    onTransformStart();
-  }, [onTransformStart]);
+    onDragStart();
+  }, [onDragStart]);
 
   // handles when the dancer is being dragged
   const handleDragMove = useCallback(
@@ -106,23 +103,29 @@ const Dancer = ({
     [onDragEnd],
   );
 
-  // handles when the dancer transform is complete
-  const handleTransformEnd = useCallback(
-    (e) => {
-      const node = e.target;
-      onTransformEnd({
-        x: node.x(),
-        y: node.y(),
-        rotation: node.rotation(),
-        scaleX: node.scaleX(),
-        scaleY: node.scaleY(),
-      });
+  // handles when the dancer transform ends
+  const handleTransformEnd = useCallback(() => {
+    onDragEnd();
+  }, [onDragEnd]);
+
+  // This function handles when a part drag starts
+  const handlePartDragStartCallback = useCallback(
+    (part, side) => (e) => {
+      const currentPos = e.target.position();
+      // Capture initial position before starting drag
+      if (part === 'Hand') {
+        onUpdateHandPosition(side, currentPos);
+      } else if (part === 'Elbow') {
+        onUpdateDancerState({ [`${side}${part}Pos`]: currentPos });
+      }
+      // Now start drag mode to pause tracking
+      onDragStart();
     },
-    [onTransformEnd],
+    [onUpdateDancerState, onUpdateHandPosition, onDragStart],
   );
 
-  // This function handles when a part of the dancer (like a hand) is dragged and logs position
-  const handlePartDragEnd = useCallback(
+  // This function handles when a part of the dancer (like a hand) is being dragged
+  const handlePartDragMove = useCallback(
     (part, side) => (e) => {
       const newPos = e.target.position();
       if (part === 'Hand') {
@@ -136,7 +139,37 @@ const Dancer = ({
     [onUpdateDancerState, onUpdateHandPosition],
   );
 
-  // This function handles rotating a hand
+  // This function handles when a part drag ends
+  const handlePartDragEndCallback = useCallback(
+    (part, side) => (e) => {
+      const newPos = e.target.position();
+      // Call onDragEnd FIRST to resume tracking, THEN do the final update
+      onDragEnd();
+      if (part === 'Hand') {
+        onUpdateHandPosition(side, newPos);
+      } else if (part === 'Elbow') {
+        onUpdateDancerState({ [`${side}${part}Pos`]: newPos });
+      }
+    },
+    [onUpdateDancerState, onUpdateHandPosition, onDragEnd],
+  );
+
+  // This function handles when hand rotation starts
+  const handleHandRotationStartCallback = useCallback(
+    (e) => {
+      const node = e.target;
+      const rotation = node.rotation();
+      // Capture initial rotation before starting
+      if (selectedHandSide) {
+        onUpdateHandRotation(selectedHandSide, rotation);
+      }
+      // Now start drag mode to pause tracking
+      onDragStart();
+    },
+    [selectedHandSide, onUpdateHandRotation, onDragStart],
+  );
+
+  // This function handles rotating a hand (during transform)
   const handleHandRotation = useCallback(
     (e) => {
       const node = e.target;
@@ -146,6 +179,20 @@ const Dancer = ({
       }
     },
     [selectedHandSide, onUpdateHandRotation],
+  );
+
+  // This function handles when hand rotation ends
+  const handleHandRotationEndCallback = useCallback(
+    (e) => {
+      const node = e.target;
+      const rotation = node.rotation();
+      // Call onDragEnd FIRST to resume tracking, THEN do the final update
+      onDragEnd();
+      if (selectedHandSide) {
+        onUpdateHandRotation(selectedHandSide, rotation);
+      }
+    },
+    [selectedHandSide, onUpdateHandRotation, onDragEnd],
   );
 
   const handleHandMouseEnter = (e) => {
@@ -297,8 +344,9 @@ const Dancer = ({
     const baseProps = {
       fill: dancer.colour,
       draggable: !disabled,
-      onDragMove: handlePartDragEnd('Hand', side),
-      onDragEnd: handlePartDragEnd('Hand', side),
+      onDragStart: handlePartDragStartCallback('Hand', side),
+      onDragMove: handlePartDragMove('Hand', side),
+      onDragEnd: handlePartDragEndCallback('Hand', side),
       onClick: disabled ? null : () => onHandClick(side),
       x: handPos.x,
       y: handPos.y,
@@ -414,8 +462,9 @@ const Dancer = ({
           radius={3}
           fill={dancer.colour}
           draggable={!disabled}
-          onDragMove={handlePartDragEnd('Elbow', side)}
-          onDragEnd={handlePartDragEnd('Elbow', side)}
+          onDragStart={handlePartDragStartCallback('Elbow', side)}
+          onDragMove={handlePartDragMove('Elbow', side)}
+          onDragEnd={handlePartDragEndCallback('Elbow', side)}
           onMouseEnter={handleElbowMouseEnter}
           onMouseLeave={handleElbowMouseLeave}
         />
@@ -470,7 +519,9 @@ const Dancer = ({
         <Transformer
           ref={handTransformerRef}
           resizeEnabled={false}
+          onTransformStart={handleHandRotationStartCallback}
           onTransform={handleHandRotation}
+          onTransformEnd={handleHandRotationEndCallback}
         />
       )}
     </>

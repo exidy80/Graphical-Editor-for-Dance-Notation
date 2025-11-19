@@ -14,18 +14,18 @@ describe('Drag Mode History Test', () => {
     getState().resetDancers();
   });
 
-  test('drag mode flags work correctly', () => {
-    const { getState } = useAppStore;
+  test('drag mode pause/resume tracking works correctly', () => {
+    const { temporal } = useAppStore;
 
-    expect(getState()._isDragMode).toBe(false);
+    expect(temporal.getState().isTracking).toBe(true);
 
-    getState().startDragMode();
+    useAppStore.getState().startDragMode();
 
-    expect(getState()._isDragMode).toBe(true);
+    expect(temporal.getState().isTracking).toBe(false);
 
-    getState().endDragMode();
+    useAppStore.getState().endDragMode();
 
-    expect(getState()._isDragMode).toBe(false);
+    expect(temporal.getState().isTracking).toBe(true);
   });
 
   test('dancer updates work during and after drag mode', () => {
