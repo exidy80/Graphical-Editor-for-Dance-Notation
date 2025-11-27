@@ -32,11 +32,6 @@ const createDancerSlice = (set, get, api) => ({
     }
   },
 
-  // Drag mode functions - actual pause/resume happens in index.js wrapper
-  // These are no-ops to avoid state changes and batching issues
-  startDragMode: () => {},
-  endDragMode: () => {},
-
   // Hand-specific updates (position and rotation) with lock propagation
   updateHandPosition: (panelId, dancerId, side, newPos) => {
     set((curr) => {

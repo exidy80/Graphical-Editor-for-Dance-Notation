@@ -4,6 +4,7 @@ import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import AutoSaveManager from './components/AutoSaveManager';
 import KeystrokeHandler from './components/KeystrokeHandler';
+import LockChangeWatcher from './components/LockChangeWatcher';
 import './App.css';
 import { useAppStore } from './stores';
 const AppContent = () => {
@@ -16,6 +17,7 @@ const AppContent = () => {
   return (
     <div className="App">
       <KeystrokeHandler />
+      <LockChangeWatcher />
       <AutoSaveManager />
       <Sidebar />
       <div className="main-content">
