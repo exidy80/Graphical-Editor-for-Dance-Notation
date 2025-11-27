@@ -9,6 +9,7 @@ import {
   faArrowLeft,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
+import images from './ImageMapping';
 
 // Tab constants
 const TAB_KEYS = {
@@ -121,7 +122,7 @@ const Sidebar = () => {
     [TAB_KEYS.FOOTWORK]: {
       label: 'Footwork',
       icon: <FontAwesomeIcon icon={faShoePrints} />,
-      items: ['Basic', 'Heel', 'Ball', 'Whole', 'Hover'],
+      items: ['Basic', 'Hover', 'Heel', 'Ball', 'Whole'],
       type: 'feet',
     },
     [TAB_KEYS.MOVEMENT]: {
@@ -151,7 +152,9 @@ const Sidebar = () => {
       if (selectedPanel !== null) {
         //Make sure a panel is selected
         const imageKey =
-          color === COLORS.RED ? shapeProps.imageKeyRed : shapeProps.imageKeyBlue; //display colour based on color parameter
+          color === COLORS.RED
+            ? shapeProps.imageKeyRed
+            : shapeProps.imageKeyBlue; //display colour based on color parameter
         handleShapeDraw({
           id: uuidv4(),
           ...shapeProps,
@@ -179,124 +182,105 @@ const Sidebar = () => {
     }
   };
 
+  // Helper to get image key for footwork items
+  const getFootImageKey = (item, side, color) => {
+    const shapeKey = feetButtonMapping[item][side];
+    const shapeProps = shapeMapping[shapeKey];
+    return color === COLORS.RED
+      ? shapeProps.imageKeyRed
+      : shapeProps.imageKeyBlue;
+  };
+
   //different feet layout (grid)
   const renderFeetButtons = () => {
     const items = tabs[TAB_KEYS.FOOTWORK].items;
     return (
       <div>
-        {/* Red buttons section */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ width: '48%' }}>
-              <h3
-                style={{
-                  color: 'black',
-                  textAlign: 'center',
-                  marginBottom: '10px',
-                }}
-              >
-                Left
-              </h3>
-              {items.map((item) => (
-                <button
-                  key={`red-left-${item}`}
-                  onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.RED)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <div style={{ width: '48%' }}>
-              <h3
-                style={{
-                  color: 'black',
-                  textAlign: 'center',
-                  marginBottom: '10px',
-                }}
-              >
-                Right
-              </h3>
-              {items.map((item) => (
-                <button
-                  key={`red-right-${item}`}
-                  onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.RED)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+        {items.map((item) => (
+          <div
+            key={item}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr 1fr',
+              gap: '5px',
+              marginBottom: '8px',
+            }}
+          >
+            {/* Blue Left */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.BLUE)}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.LEFT, COLORS.BLUE)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+              }}
+              title={`${item} - Blue Left`}
+            />
+            {/* Blue Right */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.BLUE)}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.RIGHT, COLORS.BLUE)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                marginRight: '10px',
+              }}
+              title={`${item} - Blue Right`}
+            />
+            {/* Red Left */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.RED)}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.LEFT, COLORS.RED)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+              }}
+              title={`${item} - Red Left`}
+            />
+            {/* Red Right */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.RED)}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.RIGHT, COLORS.RED)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+              }}
+              title={`${item} - Red Right`}
+            />
           </div>
-        </div>
-
-        {/* Blue buttons section */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ width: '48%' }}>
-              {items.map((item) => (
-                <button
-                  key={`blue-left-${item}`}
-                  onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.BLUE)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'blue',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <div style={{ width: '48%' }}>
-              {items.map((item) => (
-                <button
-                  key={`blue-right-${item}`}
-                  onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.BLUE)}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'blue',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     );
   };
@@ -307,7 +291,13 @@ const Sidebar = () => {
     return (
       <div>
         <h3 style={{ color: 'black', marginBottom: '10px' }}>Motion</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '20px',
+          }}
+        >
           <div style={{ width: '48%' }}>
             {categories.motion.map((item) => (
               <button
@@ -351,7 +341,7 @@ const Sidebar = () => {
             ))}
           </div>
         </div>
-        
+
         <h3 style={{ color: 'black', marginBottom: '10px' }}>Spin</h3>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <div style={{ width: '48%' }}>
@@ -480,7 +470,10 @@ const Sidebar = () => {
               padding: '15px 10px',
               backgroundColor: activeTab === key ? '#fff' : '#e9ecef',
               border: 'none',
-              borderBottom: activeTab === key ? '3px solid #007bff' : '3px solid transparent',
+              borderBottom:
+                activeTab === key
+                  ? '3px solid #007bff'
+                  : '3px solid transparent',
               cursor: 'pointer',
               fontSize: '14px',
               fontWeight: activeTab === key ? 'bold' : 'normal',
