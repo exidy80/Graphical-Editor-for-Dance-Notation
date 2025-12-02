@@ -4,9 +4,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faShoePrints,
   faArrowRight,
-  faSyncAlt,
   faLongArrowAltRight,
-  faArrowLeft,
+  faArrowUp,
+  faArrowDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
 import images from './ImageMapping';
@@ -99,6 +99,10 @@ const shapeMapping = {
   Waist: { type: 'waist' },
   Shoulder: { type: 'shoulder' },
   Overhead: { type: 'overhead' },
+  'Direction Up': { type: 'directionUp' },
+  'Direction Down': { type: 'directionDown' },
+  Block: { type: 'block' },
+  'Split Hands': { type: 'splitHands' },
 };
 
 // Map the feet types to left or right
@@ -167,8 +171,8 @@ const Sidebar = () => {
     } else {
       //other shapes
       const shapeProps = shapeMapping[shapeKey];
-      if (selectedPanel !== null) {
-        //Make sure a panel is selected
+      if (selectedPanel !== null && shapeProps) {
+        //Make sure a panel is selected and shape exists
         handleShapeDraw({
           id: uuidv4(),
           ...shapeProps,
@@ -194,6 +198,7 @@ const Sidebar = () => {
   //different feet layout (grid)
   const renderFeetButtons = () => {
     const items = tabs[TAB_KEYS.FOOTWORK].items;
+    const isDisabled = selectedPanel === null;
     return (
       <div>
         {items.map((item) => (
@@ -209,30 +214,33 @@ const Sidebar = () => {
             {/* Blue Left */}
             <button
               onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.BLUE)}
+              disabled={isDisabled}
               style={{
                 height: '40px',
                 backgroundColor: 'white',
                 border: '2px solid #ddd',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 backgroundImage: `url(${
                   images[getFootImageKey(item, SIDES.LEFT, COLORS.BLUE)]
                 })`,
                 backgroundSize: 'contain',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
+                opacity: isDisabled ? 0.5 : 1,
               }}
               title={`${item} - Blue Left`}
             />
             {/* Blue Right */}
             <button
               onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.BLUE)}
+              disabled={isDisabled}
               style={{
                 height: '40px',
                 backgroundColor: 'white',
                 border: '2px solid #ddd',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 backgroundImage: `url(${
                   images[getFootImageKey(item, SIDES.RIGHT, COLORS.BLUE)]
                 })`,
@@ -240,42 +248,47 @@ const Sidebar = () => {
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
                 marginRight: '10px',
+                opacity: isDisabled ? 0.5 : 1,
               }}
               title={`${item} - Blue Right`}
             />
             {/* Red Left */}
             <button
               onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.RED)}
+              disabled={isDisabled}
               style={{
                 height: '40px',
                 backgroundColor: 'white',
                 border: '2px solid #ddd',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 backgroundImage: `url(${
                   images[getFootImageKey(item, SIDES.LEFT, COLORS.RED)]
                 })`,
                 backgroundSize: 'contain',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
+                opacity: isDisabled ? 0.5 : 1,
               }}
               title={`${item} - Red Left`}
             />
             {/* Red Right */}
             <button
               onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.RED)}
+              disabled={isDisabled}
               style={{
                 height: '40px',
                 backgroundColor: 'white',
                 border: '2px solid #ddd',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
                 backgroundImage: `url(${
                   images[getFootImageKey(item, SIDES.RIGHT, COLORS.RED)]
                 })`,
                 backgroundSize: 'contain',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
+                opacity: isDisabled ? 0.5 : 1,
               }}
               title={`${item} - Red Right`}
             />
@@ -287,104 +300,394 @@ const Sidebar = () => {
 
   // Render buttons for movement tab (motion + spin)
   const renderMovementButtons = () => {
-    const { categories } = tabs[TAB_KEYS.MOVEMENT];
+    const isDisabled = selectedPanel === null;
+    const elevationItems = [
+      { name: 'Overhead', shape: 'triangle' },
+      { name: 'Shoulder', shape: 'arc' },
+      { name: 'Waist', shape: 'rect' },
+      { name: 'Knee', shape: 'circle' },
+    ];
+
+    // Helper to render the elevation shape
+    const renderElevationShape = (shape, color) => {
+      const shapeColor = color === COLORS.RED ? 'red' : 'blue';
+
+      switch (shape) {
+        case 'triangle':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <polygon
+                points="12,6 18,18 6,18"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'arc':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <path
+                d="M 6 18 A 6 6 0 0 1 18 18"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'rect':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <rect
+                x="6"
+                y="11"
+                width="12"
+                height="2"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'circle':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        default:
+          return null;
+      }
+    };
+
     return (
       <div>
-        <h3 style={{ color: 'black', marginBottom: '10px' }}>Motion</h3>
+        {/* Direction Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+        >
+          Direction
+        </h3>
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '20px',
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr 1fr',
+            gap: '5px',
+            marginBottom: '25px',
+            minHeight: '40px',
           }}
         >
-          <div style={{ width: '48%' }}>
-            {categories.motion.map((item) => (
-              <button
-                key={`red-${item}`}
-                onClick={() => handleItemClick(item, null, COLORS.RED)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '5px',
-                  marginBottom: '5px',
-                  backgroundColor: 'red',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
-          <div style={{ width: '48%' }}>
-            {categories.motion.map((item) => (
-              <button
-                key={`blue-${item}`}
-                onClick={() => handleItemClick(item, null, COLORS.BLUE)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '5px',
-                  marginBottom: '5px',
-                  backgroundColor: 'blue',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                {item}
-              </button>
-            ))}
-          </div>
+          {/* Red Up */}
+          <button
+            onClick={() => handleItemClick('Direction Up', null, COLORS.RED)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'red',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Up - Red"
+          >
+            <FontAwesomeIcon
+              icon={faArrowUp}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
+          {/* Red Down */}
+          <button
+            onClick={() => handleItemClick('Direction Down', null, COLORS.RED)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'red',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Down - Red"
+          >
+            <FontAwesomeIcon
+              icon={faArrowDown}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
+          {/* Blue Up */}
+          <button
+            onClick={() => handleItemClick('Direction Up', null, COLORS.BLUE)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'blue',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Up - Blue"
+          >
+            <FontAwesomeIcon
+              icon={faArrowUp}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
+          {/* Blue Down */}
+          <button
+            onClick={() => handleItemClick('Direction Down', null, COLORS.BLUE)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'blue',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Down - Blue"
+          >
+            <FontAwesomeIcon
+              icon={faArrowDown}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
         </div>
 
-        <h3 style={{ color: 'black', marginBottom: '10px' }}>Spin</h3>
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <div style={{ width: '48%' }}>
-            {categories.spin.map((item) => (
+        {/* Elevation Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+        >
+          Elevation
+        </h3>
+        <div style={{ marginBottom: '25px' }}>
+          {elevationItems.map((item) => (
+            <div
+              key={item.name}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 2fr 1fr',
+                gap: '10px',
+              }}
+            >
+              {/* Red button */}
               <button
-                key={`red-${item}`}
-                onClick={() => handleItemClick(item, null, COLORS.RED)}
+                onClick={() => handleItemClick(item.name, null, COLORS.RED)}
+                disabled={isDisabled}
                 style={{
-                  display: 'block',
+                  height: '40px',
                   width: '100%',
-                  padding: '5px',
-                  marginBottom: '5px',
-                  backgroundColor: 'red',
-                  color: 'white',
-                  border: 'none',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
                   borderRadius: '5px',
-                  cursor: 'pointer',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                }}
+                title={`${item.name} - Red`}
+              >
+                {renderElevationShape(item.shape, COLORS.RED)}
+              </button>
+              {/* Label */}
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#333',
                 }}
               >
-                {item}
+                {item.name}
+              </div>
+              {/* Blue button */}
+              <button
+                onClick={() => handleItemClick(item.name, null, COLORS.BLUE)}
+                disabled={isDisabled}
+                style={{
+                  height: '40px',
+                  width: '100%',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                }}
+                title={`${item.name} - Blue`}
+              >
+                {renderElevationShape(item.shape, COLORS.BLUE)}
               </button>
-            ))}
+            </div>
+          ))}
+        </div>
+
+        {/* Other Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+        >
+          Other
+        </h3>
+        <div style={{ marginBottom: '10px' }}>
+          {/* Block */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 2fr 1fr',
+              gap: '10px',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <button
+              onClick={() => handleItemClick('Block', null, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'red',
+                fontSize: '24px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Block - Red"
+            >
+              ■
+            </button>
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#333',
+              }}
+            >
+              Block
+            </div>
+            <button
+              onClick={() => handleItemClick('Block', null, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'blue',
+                fontSize: '24px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Block - Blue"
+            >
+              ■
+            </button>
           </div>
-          <div style={{ width: '48%' }}>
-            {categories.spin.map((item) => (
-              <button
-                key={`blue-${item}`}
-                onClick={() => handleItemClick(item, null, COLORS.BLUE)}
-                style={{
-                  display: 'block',
-                  width: '100%',
-                  padding: '5px',
-                  marginBottom: '5px',
-                  backgroundColor: 'blue',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                {item}
-              </button>
-            ))}
+
+          {/* Split Hands */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 2fr 1fr',
+              gap: '10px',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <button
+              onClick={() => handleItemClick('Split Hands', null, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'red',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Split Hands - Red"
+            >
+              ×
+            </button>
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#333',
+              }}
+            >
+              Split Hands
+            </div>
+            <button
+              onClick={() => handleItemClick('Split Hands', null, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'blue',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Split Hands - Blue"
+            >
+              ×
+            </button>
           </div>
         </div>
       </div>
@@ -394,6 +697,7 @@ const Sidebar = () => {
   // Render buttons for signals tab
   const renderSignalsButtons = () => {
     const items = tabs[TAB_KEYS.SIGNALS].items;
+    const isDisabled = selectedPanel === null;
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ width: '48%' }}>
@@ -401,6 +705,7 @@ const Sidebar = () => {
             <button
               key={`red-${item}`}
               onClick={() => handleItemClick(item, null, COLORS.RED)}
+              disabled={isDisabled}
               style={{
                 display: 'block',
                 width: '100%',
@@ -410,7 +715,8 @@ const Sidebar = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                opacity: isDisabled ? 0.5 : 1,
               }}
             >
               {item}
@@ -422,6 +728,7 @@ const Sidebar = () => {
             <button
               key={`blue-${item}`}
               onClick={() => handleItemClick(item, null, COLORS.BLUE)}
+              disabled={isDisabled}
               style={{
                 display: 'block',
                 width: '100%',
@@ -431,7 +738,8 @@ const Sidebar = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                opacity: isDisabled ? 0.5 : 1,
               }}
             >
               {item}

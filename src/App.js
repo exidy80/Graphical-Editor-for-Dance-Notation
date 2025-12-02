@@ -8,9 +8,20 @@ import './App.css';
 import { useAppStore } from './stores';
 const AppContent = () => {
   const panelSize = useAppStore((state) => state.panelSize);
+  const panels = useAppStore((state) => state.panels);
+  const selectedPanel = useAppStore((state) => state.selectedPanel);
+  const setSelectedPanel = useAppStore((state) => state.setSelectedPanel);
+
   useEffect(() => {
     document.title = 'DanceMarks';
   }, []);
+
+  // Auto-select first panel on startup if no panel is selected
+  useEffect(() => {
+    if (panels.length > 0 && selectedPanel === null) {
+      setSelectedPanel(panels[0].id);
+    }
+  }, [panels, selectedPanel, setSelectedPanel]);
 
   /* Renders the components */
   return (
