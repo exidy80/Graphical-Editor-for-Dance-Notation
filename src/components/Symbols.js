@@ -232,6 +232,49 @@ const Symbol = ({
           hitStrokeWidth={10}
         />
       )}
+      {shape.type === 'directionUp' && (
+        <Arrow
+          {...commonProps}
+          points={[10, 30, 10, 10]}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={3}
+          hitStrokeWidth={10}
+        />
+      )}
+      {shape.type === 'directionDown' && (
+        <Arrow
+          {...commonProps}
+          points={[10, 10, 10, 30]}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={3}
+          hitStrokeWidth={10}
+        />
+      )}
+      {shape.type === 'block' && (
+        <Rect
+          {...commonProps}
+          width={10}
+          height={10}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+        />
+      )}
+      {shape.type === 'splitHands' && (
+        <Text
+          {...commonProps}
+          text="×"
+          fontSize={24}
+          fontWeight="bold"
+          fill={shape.fill}
+        />
+      )}
       {shape.type === 'image' && (
         <KonvaImage
           {...commonProps}

@@ -4,11 +4,31 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faShoePrints,
   faArrowRight,
-  faSyncAlt,
   faLongArrowAltRight,
-  faArrowLeft,
+  faArrowUp,
+  faArrowDown,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
+import images from './ImageMapping';
+
+// Tab constants
+const TAB_KEYS = {
+  FOOTWORK: 'footwork',
+  MOVEMENT: 'movement',
+  SIGNALS: 'signals',
+};
+
+// Color constants
+const COLORS = {
+  RED: 'red',
+  BLUE: 'blue',
+};
+
+// Side constants
+const SIDES = {
+  LEFT: 'left',
+  RIGHT: 'right',
+};
 
 // Map the shapes to their types
 const shapeMapping = {
@@ -79,15 +99,19 @@ const shapeMapping = {
   Waist: { type: 'waist' },
   Shoulder: { type: 'shoulder' },
   Overhead: { type: 'overhead' },
+  'Direction Up': { type: 'directionUp' },
+  'Direction Down': { type: 'directionDown' },
+  Block: { type: 'block' },
+  'Split Hands': { type: 'splitHands' },
 };
 
 // Map the feet types to left or right
 const feetButtonMapping = {
-  Basic: { left: 'Left Foot Basic', right: 'Right Foot Basic' },
-  Heel: { left: 'Left Heel', right: 'Right Heel' },
-  Ball: { left: 'Left Ball', right: 'Right Ball' },
-  Whole: { left: 'Whole Left', right: 'Whole Right' },
-  Hover: { left: 'Hov Left', right: 'Hov Right' },
+  Basic: { [SIDES.LEFT]: 'Left Foot Basic', [SIDES.RIGHT]: 'Right Foot Basic' },
+  Heel: { [SIDES.LEFT]: 'Left Heel', [SIDES.RIGHT]: 'Right Heel' },
+  Ball: { [SIDES.LEFT]: 'Left Ball', [SIDES.RIGHT]: 'Right Ball' },
+  Whole: { [SIDES.LEFT]: 'Whole Left', [SIDES.RIGHT]: 'Whole Right' },
+  Hover: { [SIDES.LEFT]: 'Hov Left', [SIDES.RIGHT]: 'Hov Right' },
 };
 
 const Sidebar = () => {
@@ -95,45 +119,46 @@ const Sidebar = () => {
   const handleShapeDraw = useAppStore((state) => state.handleShapeDraw);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   //Local states for the sidebar
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [activeTab, setActiveTab] = useState(TAB_KEYS.FOOTWORK);
 
-  //Categories and the shapes in them
-  const categories = {
-    motion: {
-      icon: <FontAwesomeIcon icon={faArrowRight} style={{ color: 'white' }} />,
-      items: ['Straight Line', 'Curved Line'],
+  //Tabs and their contents
+  const tabs = {
+    [TAB_KEYS.FOOTWORK]: {
+      label: 'Footwork',
+      icon: <FontAwesomeIcon icon={faShoePrints} />,
+      items: ['Basic', 'Hover', 'Heel', 'Ball', 'Whole'],
+      type: 'feet',
     },
-    spin: {
-      icon: <FontAwesomeIcon icon={faSyncAlt} style={{ color: 'white' }} />,
-      items: ['2 Spin', '1.5 Spin', '1 Spin', 'Half Spin', 'Quarter Spin'],
+    [TAB_KEYS.MOVEMENT]: {
+      label: 'Movement',
+      icon: <FontAwesomeIcon icon={faArrowRight} />,
+      categories: {
+        motion: ['Straight Line', 'Curved Line'],
+        spin: ['2 Spin', '1.5 Spin', '1 Spin', 'Half Spin', 'Quarter Spin'],
+      },
+      type: 'movement',
     },
-    signal: {
-      icon: (
-        <FontAwesomeIcon
-          icon={faLongArrowAltRight}
-          style={{ color: 'white' }}
-        />
-      ),
+    [TAB_KEYS.SIGNALS]: {
+      label: 'Signals',
+      icon: <FontAwesomeIcon icon={faLongArrowAltRight} />,
       items: ['Direction', 'Knee', 'Waist', 'Shoulder', 'Overhead'],
-    },
-    feet: {
-      icon: <FontAwesomeIcon icon={faShoePrints} style={{ color: 'white' }} />,
-      items: ['Basic', 'Heel', 'Ball', 'Whole', 'Hover'],
+      type: 'signals',
     },
   };
 
   //Handle clicking on a shape in the sidebar
-  const handleItemClick = (item, side = null, color = 'red') => {
+  const handleItemClick = (item, side = null, color = COLORS.RED) => {
     let shapeKey = item;
-    if (selectedCategory === 'feet' && side) {
+    if (activeTab === TAB_KEYS.FOOTWORK && side) {
       //SPecial case for the feet
       shapeKey = feetButtonMapping[item][side]; //Get key for L/R versions
       const shapeProps = shapeMapping[shapeKey];
       if (selectedPanel !== null) {
         //Make sure a panel is selected
         const imageKey =
-          color === 'red' ? shapeProps.imageKeyRed : shapeProps.imageKeyBlue; //display colour based on color parameter
+          color === COLORS.RED
+            ? shapeProps.imageKeyRed
+            : shapeProps.imageKeyBlue; //display colour based on color parameter
         handleShapeDraw({
           id: uuidv4(),
           ...shapeProps,
@@ -146,8 +171,8 @@ const Sidebar = () => {
     } else {
       //other shapes
       const shapeProps = shapeMapping[shapeKey];
-      if (selectedPanel !== null) {
-        //Make sure a panel is selected
+      if (selectedPanel !== null && shapeProps) {
+        //Make sure a panel is selected and shape exists
         handleShapeDraw({
           id: uuidv4(),
           ...shapeProps,
@@ -161,142 +186,526 @@ const Sidebar = () => {
     }
   };
 
-  //Handle clicking on a category
-  const handleCategoryClick = (category) => {
-    setSelectedCategory(category);
-    setIsExpanded(true); //OPen the sidebar
+  // Helper to get image key for footwork items
+  const getFootImageKey = (item, side, color) => {
+    const shapeKey = feetButtonMapping[item][side];
+    const shapeProps = shapeMapping[shapeKey];
+    return color === COLORS.RED
+      ? shapeProps.imageKeyRed
+      : shapeProps.imageKeyBlue;
   };
 
   //different feet layout (grid)
   const renderFeetButtons = () => {
+    const items = tabs[TAB_KEYS.FOOTWORK].items;
+    const isDisabled = selectedPanel === null;
     return (
       <div>
-        {/* Red buttons section */}
-        <div style={{ marginBottom: '20px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ width: '48%' }}>
-              <h3
-                style={{
-                  color: 'black',
-                  textAlign: 'center',
-                  marginBottom: '10px',
-                }}
-              >
-                Left
-              </h3>
-              {categories.feet.items.map((item) => (
-                <button
-                  key={`red-left-${item}`}
-                  onClick={() => handleItemClick(item, 'left', 'red')}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <div style={{ width: '48%' }}>
-              <h3
-                style={{
-                  color: 'black',
-                  textAlign: 'center',
-                  marginBottom: '10px',
-                }}
-              >
-                Right
-              </h3>
-              {categories.feet.items.map((item) => (
-                <button
-                  key={`red-right-${item}`}
-                  onClick={() => handleItemClick(item, 'right', 'red')}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
+        {items.map((item) => (
+          <div
+            key={item}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr 1fr 1fr',
+              gap: '5px',
+              marginBottom: '8px',
+            }}
+          >
+            {/* Blue Left */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.LEFT, COLORS.BLUE)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title={`${item} - Blue Left`}
+            />
+            {/* Blue Right */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.RIGHT, COLORS.BLUE)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                marginRight: '10px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title={`${item} - Blue Right`}
+            />
+            {/* Red Left */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.LEFT, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.LEFT, COLORS.RED)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title={`${item} - Red Left`}
+            />
+            {/* Red Right */}
+            <button
+              onClick={() => handleItemClick(item, SIDES.RIGHT, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                backgroundImage: `url(${
+                  images[getFootImageKey(item, SIDES.RIGHT, COLORS.RED)]
+                })`,
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title={`${item} - Red Right`}
+            />
           </div>
+        ))}
+      </div>
+    );
+  };
+
+  // Render buttons for movement tab (motion + spin)
+  const renderMovementButtons = () => {
+    const isDisabled = selectedPanel === null;
+    const elevationItems = [
+      { name: 'Overhead', shape: 'triangle' },
+      { name: 'Shoulder', shape: 'arc' },
+      { name: 'Waist', shape: 'rect' },
+      { name: 'Knee', shape: 'circle' },
+    ];
+
+    // Helper to render the elevation shape
+    const renderElevationShape = (shape, color) => {
+      const shapeColor = color === COLORS.RED ? 'red' : 'blue';
+
+      switch (shape) {
+        case 'triangle':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <polygon
+                points="12,6 18,18 6,18"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'arc':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <path
+                d="M 6 18 A 6 6 0 0 1 18 18"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'rect':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <rect
+                x="6"
+                y="11"
+                width="12"
+                height="2"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'circle':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                fill={shapeColor}
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div>
+        {/* Direction Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+        >
+          Direction
+        </h3>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr 1fr 1fr',
+            gap: '5px',
+            marginBottom: '25px',
+            minHeight: '40px',
+          }}
+        >
+          {/* Red Up */}
+          <button
+            onClick={() => handleItemClick('Direction Up', null, COLORS.RED)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'red',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Up - Red"
+          >
+            <FontAwesomeIcon
+              icon={faArrowUp}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
+          {/* Red Down */}
+          <button
+            onClick={() => handleItemClick('Direction Down', null, COLORS.RED)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'red',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Down - Red"
+          >
+            <FontAwesomeIcon
+              icon={faArrowDown}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
+          {/* Blue Up */}
+          <button
+            onClick={() => handleItemClick('Direction Up', null, COLORS.BLUE)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'blue',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Up - Blue"
+          >
+            <FontAwesomeIcon
+              icon={faArrowUp}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
+          {/* Blue Down */}
+          <button
+            onClick={() => handleItemClick('Direction Down', null, COLORS.BLUE)}
+            disabled={isDisabled}
+            style={{
+              height: '40px',
+              width: '100%',
+              backgroundColor: 'white',
+              border: '2px solid #ddd',
+              borderRadius: '5px',
+              cursor: isDisabled ? 'not-allowed' : 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'blue',
+              fontSize: '20px',
+              opacity: isDisabled ? 0.5 : 1,
+            }}
+            title="Direction Down - Blue"
+          >
+            <FontAwesomeIcon
+              icon={faArrowDown}
+              style={{ width: '20px', height: '20px' }}
+            />
+          </button>
         </div>
 
-        {/* Blue buttons section */}
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div style={{ width: '48%' }}>
-              {categories.feet.items.map((item) => (
-                <button
-                  key={`blue-left-${item}`}
-                  onClick={() => handleItemClick(item, 'left', 'blue')}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'blue',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
+        {/* Elevation Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+        >
+          Elevation
+        </h3>
+        <div style={{ marginBottom: '25px' }}>
+          {elevationItems.map((item) => (
+            <div
+              key={item.name}
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 2fr 1fr',
+                gap: '10px',
+              }}
+            >
+              {/* Red button */}
+              <button
+                onClick={() => handleItemClick(item.name, null, COLORS.RED)}
+                disabled={isDisabled}
+                style={{
+                  height: '40px',
+                  width: '100%',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                }}
+                title={`${item.name} - Red`}
+              >
+                {renderElevationShape(item.shape, COLORS.RED)}
+              </button>
+              {/* Label */}
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  color: '#333',
+                }}
+              >
+                {item.name}
+              </div>
+              {/* Blue button */}
+              <button
+                onClick={() => handleItemClick(item.name, null, COLORS.BLUE)}
+                disabled={isDisabled}
+                style={{
+                  height: '40px',
+                  width: '100%',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                }}
+                title={`${item.name} - Blue`}
+              >
+                {renderElevationShape(item.shape, COLORS.BLUE)}
+              </button>
             </div>
-            <div style={{ width: '48%' }}>
-              {categories.feet.items.map((item) => (
-                <button
-                  key={`blue-right-${item}`}
-                  onClick={() => handleItemClick(item, 'right', 'blue')}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '8px',
-                    marginBottom: '5px',
-                    backgroundColor: 'blue',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {item}
-                </button>
-              ))}
+          ))}
+        </div>
+
+        {/* Other Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+        >
+          Other
+        </h3>
+        <div style={{ marginBottom: '10px' }}>
+          {/* Block */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 2fr 1fr',
+              gap: '10px',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <button
+              onClick={() => handleItemClick('Block', null, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'red',
+                fontSize: '24px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Block - Red"
+            >
+              ■
+            </button>
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#333',
+              }}
+            >
+              Block
             </div>
+            <button
+              onClick={() => handleItemClick('Block', null, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'blue',
+                fontSize: '24px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Block - Blue"
+            >
+              ■
+            </button>
+          </div>
+
+          {/* Split Hands */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 2fr 1fr',
+              gap: '10px',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <button
+              onClick={() => handleItemClick('Split Hands', null, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'red',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Split Hands - Red"
+            >
+              ×
+            </button>
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#333',
+              }}
+            >
+              Split Hands
+            </div>
+            <button
+              onClick={() => handleItemClick('Split Hands', null, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'blue',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Split Hands - Blue"
+            >
+              ×
+            </button>
           </div>
         </div>
       </div>
     );
   };
 
-  // Render buttons for other categories (motion, spin, signal) with red and blue side by side
-  const renderCategoryButtons = () => {
+  // Render buttons for signals tab
+  const renderSignalsButtons = () => {
+    const items = tabs[TAB_KEYS.SIGNALS].items;
+    const isDisabled = selectedPanel === null;
     return (
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <div style={{ width: '48%' }}>
-          {categories[selectedCategory].items.map((item) => (
+          {items.map((item) => (
             <button
               key={`red-${item}`}
-              onClick={() => handleItemClick(item, null, 'red')}
+              onClick={() => handleItemClick(item, null, COLORS.RED)}
+              disabled={isDisabled}
               style={{
                 display: 'block',
                 width: '100%',
@@ -306,7 +715,8 @@ const Sidebar = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                opacity: isDisabled ? 0.5 : 1,
               }}
             >
               {item}
@@ -314,10 +724,11 @@ const Sidebar = () => {
           ))}
         </div>
         <div style={{ width: '48%' }}>
-          {categories[selectedCategory].items.map((item) => (
+          {items.map((item) => (
             <button
               key={`blue-${item}`}
-              onClick={() => handleItemClick(item, null, 'blue')}
+              onClick={() => handleItemClick(item, null, COLORS.BLUE)}
+              disabled={isDisabled}
               style={{
                 display: 'block',
                 width: '100%',
@@ -327,7 +738,8 @@ const Sidebar = () => {
                 color: 'white',
                 border: 'none',
                 borderRadius: '5px',
-                cursor: 'pointer',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                opacity: isDisabled ? 0.5 : 1,
               }}
             >
               {item}
@@ -339,74 +751,67 @@ const Sidebar = () => {
   };
 
   return (
-    <div style={{ display: 'flex', height: '100%' }}>
-      {/* Sidebar */}
+    <div
+      style={{
+        width: '280px',
+        height: '100vh',
+        backgroundColor: '#f5f5f5',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRight: '1px solid #ddd',
+      }}
+    >
+      {/* Tab Headers */}
       <div
         style={{
-          width: isExpanded ? '140px' : '60px', //Sizes for both states
-          height: '100vh',
-          backgroundColor: '#333',
-          transition: 'width 0.3s', //Go to and from current size to new size in 0.3s
-          overflow: 'hidden',
+          display: 'flex',
+          borderBottom: '2px solid #ddd',
+          backgroundColor: '#fff',
         }}
       >
-        {Object.entries(categories).map(([key, { icon }]) => (
+        {Object.entries(tabs).map(([key, { label, icon }]) => (
           <button
             key={key}
-            onClick={() => handleCategoryClick(key)}
+            onClick={() => setActiveTab(key)}
             style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: isExpanded ? 'flex-start' : 'center',
-              width: '100%',
-              padding: '30px',
-              gap: '10px',
-              marginBottom: '10px',
-              background: 'none',
+              flex: 1,
+              padding: '15px 10px',
+              backgroundColor: activeTab === key ? '#fff' : '#e9ecef',
               border: 'none',
-              color: 'white',
+              borderBottom:
+                activeTab === key
+                  ? '3px solid #007bff'
+                  : '3px solid transparent',
               cursor: 'pointer',
-              fontSize: '20px',
-              lineHeight: '1',
+              fontSize: '14px',
+              fontWeight: activeTab === key ? 'bold' : 'normal',
+              color: activeTab === key ? '#007bff' : '#666',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.2s',
             }}
           >
-            {icon} {isExpanded && key}
+            <span style={{ fontSize: '18px' }}>{icon}</span>
+            <span>{label}</span>
           </button>
         ))}
       </div>
-      {isExpanded && (
-        <div
-          style={{
-            width: '220px',
-            padding: '20px',
-            backgroundColor: '#E2E2E2',
-            position: 'relative',
-            overflowY: 'auto',
-          }}
-        >
-          <button
-            onClick={() => setIsExpanded(false)}
-            style={{
-              position: 'absolute',
-              top: '20px',
-              right: '20px',
-              backgroundColor: 'transparent',
-              color: 'black',
-              border: 'none',
-              padding: '5px 10px',
-              borderRadius: '5px',
-              cursor: 'pointer',
-            }}
-          >
-            <FontAwesomeIcon icon={faArrowLeft} />
-          </button>
-          <h2 style={{ marginBottom: '40px' }}>{selectedCategory}</h2>
-          {selectedCategory === 'feet' && renderFeetButtons()}
-          {selectedCategory &&
-            selectedCategory !== 'feet' &&
-            renderCategoryButtons()}
-        </div>
-      )}
+
+      {/* Tab Content */}
+      <div
+        style={{
+          flex: 1,
+          padding: '20px',
+          overflowY: 'auto',
+          backgroundColor: '#E2E2E2',
+        }}
+      >
+        {activeTab === TAB_KEYS.FOOTWORK && renderFeetButtons()}
+        {activeTab === TAB_KEYS.MOVEMENT && renderMovementButtons()}
+        {activeTab === TAB_KEYS.SIGNALS && renderSignalsButtons()}
+      </div>
     </div>
   );
 };

@@ -150,11 +150,10 @@ const PanelFileHandler = () => {
     border: 'none',
     padding: '0',
     font: 'inherit',
-    marginRight: '15px',
   };
 
   return (
-    <div>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
       <button
         onClick={downloadPanels}
         style={linkStyle}

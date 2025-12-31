@@ -244,7 +244,6 @@ const Toolbar = () => {
           }}
           variant="outline-danger"
           className="icon-button"
-          style={{ marginLeft: '15px' }}
           title="Reset all dancers to default state"
         >
           <FontAwesomeIcon icon={faRefresh} />
