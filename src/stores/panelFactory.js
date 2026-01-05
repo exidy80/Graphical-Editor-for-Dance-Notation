@@ -63,6 +63,7 @@ const createInitialPanel = () => ({
     },
   ],
   locks: [],
+  notes: '',
 });
 
 export default createInitialPanel;

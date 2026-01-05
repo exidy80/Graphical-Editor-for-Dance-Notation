@@ -80,6 +80,12 @@ const createPanelSlice = (set, get, api) => ({
   },
 
   handlePanelSelection: (panelId) => set({ selectedPanel: panelId }),
+
+  updatePanelNotes: (panelId, notes) => {
+    set((state) => ({
+      panels: state.panels.map((p) => (p.id === panelId ? { ...p, notes } : p)),
+    }));
+  },
 });
 
 export default createPanelSlice;

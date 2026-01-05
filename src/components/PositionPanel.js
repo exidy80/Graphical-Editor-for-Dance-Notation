@@ -1,8 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Canvas from './Canvas';
 import { useAppStore } from '../stores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClone, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
+import {
+  faClone,
+  faPlus,
+  faMinus,
+  faChevronUp,
+  faChevronDown,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 
 const PositionPanel = () => {
   const panels = useAppStore((state) => state.panels);
@@ -14,14 +21,25 @@ const PositionPanel = () => {
   const addPanel = useAppStore((state) => state.addPanel);
   const clonePanel = useAppStore((state) => state.clonePanel);
   const deleteSelectedPanel = useAppStore((state) => state.deleteSelectedPanel);
+  const updatePanelNotes = useAppStore((state) => state.updatePanelNotes);
   const movePanel = useAppStore((state) => state.movePanel);
 
   const [draggingPanelId, setDraggingPanelId] = useState(null);
   const [dragEnabledPanelId, setDragEnabledPanelId] = useState(null);
   const [dragPreviewPanels, setDragPreviewPanels] = useState(null);
   const [dropTargetId, setDropTargetId] = useState(null);
+  const [expandedNotesPanel, setExpandedNotesPanel] = useState(null);
 
   const panelRefs = useRef({});
+  const textareaRefs = useRef({});
+
+  useEffect(() => {
+    if (expandedNotesPanel && textareaRefs.current[expandedNotesPanel]) {
+      const textarea = textareaRefs.current[expandedNotesPanel];
+      textarea.focus();
+      textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
+    }
+  }, [expandedNotesPanel]);
 
   const optionsBarHeight = 40; //size of bar at top of panel
 
@@ -122,26 +140,6 @@ const PositionPanel = () => {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  addPanel();
-                }}
-                style={buttonStyle}
-                title="Add Panel"
-              >
-                <FontAwesomeIcon icon={faPlus} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation(); //Just in case parent or child elements are triggered
-                  clonePanel(panel.id);
-                }}
-                style={buttonStyle}
-                title="Clone Panel"
-              >
-                <FontAwesomeIcon icon={faClone} />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
                   if (
                     window.confirm(
                       'Are you sure you want to delete this panel?',
@@ -153,10 +151,159 @@ const PositionPanel = () => {
                 style={buttonStyle}
                 title="Delete Panel"
               >
-                <FontAwesomeIcon icon={faMinus} />
+                <FontAwesomeIcon icon={faTrash} />
               </button>
+              <div style={{ display: 'flex', gap: '5px' }}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    addPanel();
+                  }}
+                  style={buttonStyle}
+                  title="Add Panel"
+                >
+                  <FontAwesomeIcon icon={faPlus} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation(); //Just in case parent or child elements are triggered
+                    clonePanel(panel.id);
+                  }}
+                  style={buttonStyle}
+                  title="Clone Panel"
+                >
+                  <FontAwesomeIcon icon={faClone} />
+                </button>
+              </div>
             </div>
-            <Canvas panelId={panel.id} />
+            <div
+              style={{
+                flex: expandedNotesPanel === panel.id ? '0 0 0' : '1 1 auto',
+                width: '100%',
+                overflow: 'hidden',
+                minHeight: '0',
+              }}
+            >
+              <Canvas panelId={panel.id} />
+            </div>
+            {/* Notes Section */}
+            <div
+              style={{
+                width: '100%',
+                backgroundColor: '#f0f0f0',
+                borderTop: '1px solid #e0e0e0',
+                display: 'flex',
+                flexDirection: 'column',
+                flex: expandedNotesPanel === panel.id ? '1 1 auto' : '0 0 50px',
+                overflow: 'hidden',
+                minHeight: '0',
+              }}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {expandedNotesPanel === panel.id ? (
+                // Expanded view
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    padding: '8px',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'flex-end',
+                      marginBottom: '5px',
+                    }}
+                  >
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedNotesPanel(null);
+                      }}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{
+                        ...buttonStyle,
+                        fontSize: '12px',
+                      }}
+                      title="Collapse Notes"
+                    >
+                      <FontAwesomeIcon icon={faChevronDown} />
+                    </button>
+                  </div>
+                  <textarea
+                    ref={(el) => (textareaRefs.current[panel.id] = el)}
+                    value={panel.notes || ''}
+                    onChange={(e) => updatePanelNotes(panel.id, e.target.value)}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      flex: '1 1 auto',
+                      padding: '8px',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      fontFamily: 'Arial, sans-serif',
+                      fontSize: '12px',
+                      resize: 'none',
+                      overflowY: 'auto',
+                      minHeight: '0',
+                    }}
+                    placeholder="Add notes for this panel..."
+                  />
+                </div>
+              ) : (
+                // Collapsed view
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setExpandedNotesPanel(panel.id);
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px',
+                    height: '50px',
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      fontSize: '13px',
+                      color: '#666',
+                      marginRight: '5px',
+                    }}
+                  >
+                    {panel.notes || '(click to add notes)'}
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setExpandedNotesPanel(panel.id);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    style={{
+                      ...buttonStyle,
+                      fontSize: '12px',
+                      flexShrink: 0,
+                    }}
+                    title="Expand Notes"
+                  >
+                    <FontAwesomeIcon icon={faChevronUp} />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         );
       })}
