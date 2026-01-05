@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import Canvas from './Canvas';
 import { useAppStore } from '../stores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClone } from '@fortawesome/free-solid-svg-icons';
+import { faClone, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons';
 
 const PositionPanel = () => {
   const panels = useAppStore((state) => state.panels);
@@ -11,7 +11,9 @@ const PositionPanel = () => {
   const handlePanelSelection = useAppStore(
     (state) => state.handlePanelSelection,
   );
+  const addPanel = useAppStore((state) => state.addPanel);
   const clonePanel = useAppStore((state) => state.clonePanel);
+  const deleteSelectedPanel = useAppStore((state) => state.deleteSelectedPanel);
   const movePanel = useAppStore((state) => state.movePanel);
 
   const [draggingPanelId, setDraggingPanelId] = useState(null);
@@ -119,6 +121,16 @@ const PositionPanel = () => {
             >
               <button
                 onClick={(e) => {
+                  e.stopPropagation();
+                  addPanel();
+                }}
+                style={buttonStyle}
+                title="Add Panel"
+              >
+                <FontAwesomeIcon icon={faPlus} />
+              </button>
+              <button
+                onClick={(e) => {
                   e.stopPropagation(); //Just in case parent or child elements are triggered
                   clonePanel(panel.id);
                 }}
@@ -126,6 +138,22 @@ const PositionPanel = () => {
                 title="Clone Panel"
               >
                 <FontAwesomeIcon icon={faClone} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (
+                    window.confirm(
+                      'Are you sure you want to delete this panel?',
+                    )
+                  ) {
+                    deleteSelectedPanel(panel.id);
+                  }
+                }}
+                style={buttonStyle}
+                title="Delete Panel"
+              >
+                <FontAwesomeIcon icon={faMinus} />
               </button>
             </div>
             <Canvas panelId={panel.id} />

@@ -206,28 +206,6 @@ const Toolbar = () => {
           <FontAwesomeIcon icon={faTrash} />
           <span className="button-text">Delete Symbol</span>
         </Button>
-        <ButtonGroup className="custom-btn-group equal-width-btn-group">
-          {/* Add a new panel */}
-          <Button
-            onClick={() => selectedPanel && addPanel()}
-            variant={selectedPanel ? 'success' : 'outline-success'}
-            className="icon-button"
-            disabled={!selectedPanel}
-          >
-            <FontAwesomeIcon icon={faPlus} />
-            <span className="button-text">Add Panel</span>
-          </Button>
-          {/* Delete the currently selected panel */}
-          <Button
-            onClick={() => selectedPanel && deleteSelectedPanel(selectedPanel)}
-            variant={selectedPanel ? 'danger' : 'outline-danger'}
-            className="icon-button"
-            disabled={!selectedPanel}
-          >
-            <FontAwesomeIcon icon={faMinus} />
-            <span className="button-text">Delete Panel</span>
-          </Button>
-        </ButtonGroup>
       </div>
 
       <div className="file-handler">
