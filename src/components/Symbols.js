@@ -206,6 +206,32 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
+      {shape.type === 'straightLineUp' && (
+        <Arrow
+          {...commonProps}
+          points={[10, SHAPE_DIMENSIONS.straightLine.width, 10, 10]}
+          pointerLength={5}
+          pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={SHAPE_STYLE.STROKE_WIDTH_THICK}
+          hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
+          dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'straightLineDown' && (
+        <Arrow
+          {...commonProps}
+          points={[10, 10, 10, SHAPE_DIMENSIONS.straightLine.width]}
+          pointerLength={5}
+          pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={SHAPE_STYLE.STROKE_WIDTH_THICK}
+          hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
+          dash={[10, 5]}
+        />
+      )}
       {shape.type === 'curvedLine' && (
         <Arrow
           {...commonProps}
@@ -218,6 +244,36 @@ const Symbol = ({
           strokeWidth={3}
           hitStrokeWidth={10}
           dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'curvedLineUp' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(3, 30, Math.PI / 14)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={3}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+          rotation={-90}
+        />
+      )}
+      {shape.type === 'curvedLineDown' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(3, 30, Math.PI / 14)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={3}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+          rotation={90}
         />
       )}
       {shape.type === 'signal' && (
