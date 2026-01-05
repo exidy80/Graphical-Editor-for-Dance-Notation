@@ -7,6 +7,9 @@ import {
   faLongArrowAltRight,
   faArrowUp,
   faArrowDown,
+  faSyncAlt,
+  faRedo,
+  faUndo,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
 import images from './ImageMapping';
@@ -33,12 +36,26 @@ const SIDES = {
 // Map the shapes to their types
 const shapeMapping = {
   'Straight Line': { type: 'straightLine' },
+  'Straight Line Up': { type: 'straightLineUp' },
+  'Straight Line Down': { type: 'straightLineDown' },
   'Curved Line': { type: 'curvedLine' },
+  'Curved Line Up': { type: 'curvedLineUp' },
+  'Curved Line Down': { type: 'curvedLineDown' },
   '2 Spin': { type: 'spinThree' },
+  '2 Spin CW': { type: 'spinThreeCW' },
+  '2 Spin CCW': { type: 'spinThreeCCW' },
   '1.5 Spin': { type: 'spinTwo' },
+  '1.5 Spin CW': { type: 'spinTwoCW' },
+  '1.5 Spin CCW': { type: 'spinTwoCCW' },
   '1 Spin': { type: 'spinOne' },
+  '1 Spin CW': { type: 'spinOneCW' },
+  '1 Spin CCW': { type: 'spinOneCCW' },
   'Half Spin': { type: 'spinHalf' },
+  'Half Spin CW': { type: 'spinHalfCW' },
+  'Half Spin CCW': { type: 'spinHalfCCW' },
   'Quarter Spin': { type: 'spinQuarter' },
+  'Quarter Spin CW': { type: 'spinQuarterCW' },
+  'Quarter Spin CCW': { type: 'spinQuarterCCW' },
   Direction: { type: 'signal' },
   'Left Foot Basic': {
     type: 'image',
@@ -134,14 +151,17 @@ const Sidebar = () => {
       icon: <FontAwesomeIcon icon={faArrowRight} />,
       categories: {
         motion: ['Straight Line', 'Curved Line'],
-        spin: ['2 Spin', '1.5 Spin', '1 Spin', 'Half Spin', 'Quarter Spin'],
+        spin: ['Quarter Spin', 'Half Spin', '1 Spin', '1.5 Spin', '2 Spin'],
       },
       type: 'movement',
     },
     [TAB_KEYS.SIGNALS]: {
       label: 'Signals',
-      icon: <FontAwesomeIcon icon={faLongArrowAltRight} />,
-      items: ['Direction', 'Knee', 'Waist', 'Shoulder', 'Overhead'],
+      icon: <FontAwesomeIcon icon={faSyncAlt} />,
+      categories: {
+        motion: ['Straight Line', 'Curved Line'],
+        spin: ['Quarter Spin', 'Half Spin', '1 Spin', '1.5 Spin', '2 Spin'],
+      },
       type: 'signals',
     },
   };
@@ -694,57 +714,380 @@ const Sidebar = () => {
     );
   };
 
-  // Render buttons for signals tab
-  const renderSignalsButtons = () => {
-    const items = tabs[TAB_KEYS.SIGNALS].items;
+  // Render buttons for move & spin tab (motion + spin)
+  const renderMoveAndSpinButtons = () => {
     const isDisabled = selectedPanel === null;
+    const categories = tabs[TAB_KEYS.SIGNALS].categories;
+
+    // Helper to render arrow icon (straight line with arrowhead)
+    const renderArrowIcon = (color, direction = 'up') => {
+      const isUp = direction === 'up';
+      const arrowColor = color === COLORS.RED ? 'red' : 'blue';
+
+      return (
+        <svg width="32" height="32" viewBox="0 0 32 32">
+          {/* Dashed line body */}
+          <line
+            x1={isUp ? '16' : '16'}
+            y1={isUp ? '24' : '8'}
+            x2={isUp ? '16' : '16'}
+            y2={isUp ? '8' : '24'}
+            stroke={arrowColor}
+            strokeWidth="2"
+            strokeDasharray="4,4"
+          />
+          {/* Arrowhead */}
+          <polygon
+            points={isUp ? '16,4 12,10 20,10' : '16,28 12,22 20,22'}
+            fill={arrowColor}
+          />
+        </svg>
+      );
+    };
+
+    // Helper to render curved line icon
+    const renderCurvedLineIcon = (color, direction = 'up') => {
+      const isUp = direction === 'up';
+      const lineColor = color === COLORS.RED ? 'red' : 'blue';
+
+      return (
+        <svg width="32" height="32" viewBox="0 0 32 32">
+          {/* Dashed curved line body */}
+          <path
+            d={isUp ? 'M 16 24 Q 8 16, 16 8' : 'M 16 8 Q 8 16, 16 24'}
+            stroke={lineColor}
+            strokeWidth="2"
+            strokeDasharray="4,4"
+            fill="none"
+          />
+          {/* Arrowhead */}
+          <polygon
+            points={isUp ? '16,4 12,10 20,10' : '16,28 12,22 20,22'}
+            fill={lineColor}
+          />
+        </svg>
+      );
+    };
+
+    // Get icon for item based on direction
+    const getIcon = (item, color, direction) => {
+      if (item === 'Straight Line') {
+        return renderArrowIcon(color, direction);
+      } else if (item === 'Curved Line') {
+        return renderCurvedLineIcon(color, direction);
+      }
+      return null;
+    };
+
     return (
-      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div style={{ width: '48%' }}>
-          {items.map((item) => (
-            <button
-              key={`red-${item}`}
-              onClick={() => handleItemClick(item, null, COLORS.RED)}
-              disabled={isDisabled}
+      <div>
+        {/* Motion Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '15px', textAlign: 'center' }}
+        >
+          Move
+        </h3>
+        <div style={{ marginBottom: '20px' }}>
+          {categories.motion.map((item) => (
+            <div
+              key={item}
               style={{
-                display: 'block',
-                width: '100%',
-                padding: '5px',
-                marginBottom: '5px',
-                backgroundColor: 'red',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                opacity: isDisabled ? 0.5 : 1,
+                display: 'flex',
+                gap: '8px',
+                marginBottom: '10px',
+                alignItems: 'center',
               }}
             >
-              {item}
-            </button>
+              {/* Red Up */}
+              <button
+                onClick={() => handleItemClick(`${item} Up`, null, COLORS.RED)}
+                disabled={isDisabled}
+                style={{
+                  height: '50px',
+                  width: '50px',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                  padding: '0',
+                }}
+                title={`${item} - Red Up`}
+              >
+                {getIcon(item, COLORS.RED, 'up')}
+              </button>
+              {/* Red Down */}
+              <button
+                onClick={() =>
+                  handleItemClick(`${item} Down`, null, COLORS.RED)
+                }
+                disabled={isDisabled}
+                style={{
+                  height: '50px',
+                  width: '50px',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                  padding: '0',
+                }}
+                title={`${item} - Red Down`}
+              >
+                {getIcon(item, COLORS.RED, 'down')}
+              </button>
+              {/* Gap */}
+              <div style={{ flex: 1 }} />
+              {/* Blue Up */}
+              <button
+                onClick={() => handleItemClick(`${item} Up`, null, COLORS.BLUE)}
+                disabled={isDisabled}
+                style={{
+                  height: '50px',
+                  width: '50px',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                  padding: '0',
+                }}
+                title={`${item} - Blue Up`}
+              >
+                {getIcon(item, COLORS.BLUE, 'up')}
+              </button>
+              {/* Blue Down */}
+              <button
+                onClick={() =>
+                  handleItemClick(`${item} Down`, null, COLORS.BLUE)
+                }
+                disabled={isDisabled}
+                style={{
+                  height: '50px',
+                  width: '50px',
+                  backgroundColor: 'white',
+                  border: '2px solid #ddd',
+                  borderRadius: '5px',
+                  cursor: isDisabled ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: isDisabled ? 0.5 : 1,
+                  padding: '0',
+                }}
+                title={`${item} - Blue Down`}
+              >
+                {getIcon(item, COLORS.BLUE, 'down')}
+              </button>
+            </div>
           ))}
         </div>
-        <div style={{ width: '48%' }}>
-          {items.map((item) => (
-            <button
-              key={`blue-${item}`}
-              onClick={() => handleItemClick(item, null, COLORS.BLUE)}
-              disabled={isDisabled}
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '5px',
-                marginBottom: '5px',
-                backgroundColor: 'blue',
-                color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: isDisabled ? 'not-allowed' : 'pointer',
-                opacity: isDisabled ? 0.5 : 1,
-              }}
-            >
-              {item}
-            </button>
-          ))}
+
+        {/* Spin Section */}
+        <h3
+          style={{ color: 'black', marginBottom: '15px', textAlign: 'center' }}
+        >
+          Spin
+        </h3>
+
+        {/* Spin Indicators Header */}
+        <div
+          style={{
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '15px',
+            alignItems: 'center',
+          }}
+        >
+          {/* Red CW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'red',
+            }}
+          >
+            <FontAwesomeIcon icon={faRedo} />
+          </div>
+          {/* Red CCW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'red',
+            }}
+          >
+            <FontAwesomeIcon icon={faUndo} />
+          </div>
+          {/* Gap */}
+          <div style={{ flex: 1 }} />
+          {/* Blue CW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'blue',
+            }}
+          >
+            <FontAwesomeIcon icon={faRedo} />
+          </div>
+          {/* Blue CCW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'blue',
+            }}
+          >
+            <FontAwesomeIcon icon={faUndo} />
+          </div>
+        </div>
+
+        {/* Spin Buttons */}
+        <div style={{ marginBottom: '20px' }}>
+          {categories.spin.map((item) => {
+            // Map spin names to shortened labels
+            const spinMap = {
+              'Quarter Spin': '1/4',
+              'Half Spin': '1/2',
+              '1 Spin': '1',
+              '1.5 Spin': '1.5',
+              '2 Spin': '2',
+            };
+            const label = spinMap[item] || item;
+
+            return (
+              <div
+                key={item}
+                style={{
+                  display: 'flex',
+                  gap: '8px',
+                  marginBottom: '10px',
+                  alignItems: 'center',
+                }}
+              >
+                {/* Red CW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CW`, null, COLORS.RED)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'red',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CW - Red`}
+                >
+                  {label}
+                </button>
+                {/* Red CCW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CCW`, null, COLORS.RED)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'red',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CCW - Red`}
+                >
+                  {label}
+                </button>
+                {/* Gap */}
+                <div style={{ flex: 1 }} />
+                {/* Blue CW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CW`, null, COLORS.BLUE)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'blue',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CW - Blue`}
+                >
+                  {label}
+                </button>
+                {/* Blue CCW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CCW`, null, COLORS.BLUE)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'blue',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CCW - Blue`}
+                >
+                  {label}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -810,7 +1153,7 @@ const Sidebar = () => {
       >
         {activeTab === TAB_KEYS.FOOTWORK && renderFeetButtons()}
         {activeTab === TAB_KEYS.MOVEMENT && renderMovementButtons()}
-        {activeTab === TAB_KEYS.SIGNALS && renderSignalsButtons()}
+        {activeTab === TAB_KEYS.SIGNALS && renderMoveAndSpinButtons()}
       </div>
     </div>
   );
