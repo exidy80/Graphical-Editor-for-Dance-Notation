@@ -8,6 +8,8 @@ import {
   faArrowUp,
   faArrowDown,
   faSyncAlt,
+  faRedo,
+  faUndo,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
 import images from './ImageMapping';
@@ -40,10 +42,20 @@ const shapeMapping = {
   'Curved Line Up': { type: 'curvedLineUp' },
   'Curved Line Down': { type: 'curvedLineDown' },
   '2 Spin': { type: 'spinThree' },
+  '2 Spin CW': { type: 'spinThreeCW' },
+  '2 Spin CCW': { type: 'spinThreeCCW' },
   '1.5 Spin': { type: 'spinTwo' },
+  '1.5 Spin CW': { type: 'spinTwoCW' },
+  '1.5 Spin CCW': { type: 'spinTwoCCW' },
   '1 Spin': { type: 'spinOne' },
+  '1 Spin CW': { type: 'spinOneCW' },
+  '1 Spin CCW': { type: 'spinOneCCW' },
   'Half Spin': { type: 'spinHalf' },
+  'Half Spin CW': { type: 'spinHalfCW' },
+  'Half Spin CCW': { type: 'spinHalfCCW' },
   'Quarter Spin': { type: 'spinQuarter' },
+  'Quarter Spin CW': { type: 'spinQuarterCW' },
+  'Quarter Spin CCW': { type: 'spinQuarterCCW' },
   Direction: { type: 'signal' },
   'Left Foot Basic': {
     type: 'image',
@@ -139,7 +151,7 @@ const Sidebar = () => {
       icon: <FontAwesomeIcon icon={faArrowRight} />,
       categories: {
         motion: ['Straight Line', 'Curved Line'],
-        spin: ['2 Spin', '1.5 Spin', '1 Spin', 'Half Spin', 'Quarter Spin'],
+        spin: ['Quarter Spin', 'Half Spin', '1 Spin', '1.5 Spin', '2 Spin'],
       },
       type: 'movement',
     },
@@ -148,7 +160,7 @@ const Sidebar = () => {
       icon: <FontAwesomeIcon icon={faSyncAlt} />,
       categories: {
         motion: ['Straight Line', 'Curved Line'],
-        spin: ['2 Spin', '1.5 Spin', '1 Spin', 'Half Spin', 'Quarter Spin'],
+        spin: ['Quarter Spin', 'Half Spin', '1 Spin', '1.5 Spin', '2 Spin'],
       },
       type: 'signals',
     },
@@ -882,66 +894,200 @@ const Sidebar = () => {
 
         {/* Spin Section */}
         <h3
-          style={{ color: 'black', marginBottom: '10px', textAlign: 'center' }}
+          style={{ color: 'black', marginBottom: '15px', textAlign: 'center' }}
         >
           Spin
         </h3>
+
+        {/* Spin Indicators Header */}
         <div
           style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '5px',
+            display: 'flex',
+            gap: '8px',
+            marginBottom: '15px',
+            alignItems: 'center',
           }}
         >
-          {categories.spin.map((item) => (
-            <div
-              key={item}
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '5px',
-              }}
-            >
-              {/* Red */}
-              <button
-                onClick={() => handleItemClick(item, null, COLORS.RED)}
-                disabled={isDisabled}
+          {/* Red CW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'red',
+            }}
+          >
+            <FontAwesomeIcon icon={faRedo} />
+          </div>
+          {/* Red CCW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'red',
+            }}
+          >
+            <FontAwesomeIcon icon={faUndo} />
+          </div>
+          {/* Gap */}
+          <div style={{ flex: 1 }} />
+          {/* Blue CW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'blue',
+            }}
+          >
+            <FontAwesomeIcon icon={faRedo} />
+          </div>
+          {/* Blue CCW Indicator */}
+          <div
+            style={{
+              width: '50px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              color: 'blue',
+            }}
+          >
+            <FontAwesomeIcon icon={faUndo} />
+          </div>
+        </div>
+
+        {/* Spin Buttons */}
+        <div style={{ marginBottom: '20px' }}>
+          {categories.spin.map((item) => {
+            // Map spin names to shortened labels
+            const spinMap = {
+              'Quarter Spin': '1/4',
+              'Half Spin': '1/2',
+              '1 Spin': '1',
+              '1.5 Spin': '1.5',
+              '2 Spin': '2',
+            };
+            const label = spinMap[item] || item;
+
+            return (
+              <div
+                key={item}
                 style={{
-                  height: '40px',
-                  backgroundColor: 'white',
-                  border: '2px solid #ddd',
-                  borderRadius: '5px',
-                  cursor: isDisabled ? 'not-allowed' : 'pointer',
-                  color: 'red',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  opacity: isDisabled ? 0.5 : 1,
+                  display: 'flex',
+                  gap: '8px',
+                  marginBottom: '10px',
+                  alignItems: 'center',
                 }}
-                title={`${item} - Red`}
               >
-                {item}
-              </button>
-              {/* Blue */}
-              <button
-                onClick={() => handleItemClick(item, null, COLORS.BLUE)}
-                disabled={isDisabled}
-                style={{
-                  height: '40px',
-                  backgroundColor: 'white',
-                  border: '2px solid #ddd',
-                  borderRadius: '5px',
-                  cursor: isDisabled ? 'not-allowed' : 'pointer',
-                  color: 'blue',
-                  fontSize: '12px',
-                  fontWeight: '600',
-                  opacity: isDisabled ? 0.5 : 1,
-                }}
-                title={`${item} - Blue`}
-              >
-                {item}
-              </button>
-            </div>
-          ))}
+                {/* Red CW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CW`, null, COLORS.RED)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'red',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CW - Red`}
+                >
+                  {label}
+                </button>
+                {/* Red CCW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CCW`, null, COLORS.RED)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'red',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CCW - Red`}
+                >
+                  {label}
+                </button>
+                {/* Gap */}
+                <div style={{ flex: 1 }} />
+                {/* Blue CW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CW`, null, COLORS.BLUE)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'blue',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CW - Blue`}
+                >
+                  {label}
+                </button>
+                {/* Blue CCW */}
+                <button
+                  onClick={() =>
+                    handleItemClick(`${item} CCW`, null, COLORS.BLUE)
+                  }
+                  disabled={isDisabled}
+                  style={{
+                    height: '50px',
+                    width: '50px',
+                    backgroundColor: 'white',
+                    border: '2px solid #ddd',
+                    borderRadius: '5px',
+                    cursor: isDisabled ? 'not-allowed' : 'pointer',
+                    color: 'blue',
+                    fontSize: '18px',
+                    fontWeight: '600',
+                    opacity: isDisabled ? 0.5 : 1,
+                    padding: '0',
+                  }}
+                  title={`${item} CCW - Blue`}
+                >
+                  {label}
+                </button>
+              </div>
+            );
+          })}
         </div>
       </div>
     );

@@ -137,6 +137,35 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
+      {shape.type === 'spinThreeCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(30, 1, Math.PI / 6)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
+          stroke={shape.stroke}
+          fill={shape.fill}
+          strokeWidth={SHAPE_STYLE.STROKE_WIDTH_THIN}
+          hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
+          dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinThreeCCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(30, 1, Math.PI / 6)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
+          stroke={shape.stroke}
+          fill={shape.fill}
+          strokeWidth={SHAPE_STYLE.STROKE_WIDTH_THIN}
+          hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
+          dash={[10, 5]}
+          scaleX={-1}
+        />
+      )}
       {shape.type === 'spinTwo' && (
         <Arrow
           {...commonProps}
@@ -149,6 +178,35 @@ const Symbol = ({
           strokeWidth={2}
           hitStrokeWidth={10}
           dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinTwoCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(20, 1, Math.PI / 6)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          stroke={shape.stroke}
+          fill={shape.fill}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinTwoCCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(20, 1, Math.PI / 6)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          stroke={shape.stroke}
+          fill={shape.fill}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+          scaleX={-1}
         />
       )}
       {shape.type === 'spinOne' && (
@@ -165,6 +223,35 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
+      {shape.type === 'spinOneCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinOneCCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+          scaleX={-1}
+        />
+      )}
       {shape.type === 'spinHalf' && (
         <Arrow
           {...commonProps}
@@ -179,6 +266,35 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
+      {shape.type === 'spinHalfCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(12, 2, Math.PI / 17)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinHalfCCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(12, 2, Math.PI / 17)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+          scaleX={-1}
+        />
+      )}
       {shape.type === 'spinQuarter' && (
         <Arrow
           {...commonProps}
@@ -191,6 +307,35 @@ const Symbol = ({
           strokeWidth={2}
           hitStrokeWidth={10}
           dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinQuarterCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(8, 2, Math.PI / 20)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+        />
+      )}
+      {shape.type === 'spinQuarterCCW' && (
+        <Arrow
+          {...commonProps}
+          points={generateSpiralPoints(8, 2, Math.PI / 20)}
+          tension={0.5}
+          pointerLength={5}
+          pointerWidth={5}
+          fill={shape.fill}
+          stroke={shape.stroke}
+          strokeWidth={2}
+          hitStrokeWidth={10}
+          dash={[10, 5]}
+          scaleX={-1}
         />
       )}
       {shape.type === 'straightLine' && (
