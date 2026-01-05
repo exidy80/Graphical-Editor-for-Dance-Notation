@@ -13,7 +13,9 @@ import {
   faLink,
   faUnlink,
   faRefresh,
+  faFilePdf,
 } from '@fortawesome/free-solid-svg-icons';
+import html2pdf from 'html2pdf.js';
 
 const Toolbar = () => {
   const handleHeadSelection = useAppStore((state) => state.handleHeadSelection);
@@ -62,6 +64,82 @@ const Toolbar = () => {
         color: 'white',
       }
     : {};
+
+  const exportPanelsToPDF = async () => {
+    try {
+      const element = document.querySelector('.position-panel-grid');
+      if (!element) {
+        alert('No panels found to export');
+        return;
+      }
+
+      // Check if File System Access API is supported
+      if ('showSaveFilePicker' in window) {
+        try {
+          // Show the native save dialog
+          const fileHandle = await window.showSaveFilePicker({
+            suggestedName: 'dance-notation.pdf',
+            types: [
+              {
+                description: 'PDF files',
+                accept: {
+                  'application/pdf': ['.pdf'],
+                },
+              },
+            ],
+          });
+
+          const opt = {
+            margin: 10,
+            filename: fileHandle.name,
+            image: { type: 'png', quality: 0.98 },
+            html2canvas: { scale: 2 },
+            jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+          };
+
+          await html2pdf().set(opt).from(element).save();
+          console.log('PDF saved successfully!');
+          return;
+        } catch (err) {
+          // User cancelled the dialog or there was an error
+          if (err.name !== 'AbortError') {
+            console.error('Error with File System Access API:', err);
+          } else {
+            // User cancelled, just return
+            return;
+          }
+        }
+      }
+
+      // Fallback: use prompt for filename
+      const filename = prompt('Enter PDF filename:', 'dance-notation');
+      if (filename === null) {
+        return; // User cancelled
+      }
+
+      if (!filename.trim()) {
+        alert('Please enter a valid filename');
+        return;
+      }
+
+      const pdfFilename = filename.endsWith('.pdf')
+        ? filename
+        : `${filename}.pdf`;
+
+      const opt = {
+        margin: 10,
+        filename: pdfFilename,
+        image: { type: 'png', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+      };
+
+      await html2pdf().set(opt).from(element).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    }
+  };
 
   return (
     <div className="perspective-selection">
@@ -209,6 +287,16 @@ const Toolbar = () => {
       </div>
 
       <div className="file-handler">
+        {/* Export panels to PDF */}
+        <Button
+          onClick={exportPanelsToPDF}
+          variant="outline-primary"
+          className="icon-button"
+          title="Export all panels to PDF"
+        >
+          <FontAwesomeIcon icon={faFilePdf} />
+          <span className="button-text">Save to PDF...</span>
+        </Button>
         {/* Reset to default state */}
         <Button
           onClick={() => {

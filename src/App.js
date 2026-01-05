@@ -32,7 +32,7 @@ const AppContent = () => {
       <div className="main-content">
         <Toolbar />
         <div
-          className="position-panels"
+          className="position-panel-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: `repeat(auto-fill, minmax(${panelSize.width}px, 1fr))`, // Responsive grid
