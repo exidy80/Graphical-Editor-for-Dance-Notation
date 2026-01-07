@@ -30,16 +30,37 @@ const Symbol = ({
   //check if its the stage marker
   const isStageX = shape.type === 'stageX';
 
+  // Calculates the center of the bounding box for points array [x1, y1, x2, y2, ...]
+  const calculateBoundingBoxCenter = (points) => {
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
+
+    for (let i = 0; i < points.length; i += 2) {
+      minX = Math.min(minX, points[i]);
+      maxX = Math.max(maxX, points[i]);
+      minY = Math.min(minY, points[i + 1]);
+      maxY = Math.max(maxY, points[i + 1]);
+    }
+
+    return {
+      x: (minX + maxX) / 2,
+      y: (minY + maxY) / 2,
+    };
+  };
+
   // Generates the points for each type of spin
   const generateSpiralPoints = (
     numPoints,
     radiusIncrement,
     angleIncrement,
     pattern,
+    startAngle = 0,
   ) => {
     const points = [];
     for (let i = 0; i < numPoints; i++) {
-      const angle = i * angleIncrement;
+      const angle = startAngle + i * angleIncrement;
       let radius;
       if (pattern === 'circle') {
         radius = radiusIncrement; // Fixed radius for a circle
@@ -341,7 +362,7 @@ const Symbol = ({
       {shape.type === 'straightLine' && (
         <Arrow
           {...commonProps}
-          points={[10, 10, SHAPE_DIMENSIONS.straightLine.width, 10]}
+          points={[-37.5, 0, 37.5, 0]}
           pointerLength={5}
           pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
           fill={shape.fill}
@@ -354,7 +375,7 @@ const Symbol = ({
       {shape.type === 'straightLineUp' && (
         <Arrow
           {...commonProps}
-          points={[10, SHAPE_DIMENSIONS.straightLine.width, 10, 10]}
+          points={[0, 37.5, 0, -37.5]}
           pointerLength={5}
           pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
           fill={shape.fill}
@@ -367,7 +388,7 @@ const Symbol = ({
       {shape.type === 'straightLineDown' && (
         <Arrow
           {...commonProps}
-          points={[10, 10, 10, SHAPE_DIMENSIONS.straightLine.width]}
+          points={[0, -37.5, 0, 37.5]}
           pointerLength={5}
           pointerWidth={SHAPE_STYLE.POINTER_WIDTH}
           fill={shape.fill}
@@ -377,50 +398,81 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'curvedLine' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(3, 30, Math.PI / 14)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shape.fill}
-          stroke={shape.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-        />
-      )}
-      {shape.type === 'curvedLineUp' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(3, 30, Math.PI / 14)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shape.fill}
-          stroke={shape.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-          rotation={-90}
-        />
-      )}
-      {shape.type === 'curvedLineDown' && (
-        <Arrow
-          {...commonProps}
-          points={generateSpiralPoints(3, 30, Math.PI / 14)}
-          tension={0.5}
-          pointerLength={5}
-          pointerWidth={5}
-          fill={shape.fill}
-          stroke={shape.stroke}
-          strokeWidth={3}
-          hitStrokeWidth={10}
-          dash={[10, 5]}
-          rotation={90}
-        />
-      )}
+      {shape.type === 'curvedLine' &&
+        (() => {
+          const points = generateSpiralPoints(3, 30, Math.PI / 14);
+          const center = calculateBoundingBoxCenter(points);
+          return (
+            <Arrow
+              {...commonProps}
+              points={points}
+              tension={0.5}
+              pointerLength={5}
+              pointerWidth={5}
+              fill={shape.fill}
+              stroke={shape.stroke}
+              strokeWidth={3}
+              hitStrokeWidth={10}
+              dash={[10, 5]}
+              offsetX={center.x}
+              offsetY={center.y}
+            />
+          );
+        })()}
+      {shape.type === 'curvedLineUp' &&
+        (() => {
+          const points = generateSpiralPoints(
+            3,
+            30,
+            Math.PI / 14,
+            undefined,
+            -Math.PI / 2,
+          );
+          const center = calculateBoundingBoxCenter(points);
+          return (
+            <Arrow
+              {...commonProps}
+              points={points}
+              tension={0.5}
+              pointerLength={5}
+              pointerWidth={5}
+              fill={shape.fill}
+              stroke={shape.stroke}
+              strokeWidth={3}
+              hitStrokeWidth={10}
+              dash={[10, 5]}
+              offsetX={center.x}
+              offsetY={center.y}
+            />
+          );
+        })()}
+      {shape.type === 'curvedLineDown' &&
+        (() => {
+          const points = generateSpiralPoints(
+            3,
+            30,
+            -Math.PI / 14,
+            undefined,
+            Math.PI / 2,
+          );
+          const center = calculateBoundingBoxCenter(points);
+          return (
+            <Arrow
+              {...commonProps}
+              points={points}
+              tension={0.5}
+              pointerLength={5}
+              pointerWidth={5}
+              fill={shape.fill}
+              stroke={shape.stroke}
+              strokeWidth={3}
+              hitStrokeWidth={10}
+              dash={[10, 5]}
+              offsetX={center.x}
+              offsetY={center.y}
+            />
+          );
+        })()}
       {shape.type === 'signal' && (
         <Arrow
           {...commonProps}
