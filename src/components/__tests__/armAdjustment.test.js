@@ -312,7 +312,7 @@ describe('Arm Adjustment with Locked Hands', () => {
       (d) => d.id === d0.id,
     );
 
-    // Lock hands
+    // Hold hands
     act(() => getState().setSelectedPanel(panel.id));
     act(() => getState().setLockModeActive(true));
     act(() => getState().handleHandClick(panel.id, d0.id, 'left'));

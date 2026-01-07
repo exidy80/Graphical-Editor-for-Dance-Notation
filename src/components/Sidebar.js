@@ -4,7 +4,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faShoePrints,
   faArrowRight,
-  faLongArrowAltRight,
   faArrowUp,
   faArrowDown,
   faSyncAlt,
@@ -136,16 +135,10 @@ const Sidebar = () => {
   const handleShapeDraw = useAppStore((state) => state.handleShapeDraw);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   //Local states for the sidebar
-  const [activeTab, setActiveTab] = useState(TAB_KEYS.FOOTWORK);
+  const [activeTab, setActiveTab] = useState(TAB_KEYS.MOVEMENT);
 
   //Tabs and their contents
   const tabs = {
-    [TAB_KEYS.FOOTWORK]: {
-      label: 'Footwork',
-      icon: <FontAwesomeIcon icon={faShoePrints} />,
-      items: ['Basic', 'Hover', 'Heel', 'Ball', 'Whole'],
-      type: 'feet',
-    },
     [TAB_KEYS.MOVEMENT]: {
       label: 'Movement',
       icon: <FontAwesomeIcon icon={faArrowRight} />,
@@ -158,11 +151,13 @@ const Sidebar = () => {
     [TAB_KEYS.SIGNALS]: {
       label: 'Signals',
       icon: <FontAwesomeIcon icon={faSyncAlt} />,
-      categories: {
-        motion: ['Straight Line', 'Curved Line'],
-        spin: ['Quarter Spin', 'Half Spin', '1 Spin', '1.5 Spin', '2 Spin'],
-      },
       type: 'signals',
+    },
+    [TAB_KEYS.FOOTWORK]: {
+      label: 'Footwork',
+      icon: <FontAwesomeIcon icon={faShoePrints} />,
+      items: ['Basic', 'Hover', 'Heel', 'Ball', 'Whole'],
+      type: 'feet',
     },
   };
 
@@ -318,8 +313,8 @@ const Sidebar = () => {
     );
   };
 
-  // Render buttons for movement tab (motion + spin)
-  const renderMovementButtons = () => {
+  // Render buttons for signals tab (directions and hands)
+  const renderSignalsButtons = () => {
     const isDisabled = selectedPanel === null;
     const elevationItems = [
       { name: 'Overhead', shape: 'triangle' },
@@ -714,10 +709,10 @@ const Sidebar = () => {
     );
   };
 
-  // Render buttons for move & spin tab (motion + spin)
-  const renderMoveAndSpinButtons = () => {
+  // Render buttons for movement tab (motion + spin)
+  const renderMovementButtons = () => {
     const isDisabled = selectedPanel === null;
-    const categories = tabs[TAB_KEYS.SIGNALS].categories;
+    const categories = tabs[TAB_KEYS.MOVEMENT].categories;
 
     // Helper to render arrow icon (straight line with arrowhead)
     const renderArrowIcon = (color, direction = 'up') => {
@@ -1153,7 +1148,7 @@ const Sidebar = () => {
       >
         {activeTab === TAB_KEYS.FOOTWORK && renderFeetButtons()}
         {activeTab === TAB_KEYS.MOVEMENT && renderMovementButtons()}
-        {activeTab === TAB_KEYS.SIGNALS && renderMoveAndSpinButtons()}
+        {activeTab === TAB_KEYS.SIGNALS && renderSignalsButtons()}
       </div>
     </div>
   );
