@@ -236,7 +236,7 @@ const Toolbar = () => {
             className="icon-button"
           >
             <FontAwesomeIcon icon={faLink} />
-            <span className="button-text">Lock Hands</span>
+            <span className="button-text">Hold Hands</span>
           </Button>
           <Button
             onClick={() => {
@@ -269,7 +269,7 @@ const Toolbar = () => {
             }
           >
             <FontAwesomeIcon icon={faUnlink} />
-            <span className="button-text">Unlock</span>
+            <span className="button-text">Release Hands</span>
           </Button>
         </ButtonGroup>
 

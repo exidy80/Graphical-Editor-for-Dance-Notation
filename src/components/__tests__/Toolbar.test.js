@@ -2,19 +2,21 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Toolbar from '../Toolbar';
 
-jest.mock('../PanelFileHandler', () => () => <div data-testid="panel-file-handler" />);
+jest.mock('../PanelFileHandler', () => () => (
+  <div data-testid="panel-file-handler" />
+));
 
 test('renders head and hand dropdowns and lock controls', () => {
   render(<Toolbar />);
   expect(screen.getByText('Select Head')).toBeInTheDocument();
   expect(screen.getByText('Select Hand')).toBeInTheDocument();
-  expect(screen.getByText('Lock Hands')).toBeInTheDocument();
+  expect(screen.getByText('Hold Hands')).toBeInTheDocument();
   expect(screen.getByText('Delete Symbol')).toBeInTheDocument();
 });
 
 test('lock mode toggle button toggles variant', () => {
   render(<Toolbar />);
-  const lockBtn = screen.getByText('Lock Hands').closest('button');
+  const lockBtn = screen.getByText('Hold Hands').closest('button');
   expect(lockBtn).toHaveClass('btn-outline-primary');
   fireEvent.click(lockBtn);
   // Variant should flip to primary
@@ -32,5 +34,3 @@ test('opacity toggles for dancers and symbols', () => {
   expect(dancerBtn).toHaveClass('btn-primary');
   expect(symbolBtn).toHaveClass('btn-primary');
 });
-
-
