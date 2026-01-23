@@ -279,6 +279,43 @@ describe('Save/Restore Functionality', () => {
         { left: 'Knee', right: 'Overhead' },
       ]);
     });
+
+    test('should add stageNext symbol to old panels that lack it', () => {
+      // Simulate an old panel file that only has stageX
+      const oldPanelData = {
+        id: 'old-panel',
+        dancers: [],
+        headShapes: [],
+        handShapes: [],
+        shapes: [
+          {
+            id: 'shape-1',
+            type: 'stageX',
+            x: 100,
+            y: 100,
+            text: 'O',
+            fill: 'black',
+          },
+        ],
+        locks: [],
+      };
+
+      const deserialized = useAppStore.getState().deserializePanel(oldPanelData);
+
+      // Should have both stageX and stageNext
+      expect(deserialized.shapes).toHaveLength(2);
+      
+      const stageX = deserialized.shapes.find((s) => s.type === 'stageX');
+      const stageNext = deserialized.shapes.find(
+        (s) => s.type === 'stageNext',
+      );
+
+      expect(stageX).toBeDefined();
+      expect(stageNext).toBeDefined();
+      expect(stageNext.text).toBe('+');
+      expect(stageNext.x).toBe(stageX.x);
+      expect(stageNext.y).toBe(stageX.y);
+    });
   });
 
   describe('Complete Save/Import Round-trip', () => {
