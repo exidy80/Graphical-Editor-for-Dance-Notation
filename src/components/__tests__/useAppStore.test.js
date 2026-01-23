@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
+import * as ShapeTypes from '../../constants/shapeTypes';
 
 describe('useAppStore', () => {
   beforeEach(() => {
@@ -59,13 +60,15 @@ describe('useAppStore', () => {
     const firstPanel = panels[0];
 
     // Check for stageX (origin marker)
-    const stageX = firstPanel.shapes.find((s) => s.type === 'stageX');
+    const stageX = firstPanel.shapes.find((s) => s.type === ShapeTypes.STAGE_X);
     expect(stageX).toBeDefined();
     expect(stageX.text).toBe('O');
     expect(stageX.fill).toBe('black');
 
     // Check for stageNext (plus marker)
-    const stageNext = firstPanel.shapes.find((s) => s.type === 'stageNext');
+    const stageNext = firstPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_NEXT,
+    );
     expect(stageNext).toBeDefined();
     expect(stageNext.text).toBe('+');
     expect(stageNext.fill).toBe('black');

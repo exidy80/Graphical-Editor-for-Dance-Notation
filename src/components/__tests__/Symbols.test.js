@@ -1,6 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import Symbol from '../Symbols';
+import * as ShapeTypes from '../../constants/shapeTypes';
 
 test('Symbol respects disabled and selected props', () => {
   const shape = {
@@ -61,7 +62,7 @@ test('Transformer is rendered for selected symbol and not for stageOrigin', () =
 
   const stageOrigin = {
     id: 'shape-3',
-    type: 'stageX',
+    type: ShapeTypes.STAGE_X,
     x: 0,
     y: 0,
     draggable: false,
@@ -113,7 +114,7 @@ test('Symbol renders stageNext type', () => {
 
   const stageNextShape = {
     id: 'shape-5',
-    type: 'stageNext',
+    type: ShapeTypes.STAGE_NEXT,
     x: 150,
     y: 150,
     draggable: false,

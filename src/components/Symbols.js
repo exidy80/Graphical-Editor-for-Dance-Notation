@@ -11,6 +11,7 @@ import {
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
 import { SHAPE_STYLE } from '../utils/dimensions';
+import * as ShapeTypes from '../constants/shapeTypes';
 
 const Symbol = ({
   shape,
@@ -27,7 +28,7 @@ const Symbol = ({
   const [image] = useImage(images[shape.imageKey]);
 
   //check if its the stage marker
-  const isStageOrigin = shape.type === 'stageX';
+  const isStageOrigin = shape.type === ShapeTypes.STAGE_X;
 
   // Calculates the center of the bounding box for points array [x1, y1, x2, y2, ...]
   const calculateBoundingBoxCenter = (points) => {
@@ -143,7 +144,7 @@ const Symbol = ({
   // Render the chosen shape
   return (
     <>
-      {shape.type === 'spinTwo' && (
+      {shape.type === ShapeTypes.SPIN_TWO && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
@@ -157,7 +158,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinTwoCW' && (
+      {shape.type === ShapeTypes.SPIN_TWO_CW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
@@ -171,7 +172,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinTwoCCW' && (
+      {shape.type === ShapeTypes.SPIN_TWO_CCW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
@@ -186,7 +187,7 @@ const Symbol = ({
           scaleX={-1}
         />
       )}
-      {shape.type === 'spinOneAndHalf' && (
+      {shape.type === ShapeTypes.SPIN_ONE_AND_HALF && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(20, 1, Math.PI / 6)}
@@ -200,7 +201,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinOneAndHalfCW' && (
+      {shape.type === ShapeTypes.SPIN_ONE_AND_HALF_CW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(20, 1, Math.PI / 6)}
@@ -214,7 +215,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinOneAndHalfCCW' && (
+      {shape.type === ShapeTypes.SPIN_ONE_AND_HALF_CCW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(20, 1, Math.PI / 6)}
@@ -229,7 +230,7 @@ const Symbol = ({
           scaleX={-1}
         />
       )}
-      {shape.type === 'spinOne' && (
+      {shape.type === ShapeTypes.SPIN_ONE && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
@@ -243,7 +244,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinOneCW' && (
+      {shape.type === ShapeTypes.SPIN_ONE_CW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
@@ -257,7 +258,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinOneCCW' && (
+      {shape.type === ShapeTypes.SPIN_ONE_CCW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(36, 25, Math.PI / 18, 'circle')}
@@ -272,7 +273,7 @@ const Symbol = ({
           scaleX={-1}
         />
       )}
-      {shape.type === 'spinHalf' && (
+      {shape.type === ShapeTypes.SPIN_HALF && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(12, 2, Math.PI / 17)}
@@ -286,7 +287,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinHalfCW' && (
+      {shape.type === ShapeTypes.SPIN_HALF_CW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(12, 2, Math.PI / 17)}
@@ -300,7 +301,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinHalfCCW' && (
+      {shape.type === ShapeTypes.SPIN_HALF_CCW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(12, 2, Math.PI / 17)}
@@ -315,7 +316,7 @@ const Symbol = ({
           scaleX={-1}
         />
       )}
-      {shape.type === 'spinQuarter' && (
+      {shape.type === ShapeTypes.SPIN_QUARTER && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(8, 2, Math.PI / 20)}
@@ -329,7 +330,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinQuarterCW' && (
+      {shape.type === ShapeTypes.SPIN_QUARTER_CW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(8, 2, Math.PI / 20)}
@@ -343,7 +344,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinQuarterCCW' && (
+      {shape.type === ShapeTypes.SPIN_QUARTER_CCW && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(8, 2, Math.PI / 20)}
@@ -358,7 +359,7 @@ const Symbol = ({
           scaleX={-1}
         />
       )}
-      {shape.type === 'straightLine' && (
+      {shape.type === ShapeTypes.STRAIGHT_LINE && (
         <Arrow
           {...commonProps}
           points={[-37.5, 0, 37.5, 0]}
@@ -371,7 +372,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'straightLineUp' && (
+      {shape.type === ShapeTypes.STRAIGHT_LINE_UP && (
         <Arrow
           {...commonProps}
           points={[0, 37.5, 0, -37.5]}
@@ -384,7 +385,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'straightLineDown' && (
+      {shape.type === ShapeTypes.STRAIGHT_LINE_DOWN && (
         <Arrow
           {...commonProps}
           points={[0, -37.5, 0, 37.5]}
@@ -397,7 +398,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'quarterCurvedLine' &&
+      {shape.type === ShapeTypes.QUARTER_CURVED_LINE &&
         (() => {
           const points = generateSpiralPoints(3, 30, Math.PI / 14);
           const center = calculateBoundingBoxCenter(points);
@@ -418,7 +419,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'quarterCurvedLineUp' &&
+      {shape.type === ShapeTypes.QUARTER_CURVED_LINE_UP &&
         (() => {
           const points = generateSpiralPoints(
             3,
@@ -445,7 +446,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'quarterCurvedLineDown' &&
+      {shape.type === ShapeTypes.QUARTER_CURVED_LINE_DOWN &&
         (() => {
           const points = generateSpiralPoints(
             3,
@@ -472,7 +473,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'halfCurvedLine' &&
+      {shape.type === ShapeTypes.HALF_CURVED_LINE &&
         (() => {
           const points = generateSpiralPoints(6, 15, Math.PI / 14);
           const center = calculateBoundingBoxCenter(points);
@@ -493,7 +494,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'halfCurvedLineUp' &&
+      {shape.type === ShapeTypes.HALF_CURVED_LINE_UP &&
         (() => {
           const points = generateSpiralPoints(
             6,
@@ -520,7 +521,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'halfCurvedLineDown' &&
+      {shape.type === ShapeTypes.HALF_CURVED_LINE_DOWN &&
         (() => {
           const points = generateSpiralPoints(
             6,
@@ -547,7 +548,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'signal' && (
+      {shape.type === ShapeTypes.SIGNAL && (
         <Arrow
           {...commonProps}
           points={[10, 10, 30, 10]}
@@ -559,7 +560,7 @@ const Symbol = ({
           hitStrokeWidth={10}
         />
       )}
-      {shape.type === 'directionUp' && (
+      {shape.type === ShapeTypes.DIRECTION_UP && (
         <Arrow
           {...commonProps}
           points={[10, 30, 10, 10]}
@@ -571,7 +572,7 @@ const Symbol = ({
           hitStrokeWidth={10}
         />
       )}
-      {shape.type === 'directionDown' && (
+      {shape.type === ShapeTypes.DIRECTION_DOWN && (
         <Arrow
           {...commonProps}
           points={[10, 10, 10, 30]}
@@ -583,7 +584,7 @@ const Symbol = ({
           hitStrokeWidth={10}
         />
       )}
-      {shape.type === 'block' && (
+      {shape.type === ShapeTypes.BLOCK && (
         <Rect
           {...commonProps}
           width={10}
@@ -593,7 +594,7 @@ const Symbol = ({
           strokeWidth={2}
         />
       )}
-      {shape.type === 'splitHands' && (
+      {shape.type === ShapeTypes.SPLIT_HANDS && (
         <Text
           {...commonProps}
           text="×"
@@ -602,10 +603,10 @@ const Symbol = ({
           fill={shape.fill}
         />
       )}
-      {shape.type === 'linkHands' && (
+      {shape.type === ShapeTypes.LINK_HANDS && (
         <Text {...commonProps} text="∞" fontSize={20} fill={shape.fill} />
       )}
-      {shape.type === 'image' && (
+      {shape.type === ShapeTypes.IMAGE && (
         <KonvaImage
           {...commonProps}
           image={image}
@@ -613,27 +614,27 @@ const Symbol = ({
           scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
         />
       )}
-      {shape.type === 'stageX' && (
+      {shape.type === ShapeTypes.STAGE_X && (
         <Text
           {...commonProps}
-          text="O"
-          fontSize={20}
-          fill="black"
+          text={shape.text}
+          fontSize={shape.fontSize}
+          fill={shape.fill}
           offsetX={10}
           offsetY={10}
         />
       )}
-      {shape.type === 'stageNext' && (
+      {shape.type === ShapeTypes.STAGE_NEXT && (
         <Text
           {...commonProps}
-          text="+"
-          fontSize={24}
-          fill="black"
+          text={shape.text}
+          fontSize={shape.fontSize}
+          fill={shape.fill}
           offsetX={10}
           offsetY={10}
         />
       )}
-      {shape.type === 'knee' && (
+      {shape.type === ShapeTypes.KNEE && (
         <Circle
           {...commonProps}
           radius={3}
@@ -642,7 +643,7 @@ const Symbol = ({
           strokeWidth={1}
         />
       )}
-      {shape.type === 'hip' && (
+      {shape.type === ShapeTypes.HIP && (
         <Circle
           {...commonProps}
           radius={3}
@@ -650,7 +651,7 @@ const Symbol = ({
           strokeWidth={2}
         />
       )}
-      {shape.type === 'waist' && (
+      {shape.type === ShapeTypes.WAIST && (
         <Rect
           {...commonProps}
           width={12}
@@ -660,7 +661,7 @@ const Symbol = ({
           strokeWidth={3}
         />
       )}
-      {shape.type === 'shoulder' && (
+      {shape.type === ShapeTypes.SHOULDER && (
         <RegularPolygon
           {...commonProps}
           sides={4}
@@ -669,7 +670,7 @@ const Symbol = ({
           strokeWidth={2}
         />
       )}
-      {shape.type === 'overhead' && (
+      {shape.type === ShapeTypes.OVERHEAD && (
         <RegularPolygon
           {...commonProps}
           sides={4}

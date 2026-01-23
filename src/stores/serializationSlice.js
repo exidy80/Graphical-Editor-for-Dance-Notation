@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as ShapeTypes from '../constants/shapeTypes';
+import { createStageNext } from '../constants/shapeTypes';
 
 // Serialization slice - handles converting panels to/from JSON for save/load operations
 const createSerializationSlice = (set, get) => ({
@@ -90,23 +92,20 @@ const createSerializationSlice = (set, get) => ({
       id: uuidv4(),
     }));
 
-    // Add stageNext if it doesn't exist (for backward compatibility with older files)
-    const hasStageNext = newShapes.some((shape) => shape.type === 'stageNext');
+    // Add stageNext if it doesn't exist
+    // This provides backward compatibility for older saved files created before stageNext was added
+    const hasStageNext = newShapes.some(
+      (shape) => shape.type === ShapeTypes.STAGE_NEXT,
+    );
     if (!hasStageNext) {
-      const stageX = newShapes.find((shape) => shape.type === 'stageX');
+      const stageX = newShapes.find(
+        (shape) => shape.type === ShapeTypes.STAGE_X,
+      );
       if (stageX) {
         // Add stageNext at the same position as stageX
         newShapes.push({
           id: uuidv4(),
-          type: 'stageNext',
-          x: stageX.x,
-          y: stageX.y,
-          width: 20,
-          height: 20,
-          draggable: true,
-          text: '+',
-          fontSize: 24,
-          fill: 'black',
+          ...createStageNext(stageX.x, stageX.y),
         });
       }
     }
