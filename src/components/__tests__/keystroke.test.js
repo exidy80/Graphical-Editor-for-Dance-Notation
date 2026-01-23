@@ -966,5 +966,99 @@ describe('Keystroke Framework', () => {
 
       expect(Object.keys(getRegisteredKeystrokes()).length).toBe(0);
     });
+
+    test('should select red dancer with w key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke } =
+        useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      const redDancer = useAppStore
+        .getState()
+        .panels[0].dancers.find((d) => d.colour === 'red');
+
+      act(() => {
+        initializeDefaultKeystrokes();
+        useAppStore.setState({ selectedPanel: panelId });
+        handleKeystroke('w', { key: 'w' });
+      });
+
+      const { selectedDancer } = useAppStore.getState();
+      expect(selectedDancer).toBeTruthy();
+      expect(selectedDancer.panelId).toBe(panelId);
+      expect(selectedDancer.dancerId).toBe(redDancer.id);
+    });
+
+    test('should select red dancer with f key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke } =
+        useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      const redDancer = useAppStore
+        .getState()
+        .panels[0].dancers.find((d) => d.colour === 'red');
+
+      act(() => {
+        initializeDefaultKeystrokes();
+        useAppStore.setState({ selectedPanel: panelId });
+        handleKeystroke('f', { key: 'f' });
+      });
+
+      const { selectedDancer } = useAppStore.getState();
+      expect(selectedDancer).toBeTruthy();
+      expect(selectedDancer.panelId).toBe(panelId);
+      expect(selectedDancer.dancerId).toBe(redDancer.id);
+    });
+
+    test('should select blue dancer with m key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke } =
+        useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      const blueDancer = useAppStore
+        .getState()
+        .panels[0].dancers.find((d) => d.colour === 'blue');
+
+      act(() => {
+        initializeDefaultKeystrokes();
+        useAppStore.setState({ selectedPanel: panelId });
+        handleKeystroke('m', { key: 'm' });
+      });
+
+      const { selectedDancer } = useAppStore.getState();
+      expect(selectedDancer).toBeTruthy();
+      expect(selectedDancer.panelId).toBe(panelId);
+      expect(selectedDancer.dancerId).toBe(blueDancer.id);
+    });
+
+    test('should select blue dancer with l key', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke } =
+        useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      const blueDancer = useAppStore
+        .getState()
+        .panels[0].dancers.find((d) => d.colour === 'blue');
+
+      act(() => {
+        initializeDefaultKeystrokes();
+        useAppStore.setState({ selectedPanel: panelId });
+        handleKeystroke('l', { key: 'l' });
+      });
+
+      const { selectedDancer } = useAppStore.getState();
+      expect(selectedDancer).toBeTruthy();
+      expect(selectedDancer.panelId).toBe(panelId);
+      expect(selectedDancer.dancerId).toBe(blueDancer.id);
+    });
+
+    test('should not select dancer if no panel is selected', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke } =
+        useAppStore.getState();
+
+      act(() => {
+        initializeDefaultKeystrokes();
+        useAppStore.setState({ selectedPanel: null });
+        handleKeystroke('w', { key: 'w' });
+      });
+
+      const { selectedDancer } = useAppStore.getState();
+      expect(selectedDancer).toBeNull();
+    });
   });
 });

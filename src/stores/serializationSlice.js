@@ -90,6 +90,27 @@ const createSerializationSlice = (set, get) => ({
       id: uuidv4(),
     }));
 
+    // Add stageNext if it doesn't exist (for backward compatibility with older files)
+    const hasStageNext = newShapes.some((shape) => shape.type === 'stageNext');
+    if (!hasStageNext) {
+      const stageX = newShapes.find((shape) => shape.type === 'stageX');
+      if (stageX) {
+        // Add stageNext at the same position as stageX
+        newShapes.push({
+          id: uuidv4(),
+          type: 'stageNext',
+          x: stageX.x,
+          y: stageX.y,
+          width: 20,
+          height: 20,
+          draggable: true,
+          text: '+',
+          fontSize: 24,
+          fill: 'black',
+        });
+      }
+    }
+
     // Handle locks array - provide default empty array if null/undefined or not an array
     const locks = Array.isArray(serializedPanel.locks)
       ? serializedPanel.locks

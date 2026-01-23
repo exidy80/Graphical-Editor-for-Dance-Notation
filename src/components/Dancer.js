@@ -365,7 +365,22 @@ const Dancer = ({
             <Circle
               fill={dancer.colour}
               radius={5}
-              offsetY={5} // This moves the circle up by its radius
+              offsetY={5}
+              onMouseEnter={handleHandMouseEnter}
+              onMouseLeave={handleHandMouseLeave}
+            />
+            {/* This invisible rectangle adjusts the rotation point */}
+            <Rect width={1} height={10} opacity={0} />
+          </Group>
+        );
+      case 'Hip':
+        return (
+          <Group {...baseProps}>
+            <Circle
+              stroke={dancer.colour}
+              strokeWidth={2}
+              radius={5}
+              offsetY={5}
               onMouseEnter={handleHandMouseEnter}
               onMouseLeave={handleHandMouseLeave}
             />
@@ -375,29 +390,34 @@ const Dancer = ({
         );
       case 'Shoulder':
         return (
-          // wrapped in group so that initial rotation can be set but still change dynamically
           <Group {...baseProps}>
-            <Arc
-              angle={180}
-              innerRadius={0}
-              outerRadius={8}
-              rotation={180}
-              fill={dancer.colour}
+            <RegularPolygon
+              sides={4}
+              radius={7}
+              stroke={dancer.colour}
+              strokeWidth={2}
+              offsetY={-1}
               onMouseEnter={handleHandMouseEnter}
               onMouseLeave={handleHandMouseLeave}
             />
+            {/* This invisible rectangle adjusts the rotation point */}
+            <Rect width={1} height={10} opacity={0} />
           </Group>
         );
       case 'Overhead':
         return (
-          <RegularPolygon
-            {...baseProps}
-            sides={3}
-            radius={7}
-            offsetY={-1}
-            onMouseEnter={handleHandMouseEnter}
-            onMouseLeave={handleHandMouseLeave}
-          />
+          <Group {...baseProps}>
+            <RegularPolygon
+              sides={4}
+              radius={7}
+              fill={dancer.colour}
+              offsetY={-1}
+              onMouseEnter={handleHandMouseEnter}
+              onMouseLeave={handleHandMouseLeave}
+            />
+            {/* This invisible rectangle adjusts the rotation point */}
+            <Rect width={1} height={10} opacity={0} />
+          </Group>
         );
       case 'Waist':
       default:

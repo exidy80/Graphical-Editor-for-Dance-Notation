@@ -31,7 +31,7 @@ test('Symbol respects disabled and selected props', () => {
   // The test relies on mock rendering; absence of crash is acceptable here
 });
 
-test('Transformer is rendered for selected symbol and not for stageX', () => {
+test('Transformer is rendered for selected symbol and not for stageOrigin', () => {
   const mockFunctions = {
     onShapeSelect: jest.fn(),
     onUpdateShapeState: jest.fn(),
@@ -59,7 +59,7 @@ test('Transformer is rendered for selected symbol and not for stageX', () => {
     screen.getByText((_, n) => n?.getAttribute('data-mock') === 'Transformer'),
   ).toBeInTheDocument();
 
-  const stageX = {
+  const stageOrigin = {
     id: 'shape-3',
     type: 'stageX',
     x: 0,
@@ -68,7 +68,7 @@ test('Transformer is rendered for selected symbol and not for stageX', () => {
   };
   render(
     <Symbol
-      shape={stageX}
+      shape={stageOrigin}
       isSelected={true}
       disabled={false}
       opacity={1}
@@ -76,4 +76,58 @@ test('Transformer is rendered for selected symbol and not for stageX', () => {
     />,
   );
   // No additional assertion necessary; lack of crash suffices
+});
+
+test('Symbol renders linkHands type', () => {
+  const mockFunctions = {
+    onShapeSelect: jest.fn(),
+    onUpdateShapeState: jest.fn(),
+  };
+
+  const linkHandsShape = {
+    id: 'shape-4',
+    type: 'linkHands',
+    x: 100,
+    y: 100,
+    draggable: true,
+    stroke: 'blue',
+  };
+
+  const { unmount } = render(
+    <Symbol
+      shape={linkHandsShape}
+      isSelected={false}
+      disabled={false}
+      opacity={1}
+      {...mockFunctions}
+    />,
+  );
+  unmount();
+});
+
+test('Symbol renders stageNext type', () => {
+  const mockFunctions = {
+    onShapeSelect: jest.fn(),
+    onUpdateShapeState: jest.fn(),
+  };
+
+  const stageNextShape = {
+    id: 'shape-5',
+    type: 'stageNext',
+    x: 150,
+    y: 150,
+    draggable: false,
+    text: '+',
+  };
+
+  const { unmount } = render(
+    <Symbol
+      shape={stageNextShape}
+      isSelected={false}
+      disabled={false}
+      opacity={1}
+      {...mockFunctions}
+    />,
+  );
+  unmount();
 });

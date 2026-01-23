@@ -51,6 +51,30 @@ describe('useAppStore', () => {
     expect(Math.abs(a.y - b.y)).toBeLessThanOrEqual(eps);
   };
 
+  test('initial panel contains stageX and stageNext symbols', () => {
+    const { getState } = useAppStore;
+    const panels = getState().panels;
+
+    expect(panels.length).toBeGreaterThan(0);
+    const firstPanel = panels[0];
+
+    // Check for stageX (origin marker)
+    const stageX = firstPanel.shapes.find((s) => s.type === 'stageX');
+    expect(stageX).toBeDefined();
+    expect(stageX.text).toBe('O');
+    expect(stageX.fill).toBe('black');
+
+    // Check for stageNext (plus marker)
+    const stageNext = firstPanel.shapes.find((s) => s.type === 'stageNext');
+    expect(stageNext).toBeDefined();
+    expect(stageNext.text).toBe('+');
+    expect(stageNext.fill).toBe('black');
+
+    // Both should be at same initial position
+    expect(stageX.x).toBe(stageNext.x);
+    expect(stageX.y).toBe(stageNext.y);
+  });
+
   test('select dancer toggles selection', () => {
     const { getState } = useAppStore;
     const panelId = getState().panels[0].id;

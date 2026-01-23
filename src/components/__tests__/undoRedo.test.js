@@ -61,7 +61,7 @@ describe('Undo/Redo Functionality', () => {
 
       // Initial state - only stage marker should exist
       const initialShapeCount = getState().panels[0].shapes.length;
-      expect(initialShapeCount).toBe(1); // Just the stageX marker
+      expect(initialShapeCount).toBe(1); // Just the stageOrigin marker
 
       // Add a shape
       act(() => {

@@ -352,6 +352,84 @@ const createKeystrokeSlice = (set, get, api) => ({
       modifiers: { ctrl: true },
       priority: 1,
     });
+
+    // W key - select red dancer in current panel
+    registerKeystroke('w', {
+      description: 'Select red dancer in current panel',
+      handler: (event, context) => {
+        const { selectedPanel, panels, handleDancerSelection } = get();
+        if (selectedPanel) {
+          const panel = panels.find((p) => p.id === selectedPanel);
+          if (panel && panel.dancers.length > 0) {
+            // Red dancer is typically at index 0
+            const redDancer =
+              panel.dancers.find((d) => d.colour === 'red') || panel.dancers[0];
+            handleDancerSelection(selectedPanel, redDancer.id);
+          }
+        }
+      },
+      context: 'global',
+      priority: 1,
+    });
+
+    // F key - select red dancer in current panel (alternative to W)
+    registerKeystroke('f', {
+      description: 'Select red dancer in current panel',
+      handler: (event, context) => {
+        const { selectedPanel, panels, handleDancerSelection } = get();
+        if (selectedPanel) {
+          const panel = panels.find((p) => p.id === selectedPanel);
+          if (panel && panel.dancers.length > 0) {
+            // Red dancer is typically at index 0
+            const redDancer =
+              panel.dancers.find((d) => d.colour === 'red') || panel.dancers[0];
+            handleDancerSelection(selectedPanel, redDancer.id);
+          }
+        }
+      },
+      context: 'global',
+      priority: 1,
+    });
+
+    // M key - select blue dancer in current panel
+    registerKeystroke('m', {
+      description: 'Select blue dancer in current panel',
+      handler: (event, context) => {
+        const { selectedPanel, panels, handleDancerSelection } = get();
+        if (selectedPanel) {
+          const panel = panels.find((p) => p.id === selectedPanel);
+          if (panel && panel.dancers.length > 1) {
+            // Blue dancer is typically at index 1
+            const blueDancer =
+              panel.dancers.find((d) => d.colour === 'blue') ||
+              panel.dancers[1];
+            handleDancerSelection(selectedPanel, blueDancer.id);
+          }
+        }
+      },
+      context: 'global',
+      priority: 1,
+    });
+
+    // L key - select blue dancer in current panel (alternative to M)
+    registerKeystroke('l', {
+      description: 'Select blue dancer in current panel',
+      handler: (event, context) => {
+        const { selectedPanel, panels, handleDancerSelection } = get();
+        if (selectedPanel) {
+          const panel = panels.find((p) => p.id === selectedPanel);
+          if (panel && panel.dancers.length > 1) {
+            // Blue dancer is typically at index 1
+            const blueDancer =
+              panel.dancers.find((d) => d.colour === 'blue') ||
+              panel.dancers[1];
+            handleDancerSelection(selectedPanel, blueDancer.id);
+          }
+        }
+      },
+      context: 'global',
+      priority: 1,
+    });
   },
 
   // Internal rotation helper

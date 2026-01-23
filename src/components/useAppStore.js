@@ -171,7 +171,7 @@ const createInitialPanel = () => ({
       width: 20,
       height: 20,
       draggable: true,
-      text: 'X',
+      text: 'O',
       fontSize: 20,
       fill: 'black',
     },
