@@ -300,15 +300,15 @@ describe('Save/Restore Functionality', () => {
         locks: [],
       };
 
-      const deserialized = useAppStore.getState().deserializePanel(oldPanelData);
+      const deserialized = useAppStore
+        .getState()
+        .deserializePanel(oldPanelData);
 
       // Should have both stageX and stageNext
       expect(deserialized.shapes).toHaveLength(2);
-      
+
       const stageX = deserialized.shapes.find((s) => s.type === 'stageX');
-      const stageNext = deserialized.shapes.find(
-        (s) => s.type === 'stageNext',
-      );
+      const stageNext = deserialized.shapes.find((s) => s.type === 'stageNext');
 
       expect(stageX).toBeDefined();
       expect(stageNext).toBeDefined();
