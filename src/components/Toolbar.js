@@ -6,8 +6,6 @@ import PanelFileHandler from './PanelFileHandler';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrash,
-  faPlus,
-  faMinus,
   faLockOpen,
   faLock,
   faLink,
@@ -27,8 +25,6 @@ const Toolbar = () => {
   const handleDelete = useAppStore((state) => state.handleDelete);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
-  const addPanel = useAppStore((state) => state.addPanel);
-  const deleteSelectedPanel = useAppStore((state) => state.deleteSelectedPanel);
   const panels = useAppStore((state) => state.panels);
   const setLockModeActive = useAppStore((state) => state.setLockModeActive);
   const lockUi = useAppStore((state) => state.lockUi);

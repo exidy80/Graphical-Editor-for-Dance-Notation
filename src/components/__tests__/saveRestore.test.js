@@ -677,7 +677,7 @@ describe('Save/Restore Functionality', () => {
                     },
                     {
                       id: 'complex-shape-2',
-                      type: 'curvedLine',
+                      type: 'quarterCurvedLine',
                       x: 75,
                       y: 200,
                       stroke: 'cyan',
