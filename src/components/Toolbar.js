@@ -174,17 +174,20 @@ const Toolbar = () => {
           </Dropdown.Toggle>
           <Dropdown.Menu>
             {/* Options for shape of hand */}
-            <Dropdown.Item onClick={() => handleHandSelection('Knee')}>
-              Knee
-            </Dropdown.Item>
-            <Dropdown.Item onClick={() => handleHandSelection('Waist')}>
-              Waist
+            <Dropdown.Item onClick={() => handleHandSelection('Overhead')}>
+              Overhead
             </Dropdown.Item>
             <Dropdown.Item onClick={() => handleHandSelection('Shoulder')}>
               Shoulder
             </Dropdown.Item>
-            <Dropdown.Item onClick={() => handleHandSelection('Overhead')}>
-              Overhead
+            <Dropdown.Item onClick={() => handleHandSelection('Waist')}>
+              Waist
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => handleHandSelection('Hip')}>
+              Hip
+            </Dropdown.Item>
+            <Dropdown.Item onClick={() => handleHandSelection('Knee')}>
+              Knee
             </Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>

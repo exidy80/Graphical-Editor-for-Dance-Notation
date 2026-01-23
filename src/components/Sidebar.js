@@ -9,6 +9,7 @@ import {
   faSyncAlt,
   faRedo,
   faUndo,
+  faLink,
 } from '@fortawesome/free-solid-svg-icons';
 import { useAppStore } from '../stores';
 import images from './ImageMapping';
@@ -114,14 +115,16 @@ const shapeMapping = {
     imageKeyRed: 'centrePoint',
     imageKeyBlue: 'centrePoint',
   },
-  Knee: { type: 'knee' },
-  Waist: { type: 'waist' },
-  Shoulder: { type: 'shoulder' },
   Overhead: { type: 'overhead' },
+  Shoulder: { type: 'shoulder' },
+  Waist: { type: 'waist' },
+  Hip: { type: 'hip' },
+  Knee: { type: 'knee' },
   'Direction Up': { type: 'directionUp' },
   'Direction Down': { type: 'directionDown' },
   Block: { type: 'block' },
   'Split Hands': { type: 'splitHands' },
+  'Link Hands': { type: 'linkHands' },
 };
 
 // Map the feet types to left or right
@@ -191,15 +194,19 @@ const Sidebar = () => {
       const shapeProps = shapeMapping[shapeKey];
       if (selectedPanel !== null && shapeProps) {
         //Make sure a panel is selected and shape exists
-        handleShapeDraw({
+        const shapeData = {
           id: uuidv4(),
           ...shapeProps,
           stroke: color,
-          fill: color,
           x: 50,
           y: 50,
           draggable: true,
-        });
+        };
+        // Only add fill for shapes that should have it (not hip or shoulder which are outline-only)
+        if (shapeProps.type !== 'hip' && shapeProps.type !== 'shoulder') {
+          shapeData.fill = color;
+        }
+        handleShapeDraw(shapeData);
       }
     }
   };
@@ -320,10 +327,11 @@ const Sidebar = () => {
   const renderSignalsButtons = () => {
     const isDisabled = selectedPanel === null;
     const elevationItems = [
-      { name: 'Overhead', shape: 'triangle' },
-      { name: 'Shoulder', shape: 'arc' },
+      { name: 'Overhead', shape: 'filledDiamond' },
+      { name: 'Shoulder', shape: 'emptyDiamond' },
       { name: 'Waist', shape: 'rect' },
-      { name: 'Knee', shape: 'circle' },
+      { name: 'Hip', shape: 'emptyCircle' },
+      { name: 'Knee', shape: 'filledCircle' },
     ];
 
     // Helper to render the elevation shape
@@ -331,23 +339,23 @@ const Sidebar = () => {
       const shapeColor = color === COLORS.RED ? 'red' : 'blue';
 
       switch (shape) {
-        case 'triangle':
+        case 'filledDiamond':
           return (
             <svg width="24" height="24" viewBox="0 0 24 24">
               <polygon
-                points="12,6 18,18 6,18"
+                points="12,6 18,12 12,18 6,12"
                 fill={shapeColor}
                 stroke={shapeColor}
                 strokeWidth="2"
               />
             </svg>
           );
-        case 'arc':
+        case 'emptyDiamond':
           return (
             <svg width="24" height="24" viewBox="0 0 24 24">
-              <path
-                d="M 6 18 A 6 6 0 0 1 18 18"
-                fill={shapeColor}
+              <polygon
+                points="12,6 18,12 12,18 6,12"
+                fill="none"
                 stroke={shapeColor}
                 strokeWidth="2"
               />
@@ -367,7 +375,20 @@ const Sidebar = () => {
               />
             </svg>
           );
-        case 'circle':
+        case 'emptyCircle':
+          return (
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <circle
+                cx="12"
+                cy="12"
+                r="4"
+                fill="none"
+                stroke={shapeColor}
+                strokeWidth="2"
+              />
+            </svg>
+          );
+        case 'filledCircle':
           return (
             <svg width="24" height="24" viewBox="0 0 24 24">
               <circle
@@ -705,6 +726,68 @@ const Sidebar = () => {
               title="Split Hands - Blue"
             >
               ×
+            </button>
+          </div>
+
+          {/* Link Hands */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 2fr 1fr',
+              gap: '10px',
+              alignItems: 'center',
+              marginBottom: '8px',
+            }}
+          >
+            <button
+              onClick={() => handleItemClick('Link Hands', null, COLORS.RED)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'red',
+                fontSize: '18px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Link Hands - Red"
+            >
+              <FontAwesomeIcon icon={faLink} />
+            </button>
+            <div
+              style={{
+                textAlign: 'center',
+                fontSize: '16px',
+                fontWeight: '600',
+                color: '#333',
+              }}
+            >
+              Link Hands
+            </div>
+            <button
+              onClick={() => handleItemClick('Link Hands', null, COLORS.BLUE)}
+              disabled={isDisabled}
+              style={{
+                height: '40px',
+                backgroundColor: 'white',
+                border: '2px solid #ddd',
+                borderRadius: '5px',
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'blue',
+                fontSize: '18px',
+                opacity: isDisabled ? 0.5 : 1,
+              }}
+              title="Link Hands - Blue"
+            >
+              <FontAwesomeIcon icon={faLink} />
             </button>
           </div>
         </div>

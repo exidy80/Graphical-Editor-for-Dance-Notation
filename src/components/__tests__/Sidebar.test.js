@@ -9,4 +9,30 @@ test('renders category buttons and expands', () => {
   fireEvent.click(buttons[0]);
 });
 
+test('renders all elevation options in Signals tab', () => {
+  render(<Sidebar />);
 
+  // Find and click the Signals tab button
+  const signalsButton = screen.getByText('Signals').closest('button');
+  fireEvent.click(signalsButton);
+
+  // Check all elevation options are present
+  expect(screen.getByText('Overhead')).toBeInTheDocument();
+  expect(screen.getByText('Shoulder')).toBeInTheDocument();
+  expect(screen.getByText('Waist')).toBeInTheDocument();
+  expect(screen.getByText('Hip')).toBeInTheDocument();
+  expect(screen.getByText('Knee')).toBeInTheDocument();
+});
+
+test('renders Link Hands option in Signals Other section', () => {
+  render(<Sidebar />);
+
+  // Find and click the Signals tab button
+  const signalsButton = screen.getByText('Signals').closest('button');
+  fireEvent.click(signalsButton);
+
+  // Check Link Hands is present in Other section
+  expect(screen.getByText('Link Hands')).toBeInTheDocument();
+  expect(screen.getByText('Block')).toBeInTheDocument();
+  expect(screen.getByText('Split Hands')).toBeInTheDocument();
+});

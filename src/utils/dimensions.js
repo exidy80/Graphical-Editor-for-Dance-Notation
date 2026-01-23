@@ -36,12 +36,14 @@ export const SHAPE_DIMENSIONS = {
   spinOne: { width: 60, height: 60 },
   spinHalf: { width: 40, height: 40 },
   spinQuarter: { width: 40, height: 40 },
-  knee: { width: 6, height: 6 },
-  waist: { width: 12, height: 2 },
-  shoulder: { width: 12, height: 6 },
   overhead: { width: 10, height: 10 },
+  shoulder: { width: 10, height: 10 },
+  waist: { width: 12, height: 2 },
+  hip: { width: 6, height: 6 },
+  knee: { width: 6, height: 6 },
   image: { width: 60, height: 60 }, // Images scaled to 0.3 by default in Symbols.js
   stageX: { width: 20, height: 20 },
+  stageNext: { width: 20, height: 20 },
   default: { width: 50, height: 50 },
 };
 

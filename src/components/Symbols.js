@@ -2,7 +2,6 @@ import React, { useRef, useEffect, useCallback } from 'react';
 import {
   Transformer,
   Arrow,
-  Arc,
   Text,
   Rect,
   Circle,
@@ -28,7 +27,7 @@ const Symbol = ({
   const [image] = useImage(images[shape.imageKey]);
 
   //check if its the stage marker
-  const isStageX = shape.type === 'stageX';
+  const isStageOrigin = shape.type === 'stageX';
 
   // Calculates the center of the bounding box for points array [x1, y1, x2, y2, ...]
   const calculateBoundingBoxCenter = (points) => {
@@ -87,15 +86,15 @@ const Symbol = ({
 
   const handleClick = useCallback(
     (e) => {
-      if (disabled || isStageX) return;
+      if (disabled || isStageOrigin) return;
 
       onShapeSelect();
     },
-    [disabled, isStageX, onShapeSelect],
+    [disabled, isStageOrigin, onShapeSelect],
   );
 
   useEffect(() => {
-    if (isSelected && !isStageX && trRef.current && shapeRef.current) {
+    if (isSelected && !isStageOrigin && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     } else if (!isSelected && trRef.current) {
@@ -103,7 +102,7 @@ const Symbol = ({
       trRef.current.nodes([]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageX]);
+  }, [isSelected, isStageOrigin]);
   //handles end of transform and updates the state
   const handleTransformEnd = useCallback(
     (e) => {
@@ -122,11 +121,11 @@ const Symbol = ({
 
   //Attach or detach transformer when selection changes
   useEffect(() => {
-    if (isSelected && !isStageX && trRef.current && shapeRef.current) {
+    if (isSelected && !isStageOrigin && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageX]);
+  }, [isSelected, isStageOrigin]);
 
   const commonProps = {
     ref: shapeRef,
@@ -603,6 +602,9 @@ const Symbol = ({
           fill={shape.fill}
         />
       )}
+      {shape.type === 'linkHands' && (
+        <Text {...commonProps} text="∞" fontSize={20} fill={shape.fill} />
+      )}
       {shape.type === 'image' && (
         <KonvaImage
           {...commonProps}
@@ -612,7 +614,24 @@ const Symbol = ({
         />
       )}
       {shape.type === 'stageX' && (
-        <Text {...commonProps} text="X" fontSize={20} fill="black" />
+        <Text
+          {...commonProps}
+          text="O"
+          fontSize={20}
+          fill="black"
+          offsetX={10}
+          offsetY={10}
+        />
+      )}
+      {shape.type === 'stageNext' && (
+        <Text
+          {...commonProps}
+          text="+"
+          fontSize={24}
+          fill="black"
+          offsetX={10}
+          offsetY={10}
+        />
       )}
       {shape.type === 'knee' && (
         <Circle
@@ -620,7 +639,15 @@ const Symbol = ({
           radius={3}
           fill={shape.fill}
           stroke={shape.stroke}
-          strokeWidth={3}
+          strokeWidth={1}
+        />
+      )}
+      {shape.type === 'hip' && (
+        <Circle
+          {...commonProps}
+          radius={3}
+          stroke={shape.stroke}
+          strokeWidth={2}
         />
       )}
       {shape.type === 'waist' && (
@@ -634,26 +661,25 @@ const Symbol = ({
         />
       )}
       {shape.type === 'shoulder' && (
-        <Arc
+        <RegularPolygon
           {...commonProps}
-          angle={180}
-          innerRadius={0}
-          outerRadius={6}
-          fill={shape.fill}
+          sides={4}
+          radius={5}
           stroke={shape.stroke}
-          strokeWidth={3}
+          strokeWidth={2}
         />
       )}
       {shape.type === 'overhead' && (
         <RegularPolygon
           {...commonProps}
-          sides={3}
+          sides={4}
           radius={5}
           fill={shape.fill}
           stroke={shape.stroke}
+          strokeWidth={1}
         />
       )}
-      {isSelected && !isStageX && (
+      {isSelected && !isStageOrigin && (
         <Transformer
           ref={trRef}
           centeredScaling={true}
