@@ -63,7 +63,7 @@ describe('useAppStore', () => {
     const stageX = firstPanel.shapes.find((s) => s.type === ShapeTypes.STAGE_X);
     expect(stageX).toBeDefined();
     expect(stageX.text).toBe('O');
-    expect(stageX.fill).toBe('black');
+    expect(stageX.fill).toBe('green');
 
     // Check for stageNext (plus marker)
     const stageNext = firstPanel.shapes.find(
@@ -71,7 +71,7 @@ describe('useAppStore', () => {
     );
     expect(stageNext).toBeDefined();
     expect(stageNext.text).toBe('+');
-    expect(stageNext.fill).toBe('black');
+    expect(stageNext.fill).toBe('green');
 
     // Both should be at same initial position
     expect(stageX.x).toBe(stageNext.x);
