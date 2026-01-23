@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faClone,
   faPlus,
-  faMinus,
   faChevronUp,
   faChevronDown,
   faTrash,

@@ -37,15 +37,18 @@ const shapeMapping = {
   'Straight Line': { type: 'straightLine' },
   'Straight Line Up': { type: 'straightLineUp' },
   'Straight Line Down': { type: 'straightLineDown' },
-  'Curved Line': { type: 'curvedLine' },
-  'Curved Line Up': { type: 'curvedLineUp' },
-  'Curved Line Down': { type: 'curvedLineDown' },
-  '2 Spin': { type: 'spinThree' },
-  '2 Spin CW': { type: 'spinThreeCW' },
-  '2 Spin CCW': { type: 'spinThreeCCW' },
-  '1.5 Spin': { type: 'spinTwo' },
-  '1.5 Spin CW': { type: 'spinTwoCW' },
-  '1.5 Spin CCW': { type: 'spinTwoCCW' },
+  'Quarter Curved Line': { type: 'quarterCurvedLine' },
+  'Quarter Curved Line Up': { type: 'quarterCurvedLineUp' },
+  'Quarter Curved Line Down': { type: 'quarterCurvedLineDown' },
+  'Half Curved Line': { type: 'halfCurvedLine' },
+  'Half Curved Line Up': { type: 'halfCurvedLineUp' },
+  'Half Curved Line Down': { type: 'halfCurvedLineDown' },
+  '2 Spin': { type: 'spinTwo' },
+  '2 Spin CW': { type: 'spinTwoCW' },
+  '2 Spin CCW': { type: 'spinTwoCCW' },
+  '1.5 Spin': { type: 'spinOneAndHalf' },
+  '1.5 Spin CW': { type: 'spinOneAndHalfCW' },
+  '1.5 Spin CCW': { type: 'spinOneAndHalfCCW' },
   '1 Spin': { type: 'spinOne' },
   '1 Spin CW': { type: 'spinOneCW' },
   '1 Spin CCW': { type: 'spinOneCCW' },
@@ -143,7 +146,7 @@ const Sidebar = () => {
       label: 'Movement',
       icon: <FontAwesomeIcon icon={faArrowRight} />,
       categories: {
-        motion: ['Straight Line', 'Curved Line'],
+        motion: ['Straight Line', 'Half Curved Line', 'Quarter Curved Line'],
         spin: ['Quarter Spin', 'Half Spin', '1 Spin', '1.5 Spin', '2 Spin'],
       },
       type: 'movement',
@@ -740,25 +743,69 @@ const Sidebar = () => {
       );
     };
 
-    // Helper to render curved line icon
-    const renderCurvedLineIcon = (color, direction = 'up') => {
+    // Helper to render quarter curved line icon
+    const renderQuarterCurvedLineIcon = (color, direction = 'up') => {
       const isUp = direction === 'up';
       const lineColor = color === COLORS.RED ? 'red' : 'blue';
+      const markerId = `arrowhead-quarter-${color}-${direction}`; // Unique ID for each variant
 
       return (
         <svg width="32" height="32" viewBox="0 0 32 32">
-          {/* Dashed curved line body */}
+          <defs>
+            <marker
+              id={markerId}
+              markerWidth="4"
+              markerHeight="4"
+              refX="2"
+              refY="2"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M0,0 L0,4 L4,2 Z" fill={lineColor} />
+            </marker>
+          </defs>
+
           <path
-            d={isUp ? 'M 16 24 Q 8 16, 16 8' : 'M 16 8 Q 8 16, 16 24'}
+            d={isUp ? 'M16 24 Q 8 16 16 8' : 'M16 8 Q 8 16 16 24'}
             stroke={lineColor}
             strokeWidth="2"
-            strokeDasharray="4,4"
+            strokeDasharray="4 4"
             fill="none"
+            markerEnd={`url(#${markerId})`}
           />
-          {/* Arrowhead */}
-          <polygon
-            points={isUp ? '16,4 12,10 20,10' : '16,28 12,22 20,22'}
-            fill={lineColor}
+        </svg>
+      );
+    };
+
+    // Helper to render half-turn curved line icon
+    const renderHalfCurvedLineIcon = (color, direction = 'up') => {
+      const isUp = direction === 'up';
+      const lineColor = color === COLORS.RED ? 'red' : 'blue';
+      const markerId = `arrowhead-half-${color}-${direction}`; // Unique ID for each variant
+
+      return (
+        <svg width="32" height="32" viewBox="0 0 32 32">
+          <defs>
+            <marker
+              id={markerId}
+              markerWidth="4"
+              markerHeight="4"
+              refX="2"
+              refY="2"
+              orient="auto"
+              markerUnits="strokeWidth"
+            >
+              <path d="M0,0 L0,4 L4,2 Z" fill={lineColor} />
+            </marker>
+          </defs>
+
+          <path
+            d={isUp ? 'M20 24 Q 4 16 20 8' : 'M12 8 Q 28 16 12 24'}
+            stroke={lineColor}
+            strokeWidth="2"
+            strokeDasharray="4 4"
+            fill="none"
+            markerEnd={`url(#${markerId})`}
           />
         </svg>
       );
@@ -768,8 +815,10 @@ const Sidebar = () => {
     const getIcon = (item, color, direction) => {
       if (item === 'Straight Line') {
         return renderArrowIcon(color, direction);
-      } else if (item === 'Curved Line') {
-        return renderCurvedLineIcon(color, direction);
+      } else if (item === 'Quarter Curved Line') {
+        return renderQuarterCurvedLineIcon(color, direction);
+      } else if (item === 'Half Curved Line') {
+        return renderHalfCurvedLineIcon(color, direction);
       }
       return null;
     };

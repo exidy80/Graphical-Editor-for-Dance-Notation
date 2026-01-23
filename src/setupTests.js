@@ -1,10 +1,18 @@
 import '@testing-library/jest-dom';
 import React from 'react';
+import { TextEncoder, TextDecoder } from 'util';
+
+// Polyfill TextEncoder/TextDecoder for Node.js test environment (required by html2pdf.js dependencies)
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
 
 // Silence specific deprecated act warning emitted by RTL + react-dom/test-utils bridge
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  if (typeof args[0] === 'string' && args[0].includes('`ReactDOMTestUtils.act` is deprecated')) {
+  if (
+    typeof args[0] === 'string' &&
+    args[0].includes('`ReactDOMTestUtils.act` is deprecated')
+  ) {
     return;
   }
   originalConsoleError(...args);
@@ -15,10 +23,11 @@ jest.mock('react-konva', () => {
   const React = require('react');
   const { forwardRef, useImperativeHandle } = React;
 
-  const makeSimple = (tag) => forwardRef(({ children }, ref) => {
-    useImperativeHandle(ref, () => ({}));
-    return <div data-mock={tag}>{children}</div>;
-  });
+  const makeSimple = (tag) =>
+    forwardRef(({ children }, ref) => {
+      useImperativeHandle(ref, () => ({}));
+      return <div data-mock={tag}>{children}</div>;
+    });
 
   const Line = forwardRef(({ children }, ref) => {
     useImperativeHandle(ref, () => ({ points: () => {} }));
@@ -59,5 +68,3 @@ jest.mock('uuid', () => {
   let c = 0;
   return { v4: () => `test-uuid-${++c}` };
 });
-
-

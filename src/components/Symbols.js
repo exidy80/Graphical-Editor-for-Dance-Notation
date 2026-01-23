@@ -11,7 +11,7 @@ import {
 } from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
-import { SHAPE_DIMENSIONS, SHAPE_STYLE } from '../utils/dimensions';
+import { SHAPE_STYLE } from '../utils/dimensions';
 
 const Symbol = ({
   shape,
@@ -144,7 +144,7 @@ const Symbol = ({
   // Render the chosen shape
   return (
     <>
-      {shape.type === 'spinThree' && (
+      {shape.type === 'spinTwo' && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
@@ -158,7 +158,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinThreeCW' && (
+      {shape.type === 'spinTwoCW' && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
@@ -172,7 +172,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinThreeCCW' && (
+      {shape.type === 'spinTwoCCW' && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(30, 1, Math.PI / 6)}
@@ -187,7 +187,7 @@ const Symbol = ({
           scaleX={-1}
         />
       )}
-      {shape.type === 'spinTwo' && (
+      {shape.type === 'spinOneAndHalf' && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(20, 1, Math.PI / 6)}
@@ -201,7 +201,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinTwoCW' && (
+      {shape.type === 'spinOneAndHalfCW' && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(20, 1, Math.PI / 6)}
@@ -215,7 +215,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'spinTwoCCW' && (
+      {shape.type === 'spinOneAndHalfCCW' && (
         <Arrow
           {...commonProps}
           points={generateSpiralPoints(20, 1, Math.PI / 6)}
@@ -398,7 +398,7 @@ const Symbol = ({
           dash={[10, 5]}
         />
       )}
-      {shape.type === 'curvedLine' &&
+      {shape.type === 'quarterCurvedLine' &&
         (() => {
           const points = generateSpiralPoints(3, 30, Math.PI / 14);
           const center = calculateBoundingBoxCenter(points);
@@ -419,7 +419,7 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'curvedLineUp' &&
+      {shape.type === 'quarterCurvedLineUp' &&
         (() => {
           const points = generateSpiralPoints(
             3,
@@ -446,11 +446,86 @@ const Symbol = ({
             />
           );
         })()}
-      {shape.type === 'curvedLineDown' &&
+      {shape.type === 'quarterCurvedLineDown' &&
         (() => {
           const points = generateSpiralPoints(
             3,
             30,
+            -Math.PI / 14,
+            undefined,
+            Math.PI / 2,
+          );
+          const center = calculateBoundingBoxCenter(points);
+          return (
+            <Arrow
+              {...commonProps}
+              points={points}
+              tension={0.5}
+              pointerLength={5}
+              pointerWidth={5}
+              fill={shape.fill}
+              stroke={shape.stroke}
+              strokeWidth={3}
+              hitStrokeWidth={10}
+              dash={[10, 5]}
+              offsetX={center.x}
+              offsetY={center.y}
+            />
+          );
+        })()}
+      {shape.type === 'halfCurvedLine' &&
+        (() => {
+          const points = generateSpiralPoints(6, 15, Math.PI / 14);
+          const center = calculateBoundingBoxCenter(points);
+          return (
+            <Arrow
+              {...commonProps}
+              points={points}
+              tension={0.5}
+              pointerLength={5}
+              pointerWidth={5}
+              fill={shape.fill}
+              stroke={shape.stroke}
+              strokeWidth={3}
+              hitStrokeWidth={10}
+              dash={[10, 5]}
+              offsetX={center.x}
+              offsetY={center.y}
+            />
+          );
+        })()}
+      {shape.type === 'halfCurvedLineUp' &&
+        (() => {
+          const points = generateSpiralPoints(
+            6,
+            15,
+            Math.PI / 14,
+            undefined,
+            -Math.PI / 2,
+          );
+          const center = calculateBoundingBoxCenter(points);
+          return (
+            <Arrow
+              {...commonProps}
+              points={points}
+              tension={0.5}
+              pointerLength={5}
+              pointerWidth={5}
+              fill={shape.fill}
+              stroke={shape.stroke}
+              strokeWidth={3}
+              hitStrokeWidth={10}
+              dash={[10, 5]}
+              offsetX={center.x}
+              offsetY={center.y}
+            />
+          );
+        })()}
+      {shape.type === 'halfCurvedLineDown' &&
+        (() => {
+          const points = generateSpiralPoints(
+            6,
+            15,
             -Math.PI / 14,
             undefined,
             Math.PI / 2,

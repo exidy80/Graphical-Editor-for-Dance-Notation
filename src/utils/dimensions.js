@@ -28,10 +28,11 @@ export const ARM_THICKNESS = {
 // Shape base dimensions (should match Symbols.js)
 export const SHAPE_DIMENSIONS = {
   straightLine: { width: 75, height: 20 },
-  curvedLine: { width: 75, height: 20 },
+  quarterCurvedLine: { width: 75, height: 20 },
+  halfCurvedLine: { width: 75, height: 20 },
   signal: { width: 75, height: 20 },
-  spinThree: { width: 60, height: 60 },
   spinTwo: { width: 60, height: 60 },
+  spinOneAndHalf: { width: 60, height: 60 },
   spinOne: { width: 60, height: 60 },
   spinHalf: { width: 40, height: 40 },
   spinQuarter: { width: 40, height: 40 },

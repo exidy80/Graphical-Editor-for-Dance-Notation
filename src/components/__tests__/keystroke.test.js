@@ -592,7 +592,7 @@ describe('Keystroke Framework', () => {
         useAppStore.getState().setSelectedPanel(panelId);
         handleShapeDraw({
           id: 'no-delete-shape',
-          type: 'curvedLine',
+          type: 'quarterCurvedLine',
           x: 200,
           y: 200,
           fill: 'green',
