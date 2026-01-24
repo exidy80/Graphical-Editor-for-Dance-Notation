@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
 import { useAppStore } from '../stores';
 import PanelFileHandler from './PanelFileHandler';
+import ZoomControl from './ZoomControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrash,
@@ -68,30 +69,14 @@ const Toolbar = () => {
         return;
       }
 
-      // Get all Konva canvases and convert them to images temporarily
-      const canvases = gridElement.querySelectorAll('canvas');
-      const canvasData = [];
+      // Get all panel containers (not just canvases)
+      const panelContainers = gridElement.querySelectorAll('.position-panel');
+      if (panelContainers.length === 0) {
+        alert('No panels found to export');
+        return;
+      }
 
-      // Convert each canvas to an image and hide the canvas
-      canvases.forEach((canvas) => {
-        const dataURL = canvas.toDataURL('image/png');
-        const img = document.createElement('img');
-        img.src = dataURL;
-        img.style.width =
-          canvas.style.width ||
-          `${canvas.width / (window.devicePixelRatio || 1)}px`;
-        img.style.height =
-          canvas.style.height ||
-          `${canvas.height / (window.devicePixelRatio || 1)}px`;
-        img.style.display = 'block';
-
-        // Store original canvas and insert image
-        canvasData.push({ canvas, img, parent: canvas.parentNode });
-        canvas.style.display = 'none';
-        canvas.parentNode.insertBefore(img, canvas);
-      });
-
-      // Get filename
+      // Get filename first
       let pdfFilename = 'dance-notation.pdf';
 
       // Check if File System Access API is supported
@@ -111,78 +96,113 @@ const Toolbar = () => {
           pdfFilename = fileHandle.name;
         } catch (err) {
           if (err.name === 'AbortError') {
-            // Restore canvases before returning
-            canvasData.forEach(({ canvas, img }) => {
-              canvas.style.display = '';
-              img.remove();
-            });
             return;
           }
         }
       } else {
         const filename = prompt('Enter PDF filename:', 'dance-notation');
         if (filename === null || !filename.trim()) {
-          // Restore canvases before returning
-          canvasData.forEach(({ canvas, img }) => {
-            canvas.style.display = '';
-            img.remove();
-          });
           return;
         }
         pdfFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
       }
 
-      // Now capture with html2canvas
+      // Import required libraries
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(gridElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-      });
-
-      // Restore the original canvases
-      canvasData.forEach(({ canvas: originalCanvas, img }) => {
-        originalCanvas.style.display = '';
-        img.remove();
-      });
-
-      // Convert to PDF
       const { jsPDF } = await import('jspdf');
-      const imgData = canvas.toDataURL('image/png');
 
+      // Create PDF with portrait orientation (A4)
       const pdf = new jsPDF({
-        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
       });
 
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 10;
+      const margin = 15;
       const contentWidth = pageWidth - 2 * margin;
       const contentHeight = pageHeight - 2 * margin;
 
-      // Calculate dimensions to fit on page
-      const imgAspect = canvas.width / canvas.height;
-      const pageAspect = contentWidth / contentHeight;
+      // Calculate how many panels can fit per row and per page
+      const panelsPerRow = 2; // 2 columns
+      const spacing = 10; // mm between panels
+      const panelWidth = (contentWidth - spacing) / panelsPerRow;
+      const panelHeight = panelWidth; // Square panels
 
-      let imgWidth, imgHeight;
-      if (imgAspect > pageAspect) {
-        imgWidth = contentWidth;
-        imgHeight = contentWidth / imgAspect;
-      } else {
-        imgHeight = contentHeight;
-        imgWidth = contentHeight * imgAspect;
+      // Calculate how many rows fit on a page
+      const rowsPerPage = Math.floor(
+        (contentHeight + spacing) / (panelHeight + spacing),
+      );
+      const panelsPerPage = panelsPerRow * rowsPerPage;
+
+      // Capture each panel as an image
+      const panelImages = [];
+      for (let i = 0; i < panelContainers.length; i++) {
+        const container = panelContainers[i];
+
+        // Temporarily convert Konva canvas to image for better rendering
+        const canvas = container.querySelector('canvas');
+        let tempImg = null;
+        if (canvas) {
+          const dataURL = canvas.toDataURL('image/png');
+          tempImg = document.createElement('img');
+          tempImg.src = dataURL;
+          tempImg.style.width =
+            canvas.style.width ||
+            `${canvas.width / (window.devicePixelRatio || 1)}px`;
+          tempImg.style.height =
+            canvas.style.height ||
+            `${canvas.height / (window.devicePixelRatio || 1)}px`;
+          tempImg.style.display = 'block';
+          canvas.style.display = 'none';
+          canvas.parentNode.insertBefore(tempImg, canvas);
+        }
+
+        const capturedCanvas = await html2canvas(container, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
+        });
+
+        // Restore canvas
+        if (canvas && tempImg) {
+          canvas.style.display = '';
+          tempImg.remove();
+        }
+
+        panelImages.push(capturedCanvas.toDataURL('image/png'));
       }
 
-      const x = margin + (contentWidth - imgWidth) / 2;
-      const y = margin + (contentHeight - imgHeight) / 2;
+      // Add panels to PDF, creating new pages as needed
+      let isFirstPage = true;
+      for (let i = 0; i < panelImages.length; i++) {
+        const pageIndex = Math.floor(i / panelsPerPage);
+        const indexOnPage = i % panelsPerPage;
 
-      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+        // Add new page if needed
+        if (i > 0 && indexOnPage === 0) {
+          pdf.addPage();
+        }
+
+        // Calculate position on page
+        const row = Math.floor(indexOnPage / panelsPerRow);
+        const col = indexOnPage % panelsPerRow;
+
+        const x = margin + col * (panelWidth + spacing);
+        const y = margin + row * (panelHeight + spacing);
+
+        // Add panel image to PDF
+        pdf.addImage(panelImages[i], 'PNG', x, y, panelWidth, panelHeight);
+      }
+
       pdf.save(pdfFilename);
-
-      console.log('PDF saved successfully!');
+      console.log(
+        `PDF saved successfully with ${
+          panelImages.length
+        } panels on ${Math.ceil(panelImages.length / panelsPerPage)} page(s)!`,
+      );
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
@@ -272,6 +292,9 @@ const Toolbar = () => {
             <span className="button-text">Symbols</span>
           </Button>
         </ButtonGroup>
+
+        {/* Global zoom control */}
+        <ZoomControl />
 
         <ButtonGroup className="custom-btn-group">
           <Button

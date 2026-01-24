@@ -3,6 +3,7 @@ import { Stage, Layer } from 'react-konva';
 import Dancer from './Dancer';
 import Symbol from './Symbols';
 import { useAppStore } from '../stores';
+import { UI_DIMENSIONS } from '../utils/dimensions';
 
 const Canvas = ({ panelId }) => {
   const panels = useAppStore((state) => state.panels);
@@ -32,6 +33,14 @@ const Canvas = ({ panelId }) => {
 
   const { dancers, headShapes, handShapes, shapes } = panel;
 
+  // Calculate viewport offset to center on the canvas
+  // At 100% zoom (300x300 panel), we offset by -150 to show center region
+  // At 200% zoom (600x600 panel), we offset by 0 to show entire canvas (0-600)
+  const viewportOffsetX =
+    (panelSize.width - UI_DIMENSIONS.CANVAS_SIZE.width) / 2;
+  const viewportOffsetY =
+    (panelSize.height - UI_DIMENSIONS.CANVAS_SIZE.height) / 2;
+
   //Triggers if the user clicks on the canvas itself
   const handleCanvasClickInternal = (e) => {
     if (e.target === e.target.getStage()) {
@@ -46,7 +55,7 @@ const Canvas = ({ panelId }) => {
       height={panelSize.height - 4}
       onMouseDown={handleCanvasClickInternal} // Lets you deselect the dancer/shape currently selected by clicking an empty area
     >
-      <Layer>
+      <Layer x={viewportOffsetX} y={viewportOffsetY}>
         {shapes.map((shape) => {
           // Create bound functions that inject panelId and shapeId
           const boundUpdateShapeState = (newState) =>

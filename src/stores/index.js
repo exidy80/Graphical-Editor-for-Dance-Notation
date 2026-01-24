@@ -5,7 +5,7 @@ import {
   loadFromLocalStorage,
 } from './autoSaveMiddleware.js';
 import coordinateTransforms from './coordinateTransforms.js';
-import createInitialPanel from './panelFactory.js';
+import createInitialPanel, { setStoreGetter } from './panelFactory.js';
 import createPanelSlice from './panelSlice.js';
 import createDancerSlice from './dancerSlice.js';
 import createShapeSlice from './shapeSlice.js';
@@ -29,6 +29,7 @@ const initialState = () => {
     console.log('Restoring from auto-save...');
     return {
       panelSize: savedData.panelSize || UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
+      globalZoomLevel: savedData.globalZoomLevel || 1.0,
       selectedPanel: null, // Reset UI state
       selectedHand: null,
       selectedDancer: null,
@@ -50,6 +51,7 @@ const initialState = () => {
   // Default initial state
   return {
     panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
+    globalZoomLevel: 1.0,
     selectedPanel: null,
     selectedHand: null,
     selectedDancer: null,
@@ -73,6 +75,9 @@ export const useAppStore = create(
     temporal(
       (set, get, api) => {
         const state = initialState();
+
+        // Set up store getter for panelFactory
+        setStoreGetter(get);
 
         return {
           // Start with the initial state
