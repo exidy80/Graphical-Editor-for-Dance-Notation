@@ -48,8 +48,8 @@ describe('Reset Dancers Functionality', () => {
     // Check first dancer (red, top position)
     const dancer1 = panel.dancers[0];
     expect(dancer1.colour).toBe('red');
-    expect(dancer1.x).toBe(150);
-    expect(dancer1.y).toBe(40);
+    expect(dancer1.x).toBe(300); // Centered on 600x600 canvas
+    expect(dancer1.y).toBe(189); // (0.13 * 300) + 150 viewport offset
     expect(dancer1.rotation).toBe(180);
     expect(dancer1.leftHandPos).toEqual({ x: -30, y: -40 });
     expect(dancer1.rightHandPos).toEqual({ x: 30, y: -40 });
@@ -59,8 +59,8 @@ describe('Reset Dancers Functionality', () => {
     // Check second dancer (blue, bottom position)
     const dancer2 = panel.dancers[1];
     expect(dancer2.colour).toBe('blue');
-    expect(dancer2.x).toBe(150);
-    expect(dancer2.y).toBe(220);
+    expect(dancer2.x).toBe(300); // Centered on 600x600 canvas
+    expect(dancer2.y).toBe(369); // (0.73 * 300) + 150 viewport offset
     expect(dancer2.rotation).toBe(0);
     expect(dancer2.leftHandPos).toEqual({ x: -30, y: -40 });
     expect(dancer2.rightHandPos).toEqual({ x: 30, y: -40 });
@@ -175,8 +175,9 @@ describe('Reset Dancers Functionality', () => {
     expect(state.panels).toHaveLength(1);
     const resetPanel = state.panels[0];
 
-    expect(resetPanel.dancers[0].x).toBe(150);
-    expect(resetPanel.dancers[0].y).toBe(40);
+    // Verify dancers are reset to initial positions (fixed canvas coordinates)
+    expect(resetPanel.dancers[0].x).toBe(300); // Canvas center
+    expect(resetPanel.dancers[0].y).toBe(189); // (0.13 * 300) + 150 viewport offset
     expect(resetPanel.dancers[0].colour).toBe('red');
     expect(resetPanel.dancers[0].rotation).toBe(180);
     expect(resetPanel.locks).toEqual([]);

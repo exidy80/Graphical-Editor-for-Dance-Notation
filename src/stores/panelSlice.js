@@ -1,6 +1,7 @@
 // panelSlice.js
 import createInitialPanel from './panelFactory.js';
 import * as ShapeTypes from '../constants/shapeTypes';
+import { UI_DIMENSIONS } from '../utils/dimensions.js';
 
 // Panel management slice - handles panel CRUD operations and panel-level state
 const createPanelSlice = (set, get, api) => ({
@@ -94,6 +95,13 @@ const createPanelSlice = (set, get, api) => ({
       clearAutoSave();
     }
 
+    // First reset zoom and panel size
+    set({
+      globalZoomLevel: 1.0,
+      panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
+    });
+
+    // Now create initial panel with correct size
     // Reset to initial state with one panel containing two dancers in default positions
     set({
       panels: [createInitialPanel()],

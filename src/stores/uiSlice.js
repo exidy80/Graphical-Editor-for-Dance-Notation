@@ -1,4 +1,10 @@
 // UI state slice - handles selection state, opacity, visual effects, and other UI concerns
+import { UI_DIMENSIONS } from '../utils/dimensions.js';
+
+const ZOOM_INCREMENT = 0.1;
+const MIN_ZOOM = 1.0;
+const MAX_ZOOM = 2.0;
+
 const createUISlice = (set, get) => ({
   // State (some initial state set in index.js)
   handFlash: [], // transient effects for visual feedback on hands
@@ -124,6 +130,63 @@ const createUISlice = (set, get) => ({
     const { clearAutoSaveData } = require('./autoSaveMiddleware.js');
     clearAutoSaveData();
     set({ hasUnsavedChanges: false, lastSaveTime: Date.now() });
+  },
+
+  // Global zoom functions
+  // Zoom is a viewport into fixed 600x600 canvas - positions don't change
+  zoomIn: () => {
+    const state = get();
+    const oldZoom = state.globalZoomLevel;
+    const newZoom = Math.min(MAX_ZOOM, oldZoom + ZOOM_INCREMENT);
+
+    if (oldZoom === newZoom) return; // Already at max
+
+    const newPanelSize = {
+      width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
+      height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+    };
+
+    // Only change zoom and panel size - positions stay fixed on canvas
+    set({
+      globalZoomLevel: newZoom,
+      panelSize: newPanelSize,
+    });
+  },
+
+  zoomOut: () => {
+    const state = get();
+    const oldZoom = state.globalZoomLevel;
+    const newZoom = Math.max(MIN_ZOOM, oldZoom - ZOOM_INCREMENT);
+
+    if (oldZoom === newZoom) return; // Already at min
+
+    const newPanelSize = {
+      width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
+      height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+    };
+
+    // Only change zoom and panel size - positions stay fixed on canvas
+    set({
+      globalZoomLevel: newZoom,
+      panelSize: newPanelSize,
+    });
+  },
+
+  resetZoom: () => {
+    set({
+      globalZoomLevel: MIN_ZOOM,
+      panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
+    });
+  },
+
+  canZoomIn: () => {
+    const state = get();
+    return state.globalZoomLevel < MAX_ZOOM;
+  },
+
+  canZoomOut: () => {
+    const state = get();
+    return state.globalZoomLevel > MIN_ZOOM;
   },
 });
 

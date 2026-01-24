@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import * as ShapeTypes from '../constants/shapeTypes';
 import { createStageX, createStageNext } from '../constants/shapeTypes';
+import { UI_DIMENSIONS } from '../utils/dimensions';
 
 // Auto-save utility functions
 const AUTO_SAVE_KEY = 'dance-notation-autosave';
@@ -184,7 +185,7 @@ const initialState = () => {
   ) {
     console.log('Restoring from auto-save...');
     return {
-      panelSize: savedData.panelSize || { width: 300, height: 300 },
+      panelSize: savedData.panelSize || UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
       selectedPanel: null, // Reset UI state
       selectedHand: null,
       selectedDancer: null,
@@ -197,7 +198,7 @@ const initialState = () => {
 
   // Default initial state
   return {
-    panelSize: { width: 300, height: 300 },
+    panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
     selectedPanel: null,
     selectedHand: null,
     selectedDancer: null,
