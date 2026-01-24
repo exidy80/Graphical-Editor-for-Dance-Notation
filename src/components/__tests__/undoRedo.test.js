@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
+import * as ShapeTypes from '../../constants/shapeTypes';
 
 describe('Undo/Redo Functionality', () => {
   beforeEach(() => {
@@ -28,7 +29,7 @@ describe('Undo/Redo Functionality', () => {
         leftHandRotation: 0,
         rightHandRotation: 0,
       })),
-      shapes: p.shapes.filter((s) => s.type === 'stageX'), // Keep only the stage marker
+      shapes: p.shapes.filter((s) => s.type === ShapeTypes.STAGE_X), // Keep only the stage marker
     }));
 
     // Reset to just one panel to ensure consistent test state

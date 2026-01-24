@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { createStageX, createStageNext } from '../constants/shapeTypes';
 
 // Factory function to create initial panels with default dancer positions and shapes
 const createInitialPanel = () => ({
@@ -49,30 +50,8 @@ const createInitialPanel = () => ({
     { left: 'Waist', right: 'Waist' },
   ],
   shapes: [
-    {
-      id: uuidv4(),
-      type: 'stageX',
-      x: 147,
-      y: 127,
-      width: 20,
-      height: 20,
-      draggable: true,
-      text: 'O',
-      fontSize: 20,
-      fill: 'black',
-    },
-    {
-      id: uuidv4(),
-      type: 'stageNext',
-      x: 147,
-      y: 127,
-      width: 20,
-      height: 20,
-      draggable: true,
-      text: '+',
-      fontSize: 24,
-      fill: 'black',
-    },
+    { id: uuidv4(), ...createStageX() },
+    { id: uuidv4(), ...createStageNext() },
   ],
   locks: [],
   notes: '',

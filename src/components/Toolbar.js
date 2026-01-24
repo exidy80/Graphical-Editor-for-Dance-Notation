@@ -13,7 +13,6 @@ import {
   faRefresh,
   faFilePdf,
 } from '@fortawesome/free-solid-svg-icons';
-import html2pdf from 'html2pdf.js';
 
 const Toolbar = () => {
   const handleHeadSelection = useAppStore((state) => state.handleHeadSelection);
@@ -63,16 +62,41 @@ const Toolbar = () => {
 
   const exportPanelsToPDF = async () => {
     try {
-      const element = document.querySelector('.position-panel-grid');
-      if (!element) {
+      const gridElement = document.querySelector('.position-panel-grid');
+      if (!gridElement) {
         alert('No panels found to export');
         return;
       }
 
+      // Get all Konva canvases and convert them to images temporarily
+      const canvases = gridElement.querySelectorAll('canvas');
+      const canvasData = [];
+
+      // Convert each canvas to an image and hide the canvas
+      canvases.forEach((canvas) => {
+        const dataURL = canvas.toDataURL('image/png');
+        const img = document.createElement('img');
+        img.src = dataURL;
+        img.style.width =
+          canvas.style.width ||
+          `${canvas.width / (window.devicePixelRatio || 1)}px`;
+        img.style.height =
+          canvas.style.height ||
+          `${canvas.height / (window.devicePixelRatio || 1)}px`;
+        img.style.display = 'block';
+
+        // Store original canvas and insert image
+        canvasData.push({ canvas, img, parent: canvas.parentNode });
+        canvas.style.display = 'none';
+        canvas.parentNode.insertBefore(img, canvas);
+      });
+
+      // Get filename
+      let pdfFilename = 'dance-notation.pdf';
+
       // Check if File System Access API is supported
       if ('showSaveFilePicker' in window) {
         try {
-          // Show the native save dialog
           const fileHandle = await window.showSaveFilePicker({
             suggestedName: 'dance-notation.pdf',
             types: [
@@ -84,53 +108,81 @@ const Toolbar = () => {
               },
             ],
           });
-
-          const opt = {
-            margin: 10,
-            filename: fileHandle.name,
-            image: { type: 'png', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
-          };
-
-          await html2pdf().set(opt).from(element).save();
-          console.log('PDF saved successfully!');
-          return;
+          pdfFilename = fileHandle.name;
         } catch (err) {
-          // User cancelled the dialog or there was an error
-          if (err.name !== 'AbortError') {
-            console.error('Error with File System Access API:', err);
-          } else {
-            // User cancelled, just return
+          if (err.name === 'AbortError') {
+            // Restore canvases before returning
+            canvasData.forEach(({ canvas, img }) => {
+              canvas.style.display = '';
+              img.remove();
+            });
             return;
           }
         }
+      } else {
+        const filename = prompt('Enter PDF filename:', 'dance-notation');
+        if (filename === null || !filename.trim()) {
+          // Restore canvases before returning
+          canvasData.forEach(({ canvas, img }) => {
+            canvas.style.display = '';
+            img.remove();
+          });
+          return;
+        }
+        pdfFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`;
       }
 
-      // Fallback: use prompt for filename
-      const filename = prompt('Enter PDF filename:', 'dance-notation');
-      if (filename === null) {
-        return; // User cancelled
+      // Now capture with html2canvas
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(gridElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+      });
+
+      // Restore the original canvases
+      canvasData.forEach(({ canvas: originalCanvas, img }) => {
+        originalCanvas.style.display = '';
+        img.remove();
+      });
+
+      // Convert to PDF
+      const { jsPDF } = await import('jspdf');
+      const imgData = canvas.toDataURL('image/png');
+
+      const pdf = new jsPDF({
+        orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - 2 * margin;
+      const contentHeight = pageHeight - 2 * margin;
+
+      // Calculate dimensions to fit on page
+      const imgAspect = canvas.width / canvas.height;
+      const pageAspect = contentWidth / contentHeight;
+
+      let imgWidth, imgHeight;
+      if (imgAspect > pageAspect) {
+        imgWidth = contentWidth;
+        imgHeight = contentWidth / imgAspect;
+      } else {
+        imgHeight = contentHeight;
+        imgWidth = contentHeight * imgAspect;
       }
 
-      if (!filename.trim()) {
-        alert('Please enter a valid filename');
-        return;
-      }
+      const x = margin + (contentWidth - imgWidth) / 2;
+      const y = margin + (contentHeight - imgHeight) / 2;
 
-      const pdfFilename = filename.endsWith('.pdf')
-        ? filename
-        : `${filename}.pdf`;
+      pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+      pdf.save(pdfFilename);
 
-      const opt = {
-        margin: 10,
-        filename: pdfFilename,
-        image: { type: 'png', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
-      };
-
-      await html2pdf().set(opt).from(element).save();
+      console.log('PDF saved successfully!');
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');

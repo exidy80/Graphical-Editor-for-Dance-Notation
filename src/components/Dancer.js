@@ -272,7 +272,7 @@ const Dancer = ({
 
     updateArm('left');
     updateArm('right');
-  }, [dancer, chosenHandShapes]);
+  }, [dancer, chosenHandShapes, bodyWidth, headSize]);
 
   useEffect(() => {
     if (isSelected && dancerRef.current) {

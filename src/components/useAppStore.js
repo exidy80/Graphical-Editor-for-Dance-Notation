@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import * as ShapeTypes from '../constants/shapeTypes';
+import { createStageX, createStageNext } from '../constants/shapeTypes';
 
 // Auto-save utility functions
 const AUTO_SAVE_KEY = 'dance-notation-autosave';
@@ -163,18 +165,8 @@ const createInitialPanel = () => ({
     { left: 'Waist', right: 'Waist' },
   ],
   shapes: [
-    {
-      id: uuidv4(),
-      type: 'stageX',
-      x: 147,
-      y: 127,
-      width: 20,
-      height: 20,
-      draggable: true,
-      text: 'O',
-      fontSize: 20,
-      fill: 'black',
-    },
+    { id: uuidv4(), ...createStageX() },
+    { id: uuidv4(), ...createStageNext() },
   ],
   locks: [],
 });

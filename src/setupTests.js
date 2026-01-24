@@ -2,7 +2,7 @@ import '@testing-library/jest-dom';
 import React from 'react';
 import { TextEncoder, TextDecoder } from 'util';
 
-// Polyfill TextEncoder/TextDecoder for Node.js test environment (required by html2pdf.js dependencies)
+// Polyfill TextEncoder/TextDecoder for Node.js test environment
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 

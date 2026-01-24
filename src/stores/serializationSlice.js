@@ -1,4 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
+import * as ShapeTypes from '../constants/shapeTypes';
+import { createStageNext, createStageX } from '../constants/shapeTypes';
 
 // Serialization slice - handles converting panels to/from JSON for save/load operations
 const createSerializationSlice = (set, get) => ({
@@ -85,28 +87,52 @@ const createSerializationSlice = (set, get) => ({
     const shapes = Array.isArray(serializedPanel.shapes)
       ? serializedPanel.shapes
       : [];
-    const newShapes = shapes.map((shape) => ({
-      ...shape,
-      id: uuidv4(),
-    }));
+    const newShapes = shapes.map((shape) => {
+      const newShape = {
+        ...shape,
+        id: uuidv4(),
+      };
 
-    // Add stageNext if it doesn't exist (for backward compatibility with older files)
-    const hasStageNext = newShapes.some((shape) => shape.type === 'stageNext');
+      // BACKWARD COMPATIBILITY: Add missing properties for stage markers
+      // Older saved files may not have text, fontSize, or fill properties on stage markers
+      // because these were previously hardcoded in the renderer
+      if (shape.type === ShapeTypes.STAGE_X && !shape.text) {
+        const defaults = createStageX();
+        return {
+          ...newShape,
+          text: defaults.text,
+          fontSize: defaults.fontSize,
+          fill: defaults.fill,
+        };
+      }
+      if (shape.type === ShapeTypes.STAGE_NEXT && !shape.text) {
+        const defaults = createStageNext();
+        return {
+          ...newShape,
+          text: defaults.text,
+          fontSize: defaults.fontSize,
+          fill: defaults.fill,
+        };
+      }
+
+      return newShape;
+    });
+
+    // BACKWARD COMPATIBILITY: Add stageNext if it doesn't exist
+    // Older saved files created before stageNext was introduced only had stageX
+    // This ensures all panels have both stage markers
+    const hasStageNext = newShapes.some(
+      (shape) => shape.type === ShapeTypes.STAGE_NEXT,
+    );
     if (!hasStageNext) {
-      const stageX = newShapes.find((shape) => shape.type === 'stageX');
+      const stageX = newShapes.find(
+        (shape) => shape.type === ShapeTypes.STAGE_X,
+      );
       if (stageX) {
         // Add stageNext at the same position as stageX
         newShapes.push({
           id: uuidv4(),
-          type: 'stageNext',
-          x: stageX.x,
-          y: stageX.y,
-          width: 20,
-          height: 20,
-          draggable: true,
-          text: '+',
-          fontSize: 24,
-          fill: 'black',
+          ...createStageNext(stageX.x, stageX.y),
         });
       }
     }

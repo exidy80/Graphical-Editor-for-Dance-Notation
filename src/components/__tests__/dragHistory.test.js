@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
+import * as ShapeTypes from '../../constants/shapeTypes';
 
 describe('Drag History Prevention', () => {
   beforeEach(() => {
@@ -28,7 +29,7 @@ describe('Drag History Prevention', () => {
         leftHandRotation: 0,
         rightHandRotation: 0,
       })),
-      shapes: p.shapes.filter((s) => s.type === 'stageX'),
+      shapes: p.shapes.filter((s) => s.type === ShapeTypes.STAGE_X),
     }));
 
     const resetPanels = [panels[0]];

@@ -1,5 +1,6 @@
 // Comprehensive Save/Restore functionality tests
 import { useAppStore } from '../../stores';
+import * as ShapeTypes from '../../constants/shapeTypes';
 
 // Mock file download/upload functionality for tests
 global.URL = {
@@ -290,7 +291,7 @@ describe('Save/Restore Functionality', () => {
         shapes: [
           {
             id: 'shape-1',
-            type: 'stageX',
+            type: ShapeTypes.STAGE_X,
             x: 100,
             y: 100,
             text: 'O',
@@ -307,8 +308,12 @@ describe('Save/Restore Functionality', () => {
       // Should have both stageX and stageNext
       expect(deserialized.shapes).toHaveLength(2);
 
-      const stageX = deserialized.shapes.find((s) => s.type === 'stageX');
-      const stageNext = deserialized.shapes.find((s) => s.type === 'stageNext');
+      const stageX = deserialized.shapes.find(
+        (s) => s.type === ShapeTypes.STAGE_X,
+      );
+      const stageNext = deserialized.shapes.find(
+        (s) => s.type === ShapeTypes.STAGE_NEXT,
+      );
 
       expect(stageX).toBeDefined();
       expect(stageNext).toBeDefined();

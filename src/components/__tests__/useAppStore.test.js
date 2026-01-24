@@ -1,5 +1,6 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
+import * as ShapeTypes from '../../constants/shapeTypes';
 
 describe('useAppStore', () => {
   beforeEach(() => {
@@ -59,13 +60,15 @@ describe('useAppStore', () => {
     const firstPanel = panels[0];
 
     // Check for stageX (origin marker)
-    const stageX = firstPanel.shapes.find((s) => s.type === 'stageX');
+    const stageX = firstPanel.shapes.find((s) => s.type === ShapeTypes.STAGE_X);
     expect(stageX).toBeDefined();
     expect(stageX.text).toBe('O');
     expect(stageX.fill).toBe('black');
 
     // Check for stageNext (plus marker)
-    const stageNext = firstPanel.shapes.find((s) => s.type === 'stageNext');
+    const stageNext = firstPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_NEXT,
+    );
     expect(stageNext).toBeDefined();
     expect(stageNext.text).toBe('+');
     expect(stageNext.fill).toBe('black');
@@ -305,6 +308,94 @@ describe('useAppStore', () => {
     const clonedLock = cloned.locks[0];
     const idSet = new Set(cloned.dancers.map((d) => d.id));
     clonedLock.members.forEach((m) => expect(idSet.has(m.dancerId)).toBe(true));
+  });
+
+  test('clonePanel recenters panel around stageNext', () => {
+    const { getState, setState } = useAppStore;
+    const panel = getState().panels[0];
+    const panelSize = getState().panelSize;
+    const centerX = panelSize.width / 2;
+    const centerY = panelSize.height / 2;
+
+    // Set selected panel for shape drawing
+    act(() => setState({ selectedPanel: panel.id }, false));
+
+    // Move stageNext to a non-center position
+    const stageNextShape = panel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_NEXT,
+    );
+    const originalStageNextX = 100;
+    const originalStageNextY = 80;
+
+    act(() => {
+      getState().updateShapeState(panel.id, stageNextShape.id, {
+        x: originalStageNextX,
+        y: originalStageNextY,
+      });
+    });
+
+    // Move a dancer to a known position
+    const dancer = panel.dancers[0];
+    const originalDancerX = 120;
+    const originalDancerY = 90;
+    act(() => {
+      getState().updateDancerState(panel.id, dancer.id, {
+        x: originalDancerX,
+        y: originalDancerY,
+      });
+    });
+
+    // Add another shape with a known position
+    const kneeShape = {
+      id: 'knee-test',
+      type: ShapeTypes.KNEE,
+      x: 110,
+      y: 85,
+      width: 10,
+      height: 10,
+      draggable: true,
+    };
+    act(() => {
+      getState().handleShapeDraw(kneeShape);
+    });
+
+    const updatedPanel = getState().panels[0];
+
+    // Calculate expected delta
+    const expectedDeltaX = centerX - originalStageNextX;
+    const expectedDeltaY = centerY - originalStageNextY;
+
+    // Clone the panel
+    act(() => getState().clonePanel(updatedPanel.id));
+
+    const clonedPanel = getState().panels[1];
+
+    // Verify stageNext is at center
+    const clonedStageNext = clonedPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_NEXT,
+    );
+    expect(clonedStageNext.x).toBeCloseTo(centerX, 5);
+    expect(clonedStageNext.y).toBeCloseTo(centerY, 5);
+
+    // Verify stageX is at center (independent move)
+    const clonedStageX = clonedPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_X,
+    );
+    expect(clonedStageX.x).toBeCloseTo(centerX, 5);
+    expect(clonedStageX.y).toBeCloseTo(centerY, 5);
+
+    // Verify dancer shifted by the same delta
+    const clonedDancer = clonedPanel.dancers[0];
+    expect(clonedDancer.x).toBeCloseTo(originalDancerX + expectedDeltaX, 5);
+    expect(clonedDancer.y).toBeCloseTo(originalDancerY + expectedDeltaY, 5);
+
+    // Verify other shape (knee) shifted by the same delta
+    const clonedKnee = clonedPanel.shapes.find(
+      (s) => s.type === ShapeTypes.KNEE,
+    );
+    expect(clonedKnee).toBeDefined();
+    expect(clonedKnee.x).toBeCloseTo(110 + expectedDeltaX, 5);
+    expect(clonedKnee.y).toBeCloseTo(85 + expectedDeltaY, 5);
   });
 
   test('handleCanvasClick clears all selections', () => {
