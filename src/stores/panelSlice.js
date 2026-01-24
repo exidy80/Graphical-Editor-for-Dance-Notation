@@ -1,5 +1,6 @@
 // panelSlice.js
 import createInitialPanel from './panelFactory.js';
+import * as ShapeTypes from '../constants/shapeTypes';
 
 // Panel management slice - handles panel CRUD operations and panel-level state
 const createPanelSlice = (set, get, api) => ({
@@ -30,6 +31,40 @@ const createPanelSlice = (set, get, api) => ({
     const serializedPanel = get().serializePanel(panelId);
     if (!serializedPanel) return;
     const clonedPanel = get().deserializePanel(serializedPanel);
+
+    // Recenter the cloned panel
+    const panelSize = get().panelSize;
+    const centerX = panelSize.width / 2;
+    const centerY = panelSize.height / 2;
+
+    // Find stageNext to use as reference point
+    const stageNext = clonedPanel.shapes.find(
+      (shape) => shape.type === ShapeTypes.STAGE_NEXT,
+    );
+
+    if (stageNext) {
+      // Calculate the shift needed to center stageNext
+      const deltaX = centerX - stageNext.x;
+      const deltaY = centerY - stageNext.y;
+
+      // Shift all dancers relative to stageNext's movement
+      clonedPanel.dancers = clonedPanel.dancers.map((dancer) => ({
+        ...dancer,
+        x: dancer.x + deltaX,
+        y: dancer.y + deltaY,
+      }));
+
+      // Shift all shapes (including stageNext) relative to stageNext's movement
+      clonedPanel.shapes = clonedPanel.shapes.map((shape) => {
+        if (shape.type === ShapeTypes.STAGE_X) {
+          // stageX moves to center independently
+          return { ...shape, x: centerX, y: centerY };
+        }
+        // All other shapes including stageNext shift together
+        return { ...shape, x: shape.x + deltaX, y: shape.y + deltaY };
+      });
+    }
+
     set((state) => {
       const index = state.panels.findIndex((p) => p.id === panelId);
       const newPanels = [...state.panels];
