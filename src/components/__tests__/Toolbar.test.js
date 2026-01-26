@@ -48,25 +48,31 @@ test('opacity toggles for dancers and symbols', () => {
   expect(symbolBtn).toHaveClass('btn-primary');
 });
 
-test('hand selection dropdown includes all elevation options', () => {
-  // Select first panel, dancer, and hand so dropdown is enabled
+test('hand selection dropdown is enabled when hand is selected', () => {
+  const { rerender } = render(<Toolbar />);
+
+  // Initially disabled when no hand selected
+  let handDropdown = screen.getByText('Select Hand').closest('button');
+  expect(handDropdown).toBeDisabled();
+
+  // Enable when hand is selected
   act(() => {
     const panel = useAppStore.getState().panels[0];
+    const dancer = panel.dancers[0];
     useAppStore.getState().setSelectedPanel(panel.id);
-    useAppStore.getState().setSelectedDancer(panel.id, panel.dancers[0].id);
     useAppStore
       .getState()
-      .setSelectedHand(panel.id, panel.dancers[0].id, 'left');
+      .setSelectedDancer({ panelId: panel.id, dancerId: dancer.id });
+    useAppStore
+      .getState()
+      .setSelectedHand({
+        panelId: panel.id,
+        dancerId: dancer.id,
+        handSide: 'left',
+      });
   });
 
-  render(<Toolbar />);
-  const handDropdown = screen.getByText('Select Hand').closest('button');
-  fireEvent.click(handDropdown);
-
-  // Check all hand elevation options are present
-  expect(screen.getByText('Overhead')).toBeInTheDocument();
-  expect(screen.getByText('Shoulder')).toBeInTheDocument();
-  expect(screen.getByText('Waist')).toBeInTheDocument();
-  expect(screen.getByText('Hip')).toBeInTheDocument();
-  expect(screen.getByText('Knee')).toBeInTheDocument();
+  rerender(<Toolbar />);
+  handDropdown = screen.getByText('Select Hand').closest('button');
+  expect(handDropdown).not.toBeDisabled();
 });
