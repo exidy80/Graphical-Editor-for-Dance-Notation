@@ -37,6 +37,9 @@ const initialState = () => {
       panels: savedData.panels,
       hasUnsavedChanges: false,
       lastSaveTime: Date.now(),
+      // Document state
+      documentTitle: 'Untitled Dance',
+      currentFileHandle: null,
       // UI state that's not persisted
       handFlash: [],
       lockUi: { active: false, selected: [] },
@@ -59,6 +62,9 @@ const initialState = () => {
     panels: [createInitialPanel()],
     hasUnsavedChanges: false,
     lastSaveTime: Date.now(),
+    // Document state
+    documentTitle: 'Untitled Dance',
+    currentFileHandle: null,
     // UI state
     handFlash: [],
     lockUi: { active: false, selected: [] },

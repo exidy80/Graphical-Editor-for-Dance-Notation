@@ -353,6 +353,54 @@ const createKeystrokeSlice = (set, get, api) => ({
       priority: 1,
     });
 
+    // Cmd+S (Ctrl+S) - Save file
+    registerKeystroke('s', {
+      description: 'Save file',
+      handler: (event, context) => {
+        const { triggerSave } = get();
+        if (triggerSave) {
+          triggerSave();
+        } else {
+          console.warn('Save handler not available');
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true },
+      priority: 1,
+    });
+
+    // Cmd+Shift+S (Ctrl+Shift+S) - Save As
+    registerKeystroke('s', {
+      description: 'Save file as...',
+      handler: (event, context) => {
+        const { triggerSaveAs } = get();
+        if (triggerSaveAs) {
+          triggerSaveAs();
+        } else {
+          console.warn('Save As handler not available');
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true, shift: true },
+      priority: 2, // Higher priority than regular save
+    });
+
+    // Cmd+O (Ctrl+O) - Open file
+    registerKeystroke('o', {
+      description: 'Open file',
+      handler: (event, context) => {
+        const { triggerOpen } = get();
+        if (triggerOpen) {
+          triggerOpen();
+        } else {
+          console.warn('Open handler not available');
+        }
+      },
+      context: 'global',
+      modifiers: { ctrl: true },
+      priority: 1,
+    });
+
     // W key - select red dancer in current panel
     registerKeystroke('w', {
       description: 'Select red dancer in current panel',

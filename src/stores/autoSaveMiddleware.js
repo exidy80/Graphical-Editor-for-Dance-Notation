@@ -2,7 +2,11 @@
 const AUTO_SAVE_KEY = 'dance-notation-autosave';
 
 // Define which state properties are consequential (require saving)
-const CONSEQUENTIAL_PROPERTIES = new Set(['panels', 'panelSize']);
+const CONSEQUENTIAL_PROPERTIES = new Set([
+  'panels',
+  'panelSize',
+  'globalZoomLevel',
+]);
 
 const saveToLocalStorage = (data) => {
   try {
@@ -60,7 +64,9 @@ const autoSaveMiddleware = (config) => (set, get, api) => {
         JSON.stringify(prevState.panels) !== JSON.stringify(newState.panels)) ||
       (CONSEQUENTIAL_PROPERTIES.has('panelSize') &&
         JSON.stringify(prevState.panelSize) !==
-          JSON.stringify(newState.panelSize));
+          JSON.stringify(newState.panelSize)) ||
+      (CONSEQUENTIAL_PROPERTIES.has('globalZoomLevel') &&
+        prevState.globalZoomLevel !== newState.globalZoomLevel);
 
     if (hasConsequentialChanges && !newState.hasUnsavedChanges) {
       // Use internal update to avoid infinite recursion
@@ -77,6 +83,7 @@ const autoSaveMiddleware = (config) => (set, get, api) => {
           const saveData = {
             panels: currentState.panels,
             panelSize: currentState.panelSize,
+            globalZoomLevel: currentState.globalZoomLevel,
           };
           saveToLocalStorage(saveData);
           isInternalUpdate = true;

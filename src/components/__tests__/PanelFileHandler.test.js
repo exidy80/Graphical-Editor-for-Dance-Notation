@@ -2,8 +2,9 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import PanelFileHandler from '../PanelFileHandler';
 
-test('renders save and import buttons', () => {
+test('renders Open, Save, and Save As buttons', () => {
   render(<PanelFileHandler />);
-  expect(screen.getByText(/Save Dance/i)).toBeInTheDocument();
-  expect(screen.getByText(/Import Dance/i)).toBeInTheDocument();
+  expect(screen.getByText(/Open/i)).toBeInTheDocument();
+  expect(screen.getByText(/^Save$/i)).toBeInTheDocument();
+  expect(screen.getByText(/Save As/i)).toBeInTheDocument();
 });

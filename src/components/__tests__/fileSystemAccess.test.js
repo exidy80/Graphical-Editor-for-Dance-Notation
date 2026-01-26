@@ -3,15 +3,16 @@ import { useAppStore } from '../../stores';
 
 // Mock File System Access API
 const mockFileHandle = {
+  name: 'test-dance.json',
   createWritable: jest.fn().mockResolvedValue({
     write: jest.fn().mockResolvedValue(undefined),
     close: jest.fn().mockResolvedValue(undefined),
   }),
-  getFile: jest
-    .fn()
-    .mockResolvedValue(
-      new File(['{"test": "data"}'], 'test.json', { type: 'application/json' }),
-    ),
+  getFile: jest.fn().mockResolvedValue(
+    new File(['{"test": "data"}'], 'test-dance.json', {
+      type: 'application/json',
+    }),
+  ),
 };
 
 const mockShowSaveFilePicker = jest.fn().mockResolvedValue(mockFileHandle);
@@ -70,6 +71,8 @@ describe('File System Access API Integration', () => {
             locks: [],
           },
         ],
+        documentTitle: 'Untitled Dance',
+        currentFileHandle: null,
       },
       false,
     );
@@ -116,8 +119,12 @@ describe('File System Access API Integration', () => {
   });
 
   test('should handle File System Access API save options correctly', () => {
+    // Set a custom document title
+    useAppStore.setState({ documentTitle: 'My Dance' });
+    const fileName = useAppStore.getState().getDocumentFileName();
+
     const expectedOptions = {
-      suggestedName: 'dance-notation.json',
+      suggestedName: `${fileName}.json`,
       types: [
         {
           description: 'JSON files',
@@ -128,8 +135,8 @@ describe('File System Access API Integration', () => {
       ],
     };
 
-    // This would be called by the downloadPanels function
-    expect(expectedOptions.suggestedName).toBe('dance-notation.json');
+    // Verify the suggested filename uses the document title
+    expect(expectedOptions.suggestedName).toBe('My Dance.json');
     expect(expectedOptions.types[0].accept['application/json']).toContain(
       '.json',
     );

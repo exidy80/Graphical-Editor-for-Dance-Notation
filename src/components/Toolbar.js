@@ -13,6 +13,7 @@ import {
   faUnlink,
   faRefresh,
   faFilePdf,
+  faCompressArrowsAlt,
 } from '@fortawesome/free-solid-svg-icons';
 
 const Toolbar = () => {
@@ -34,6 +35,11 @@ const Toolbar = () => {
     (state) => state.lockOverlappingHands,
   );
   const resetDancers = useAppStore((state) => state.resetDancers);
+  const recenterAllPanels = useAppStore((state) => state.recenterAllPanels);
+  const documentTitle = useAppStore((state) => state.documentTitle);
+  const setDocumentTitle = useAppStore((state) => state.setDocumentTitle);
+  const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
+  const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);
 
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
@@ -79,11 +85,14 @@ const Toolbar = () => {
       // Get filename first
       let pdfFilename = 'dance-notation.pdf';
 
+      // Use document title for PDF filename
+      const fileName = getDocumentFileName();
+
       // Check if File System Access API is supported
       if ('showSaveFilePicker' in window) {
         try {
           const fileHandle = await window.showSaveFilePicker({
-            suggestedName: 'dance-notation.pdf',
+            suggestedName: `${fileName}.pdf`,
             types: [
               {
                 description: 'PDF files',
@@ -98,6 +107,7 @@ const Toolbar = () => {
           if (err.name === 'AbortError') {
             return;
           }
+          getDocumentFileName();
         }
       } else {
         const filename = prompt('Enter PDF filename:', 'dance-notation');
@@ -212,6 +222,56 @@ const Toolbar = () => {
   return (
     <div className="perspective-selection">
       <div className="options-group">
+        {/* Document Title Input */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            marginRight: '20px',
+            position: 'relative',
+          }}
+        >
+          <label style={{ marginRight: '8px', fontWeight: 'bold' }}>
+            Title:
+          </label>
+          <input
+            type="text"
+            value={documentTitle}
+            onChange={(e) => setDocumentTitle(e.target.value)}
+            placeholder="Untitled Dance"
+            style={{
+              padding: '5px 10px',
+              border: hasUnsavedChanges
+                ? '2px solid #ff6b6b'
+                : '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '14px',
+              minWidth: '200px',
+              backgroundColor: hasUnsavedChanges ? '#fff5f5' : 'white',
+            }}
+            title={
+              hasUnsavedChanges
+                ? 'You have unsaved changes (Cmd+S to save)'
+                : 'Document title'
+            }
+          />
+          {hasUnsavedChanges && (
+            <span
+              style={{
+                position: 'absolute',
+                right: '10px',
+                color: '#ff6b6b',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                pointerEvents: 'none',
+              }}
+              title="Unsaved changes"
+            >
+              •
+            </span>
+          )}
+        </div>
+
         <Dropdown className="custom-dropdown">
           <Dropdown.Toggle
             variant={selectedDancer ? 'primary' : 'outline-secondary'}
@@ -370,6 +430,24 @@ const Toolbar = () => {
         >
           <FontAwesomeIcon icon={faFilePdf} />
           <span className="button-text">Save to PDF...</span>
+        </Button>
+        {/* Recenter all panels */}
+        <Button
+          onClick={() => {
+            if (
+              window.confirm(
+                'Recenter all panels? This will move all dancers and shapes to center the stage markers.',
+              )
+            ) {
+              recenterAllPanels();
+            }
+          }}
+          variant="outline-success"
+          className="icon-button"
+          title="Recenter all panels to center the stage markers"
+        >
+          <FontAwesomeIcon icon={faCompressArrowsAlt} />
+          <span className="button-text">Recenter Panels</span>
         </Button>
         {/* Reset to default state */}
         <Button

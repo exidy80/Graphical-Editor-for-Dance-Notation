@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { UI_DIMENSIONS } from '../utils/dimensions';
 import {
   faShoePrints,
   faArrowRight,
@@ -170,6 +171,18 @@ const Sidebar = () => {
 
   //Handle clicking on a shape in the sidebar
   const handleItemClick = (item, side = null, color = COLORS.RED) => {
+    // Calculate position for new shapes based on canvas coordinate system
+    const CANVAS_SIZE = UI_DIMENSIONS.CANVAS_SIZE;
+    const DEFAULT_PANEL_SIZE = UI_DIMENSIONS.DEFAULT_PANEL_SIZE;
+    const viewportOffset = (CANVAS_SIZE.width - DEFAULT_PANEL_SIZE.width) / 2; // 150
+    const canvasCenterX = CANVAS_SIZE.width / 2; // 300
+    const topY = DEFAULT_PANEL_SIZE.height * 0.13 + viewportOffset; // 189 - red dancer position
+    const stageMarkersY = DEFAULT_PANEL_SIZE.height * 0.42 + viewportOffset; // 276
+    // Position new shapes to the left and between red dancer and stage markers
+    // At 100% zoom, viewport shows 150-450, so these coordinates are fully visible
+    const newShapeX = canvasCenterX - 100; // 200 - to the left of center, within viewport
+    const newShapeY = (topY + stageMarkersY) / 2 - 2.5; // 230 - midpoint between dancer and markers
+
     let shapeKey = item;
     if (activeTab === TAB_KEYS.FOOTWORK && side) {
       //SPecial case for the feet
@@ -185,8 +198,8 @@ const Sidebar = () => {
           id: uuidv4(),
           ...shapeProps,
           imageKey,
-          x: 50,
-          y: 50,
+          x: newShapeX,
+          y: newShapeY,
           draggable: true,
         });
       }
@@ -199,8 +212,8 @@ const Sidebar = () => {
           id: uuidv4(),
           ...shapeProps,
           stroke: color,
-          x: 50,
-          y: 50,
+          x: newShapeX,
+          y: newShapeY,
           draggable: true,
         };
         // Only add fill for shapes that should have it (not hip or shoulder which are outline-only)
