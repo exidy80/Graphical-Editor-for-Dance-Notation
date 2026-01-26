@@ -13,7 +13,6 @@ const PanelFileHandler = () => {
   const setCurrentFileHandle = useAppStore(
     (state) => state.setCurrentFileHandle,
   );
-  const documentTitle = useAppStore((state) => state.documentTitle);
   const setDocumentTitle = useAppStore((state) => state.setDocumentTitle);
   const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
   const setFileOperationTriggers = useAppStore(
@@ -25,46 +24,13 @@ const PanelFileHandler = () => {
   const hasFileSystemAccess =
     'showSaveFilePicker' in window && 'showOpenFilePicker' in window;
 
-  // Helper function to serialize panels
-  const getSerializedData = () => {
-    const serializedPanels = panels
-      .map((panel) => serializePanel(panel.id))
-      .filter((panel) => panel !== null);
-    return JSON.stringify(serializedPanels, null, 2);
-  };
-
-  // Save to existing file (if we have a handle) or show dialog
-  const handleSave = useCallback(async () => {
-    if (currentFileHandle && hasFileSystemAccess) {
-      // We have a file handle, save directly
-      try {
-        const jsonString = getSerializedData();
-        const writable = await currentFileHandle.createWritable();
-        await writable.write(jsonString);
-        await writable.close();
-        console.log('File saved successfully!');
-        clearAutoSave();
-        return;
-      } catch (err) {
-        console.error('Error saving file:', err);
-        alert('Error saving file. Please try again.');
-        return;
-      }
-    }
-
-    // No file handle, fall through to Save As
-    await handleSaveAs();
-  }, [
-    currentFileHandle,
-    hasFileSystemAccess,
-    clearAutoSave,
-    getSerializedData,
-  ]);
-
   // Always show save dialog
   const handleSaveAs = useCallback(async () => {
     try {
-      const jsonString = getSerializedData();
+      const serializedPanels = panels
+        .map((panel) => serializePanel(panel.id))
+        .filter((panel) => panel !== null);
+      const jsonString = JSON.stringify(serializedPanels, null, 2);
 
       // Check if the File System Access API is supported
       if (hasFileSystemAccess) {
@@ -124,11 +90,45 @@ const PanelFileHandler = () => {
     }
   }, [
     hasFileSystemAccess,
-    getSerializedData,
+    panels,
+    serializePanel,
     getDocumentFileName,
     setCurrentFileHandle,
     setDocumentTitle,
     clearAutoSave,
+  ]);
+
+  // Save to existing file (if we have a handle) or show dialog
+  const handleSave = useCallback(async () => {
+    if (currentFileHandle && hasFileSystemAccess) {
+      // We have a file handle, save directly
+      try {
+        const serializedPanels = panels
+          .map((panel) => serializePanel(panel.id))
+          .filter((panel) => panel !== null);
+        const jsonString = JSON.stringify(serializedPanels, null, 2);
+        const writable = await currentFileHandle.createWritable();
+        await writable.write(jsonString);
+        await writable.close();
+        console.log('File saved successfully!');
+        clearAutoSave();
+        return;
+      } catch (err) {
+        console.error('Error saving file:', err);
+        alert('Error saving file. Please try again.');
+        return;
+      }
+    }
+
+    // No file handle, fall through to Save As
+    await handleSaveAs();
+  }, [
+    currentFileHandle,
+    hasFileSystemAccess,
+    panels,
+    serializePanel,
+    clearAutoSave,
+    handleSaveAs,
   ]);
 
   // Define processImportedFile before handleOpen since it's used there

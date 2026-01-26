@@ -79,18 +79,13 @@ const autoSaveMiddleware = (config) => (set, get, api) => {
       }
       const timer = setTimeout(() => {
         const currentState = get();
-        if (currentState.hasUnsavedChanges) {
-          const saveData = {
-            panels: currentState.panels,
-            panelSize: currentState.panelSize,
-            globalZoomLevel: currentState.globalZoomLevel,
-          };
-          saveToLocalStorage(saveData);
-          isInternalUpdate = true;
-          originalSet({ hasUnsavedChanges: false, lastSaveTime: Date.now() });
-          isInternalUpdate = false;
-          console.log('Auto-saved to localStorage');
-        }
+        const saveData = {
+          panels: currentState.panels,
+          panelSize: currentState.panelSize,
+          globalZoomLevel: currentState.globalZoomLevel,
+        };
+        saveToLocalStorage(saveData);
+        console.log('Auto-saved to localStorage');
       }, 2000);
 
       originalSet({ _autoSaveTimer: timer });
