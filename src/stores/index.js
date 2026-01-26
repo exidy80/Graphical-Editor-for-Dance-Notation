@@ -5,7 +5,7 @@ import {
   loadFromLocalStorage,
 } from './autoSaveMiddleware.js';
 import coordinateTransforms from './coordinateTransforms.js';
-import createInitialPanel, { setStoreGetter } from './panelFactory.js';
+import createInitialPanel from './panelFactory.js';
 import createPanelSlice from './panelSlice.js';
 import createDancerSlice from './dancerSlice.js';
 import createShapeSlice from './shapeSlice.js';
@@ -37,6 +37,9 @@ const initialState = () => {
       panels: savedData.panels,
       hasUnsavedChanges: false,
       lastSaveTime: Date.now(),
+      // Document state
+      documentTitle: 'Untitled Dance',
+      currentFileHandle: null,
       // UI state that's not persisted
       handFlash: [],
       lockUi: { active: false, selected: [] },
@@ -59,6 +62,9 @@ const initialState = () => {
     panels: [createInitialPanel()],
     hasUnsavedChanges: false,
     lastSaveTime: Date.now(),
+    // Document state
+    documentTitle: 'Untitled Dance',
+    currentFileHandle: null,
     // UI state
     handFlash: [],
     lockUi: { active: false, selected: [] },
@@ -75,9 +81,6 @@ export const useAppStore = create(
     temporal(
       (set, get, api) => {
         const state = initialState();
-
-        // Set up store getter for panelFactory
-        setStoreGetter(get);
 
         return {
           // Start with the initial state

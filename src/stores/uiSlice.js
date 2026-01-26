@@ -17,6 +17,10 @@ const createUISlice = (set, get) => ({
     symbols: { value: 1, disabled: false },
   },
 
+  // Document state (for file handling)
+  documentTitle: 'Untitled Dance',
+  currentFileHandle: null,
+
   // Auto-save state (handled by middleware, some initial state set in index.js)
   _autoSaveTimer: null,
 
@@ -130,6 +134,32 @@ const createUISlice = (set, get) => ({
     const { clearAutoSaveData } = require('./autoSaveMiddleware.js');
     clearAutoSaveData();
     set({ hasUnsavedChanges: false, lastSaveTime: Date.now() });
+  },
+
+  // Document title and file handle management
+  setDocumentTitle: (title) =>
+    set({ documentTitle: title || 'Untitled Dance' }),
+
+  setCurrentFileHandle: (handle) => set({ currentFileHandle: handle }),
+
+  getDocumentFileName: () => {
+    const state = get();
+    // Sanitize title for filename - remove invalid characters
+    const sanitized = state.documentTitle.replace(/[<>:"/\\|?*]/g, '-');
+    return sanitized || 'Untitled Dance';
+  },
+
+  // File operation triggers (for keyboard shortcuts)
+  triggerSave: null,
+  triggerSaveAs: null,
+  triggerOpen: null,
+
+  setFileOperationTriggers: (triggers) => {
+    set({
+      triggerSave: triggers.save,
+      triggerSaveAs: triggers.saveAs,
+      triggerOpen: triggers.open,
+    });
   },
 
   // Global zoom functions

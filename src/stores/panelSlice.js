@@ -122,6 +122,79 @@ const createPanelSlice = (set, get, api) => ({
     }
   },
 
+  recenterAllPanels: () => {
+    set((state) => {
+      const canvasCenterX = UI_DIMENSIONS.CANVAS_SIZE.width / 2; // 300
+      const canvasCenterY = UI_DIMENSIONS.CANVAS_SIZE.height / 2; // 300
+
+      const recenteredPanels = state.panels.map((panel) => {
+        // Find stage markers to determine current center
+        const stageXMarker = panel.shapes?.find(
+          (s) => s.type === ShapeTypes.STAGE_X,
+        );
+        const stageNextMarker = panel.shapes?.find(
+          (s) => s.type === ShapeTypes.STAGE_NEXT,
+        );
+
+        if (!stageXMarker && !stageNextMarker) {
+          // No stage markers, calculate center from dancers
+          if (panel.dancers && panel.dancers.length > 0) {
+            const avgX =
+              panel.dancers.reduce((sum, d) => sum + d.x, 0) /
+              panel.dancers.length;
+            const avgY =
+              panel.dancers.reduce((sum, d) => sum + d.y, 0) /
+              panel.dancers.length;
+
+            const offsetX = canvasCenterX - avgX;
+            const offsetY = canvasCenterY - avgY;
+
+            return {
+              ...panel,
+              dancers: panel.dancers.map((d) => ({
+                ...d,
+                x: d.x + offsetX,
+                y: d.y + offsetY,
+              })),
+              shapes: panel.shapes.map((s) => ({
+                ...s,
+                x: s.x + offsetX,
+                y: s.y + offsetY,
+              })),
+            };
+          }
+          return panel; // No dancers either, return unchanged
+        }
+
+        // Use stage marker position as current center
+        const currentCenterX =
+          stageXMarker?.x || stageNextMarker?.x || canvasCenterX;
+        const currentCenterY =
+          stageXMarker?.y || stageNextMarker?.y || canvasCenterY;
+
+        const offsetX = canvasCenterX - currentCenterX;
+        const offsetY = canvasCenterY - currentCenterY;
+
+        // Apply offset to all dancers and shapes
+        return {
+          ...panel,
+          dancers: panel.dancers.map((d) => ({
+            ...d,
+            x: d.x + offsetX,
+            y: d.y + offsetY,
+          })),
+          shapes: panel.shapes.map((s) => ({
+            ...s,
+            x: s.x + offsetX,
+            y: s.y + offsetY,
+          })),
+        };
+      });
+
+      return { panels: recenteredPanels };
+    });
+  },
+
   handlePanelSelection: (panelId) => set({ selectedPanel: panelId }),
 
   updatePanelNotes: (panelId, notes) => {

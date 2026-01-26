@@ -6,12 +6,6 @@ import { UI_DIMENSIONS } from '../utils/dimensions';
 // The panel is a viewport window into this canvas
 const CANVAS_SIZE = UI_DIMENSIONS.CANVAS_SIZE;
 
-// Get the store to access current panelSize (not used for positions anymore)
-let getStoreState = null;
-export const setStoreGetter = (getter) => {
-  getStoreState = getter;
-};
-
 // Factory function to create initial panels with default dancer positions and shapes
 const createInitialPanel = () => {
   // Positions are ALWAYS based on fixed canvas size, regardless of zoom/panel size
