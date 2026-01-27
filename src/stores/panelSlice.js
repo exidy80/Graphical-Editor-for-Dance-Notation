@@ -112,6 +112,12 @@ const createPanelSlice = (set, get, api) => ({
       lockUi: { active: false, selected: [] },
       documentTitle: 'Untitled Dance',
       currentFileHandle: null,
+      hasUnsavedChanges: false,
+      lastSaveTime: Date.now(),
+      opacity: {
+        dancers: { value: 1, disabled: false },
+        symbols: { value: 1, disabled: false },
+      },
     });
 
     // Clear undo/redo history via zundo temporal store
