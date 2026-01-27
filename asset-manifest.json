@@ -1,14 +1,14 @@
 {
   "files": {
     "main.css": "/Graphical-Editor-for-Dance-Notation/static/css/main.d107d280.css",
-    "main.js": "/Graphical-Editor-for-Dance-Notation/static/js/main.2aad914a.js",
+    "main.js": "/Graphical-Editor-for-Dance-Notation/static/js/main.a3b23f0b.js",
     "static/js/239.0e0176f2.chunk.js": "/Graphical-Editor-for-Dance-Notation/static/js/239.0e0176f2.chunk.js",
     "static/js/389.dc258eed.chunk.js": "/Graphical-Editor-for-Dance-Notation/static/js/389.dc258eed.chunk.js",
     "static/js/977.238143dc.chunk.js": "/Graphical-Editor-for-Dance-Notation/static/js/977.238143dc.chunk.js",
     "static/js/455.9080b5fb.chunk.js": "/Graphical-Editor-for-Dance-Notation/static/js/455.9080b5fb.chunk.js",
     "index.html": "/Graphical-Editor-for-Dance-Notation/index.html",
     "main.d107d280.css.map": "/Graphical-Editor-for-Dance-Notation/static/css/main.d107d280.css.map",
-    "main.2aad914a.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/main.2aad914a.js.map",
+    "main.a3b23f0b.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/main.a3b23f0b.js.map",
     "239.0e0176f2.chunk.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/239.0e0176f2.chunk.js.map",
     "389.dc258eed.chunk.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/389.dc258eed.chunk.js.map",
     "977.238143dc.chunk.js.map": "/Graphical-Editor-for-Dance-Notation/static/js/977.238143dc.chunk.js.map",
@@ -16,6 +16,6 @@
   },
   "entrypoints": [
     "static/css/main.d107d280.css",
-    "static/js/main.2aad914a.js"
+    "static/js/main.a3b23f0b.js"
   ]
 }
