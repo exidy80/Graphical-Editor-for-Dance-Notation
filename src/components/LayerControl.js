@@ -77,15 +77,13 @@ const LayerControl = () => {
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const setSelectedShapeId = useAppStore((state) => state.setSelectedShapeId);
 
-  // Handler: Bring to front
+  // Handler: Bring to front (all panels)
   const handleBringToFront = (catIdx) => {
-    if (!selectedPanel) return;
     const catKey = LAYER_CATEGORIES[catIdx].key;
     setPanels(
       panels.map((panel) => {
-        if (panel.id !== selectedPanel) return panel;
         if (catKey === 'body') {
-          // Move all dancers to end (front)
+          // Move all dancers to end (front) (no-op unless you want to reorder dancers)
           return { ...panel, dancers: [...panel.dancers] };
         }
         // Move all shapes of this category to the end (front)
@@ -100,15 +98,13 @@ const LayerControl = () => {
     );
   };
 
-  // Handler: Send to back
+  // Handler: Send to back (all panels)
   const handleSendToBack = (catIdx) => {
-    if (!selectedPanel) return;
     const catKey = LAYER_CATEGORIES[catIdx].key;
     setPanels(
       panels.map((panel) => {
-        if (panel.id !== selectedPanel) return panel;
         if (catKey === 'body') {
-          // Move all dancers to start (back)
+          // Move all dancers to start (back) (no-op unless you want to reorder dancers)
           return { ...panel, dancers: [...panel.dancers] };
         }
         // Move all shapes of this category to the start (back)
@@ -123,16 +119,15 @@ const LayerControl = () => {
     );
   };
 
-  // Handler: Lock/Unlock
+  // Handler: Lock/Unlock (global)
   const handleToggleLock = (catIdx) => {
     setLocked((prev) => {
       const newLocked = [...prev];
       newLocked[catIdx] = !newLocked[catIdx];
-      // Deselect if currently selected shape/dancer is in this category
+      // Deselect if any selected shape in any panel is in this category
       if (selectedShapeId && panels) {
-        const panel = panels.find((p) => p.id === selectedPanel);
-        if (panel) {
-          const catKey = LAYER_CATEGORIES[catIdx].key;
+        const catKey = LAYER_CATEGORIES[catIdx].key;
+        for (const panel of panels) {
           if (catKey === 'body') {
             // Deselect if a dancer is selected (not handled here, but could be in store)
           } else {
