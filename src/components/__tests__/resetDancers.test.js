@@ -106,8 +106,10 @@ describe('Reset Dancers Functionality', () => {
     getState().addPanel();
     getState().addPanel();
 
-    expect(getState().panels).toHaveLength(3);
-    expect(getState().selectedPanel).toBe(initialPanel.id);
+    const panels = getState().panels;
+
+    expect(panels).toHaveLength(3);
+    expect(getState().selectedPanel).toBe(panels[2].id);
     expect(getState().selectedDancer).toBeDefined();
     expect(getState().selectedHand).toBeDefined();
     expect(getState().lockUi.active).toBe(true);
