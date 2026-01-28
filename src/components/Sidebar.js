@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LayerControl from './LayerControl';
 import { useAppStore } from '../stores';
 import { footworkTabConfig } from './FootworkTab';
 import { movementTabConfig } from './MovementTab';
@@ -83,6 +84,9 @@ const Sidebar = () => {
           />
         )}
       </div>
+
+      {/* Layers Control Panel */}
+      <LayerControl />
     </div>
   );
 };
