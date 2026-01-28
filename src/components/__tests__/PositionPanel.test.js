@@ -35,5 +35,3 @@ test('clonePanel selects the newly cloned panel', () => {
   const selectedPanel = useAppStore.getState().selectedPanel;
   expect(selectedPanel).toBe(panels[panels.length - 1].id);
 });
-
-
