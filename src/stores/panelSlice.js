@@ -72,6 +72,16 @@ const createPanelSlice = (set, get, api) => ({
       ? _recenterPanel(clonedPanel, stageNext)
       : clonedPanel;
 
+    const stageX = recenteredPanel.shapes.find(
+      (shape) => shape.type === ShapeTypes.STAGE_X,
+    );
+
+    // move stageX to center
+    if (stageX) {
+      stageX.x = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
+      stageX.y = UI_DIMENSIONS.CANVAS_SIZE.height / 2;
+    }
+
     set((state) => {
       const index = state.panels.findIndex((p) => p.id === panelId);
       const newPanels = [...state.panels];

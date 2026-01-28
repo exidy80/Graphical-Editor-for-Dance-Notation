@@ -1,6 +1,7 @@
 import { act } from '@testing-library/react';
 import { useAppStore } from '../../stores';
 import * as ShapeTypes from '../../constants/shapeTypes';
+import { UI_DIMENSIONS } from 'utils/dimensions';
 
 describe('useAppStore', () => {
   beforeEach(() => {
@@ -313,9 +314,8 @@ describe('useAppStore', () => {
   test('clonePanel recenters panel around stageNext', () => {
     const { getState, setState } = useAppStore;
     const panel = getState().panels[0];
-    const panelSize = getState().panelSize;
-    const centerX = panelSize.width / 2;
-    const centerY = panelSize.height / 2;
+    const centerX = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
+    const centerY = UI_DIMENSIONS.CANVAS_SIZE.height / 2;
 
     // Set selected panel for shape drawing
     act(() => setState({ selectedPanel: panel.id }, false));
