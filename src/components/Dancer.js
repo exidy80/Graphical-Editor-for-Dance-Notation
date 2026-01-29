@@ -465,6 +465,9 @@ const Dancer = ({
           } //The two thickness options to toggle between
           hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH} // Consistent hitbox
           onClick={(e) => handleArmClick(side, 'Upper')(e)}
+          shadowColor={isGlowing ? dancer.colour : null}
+          shadowBlur={isGlowing ? 15 : 0}
+          shadowOpacity={isGlowing ? 1 : 0}
         />
         <Line
           ref={side === 'left' ? leftLowerArmRef : rightLowerArmRef}
@@ -474,6 +477,9 @@ const Dancer = ({
               ? ARM_THICKNESS.THICK
               : ARM_THICKNESS.THIN
           }
+          shadowColor={isGlowing ? dancer.colour : null}
+          shadowBlur={isGlowing ? 15 : 0}
+          shadowOpacity={isGlowing ? 1 : 0}
           hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH} // Consistent hitbox
           onClick={(e) => handleArmClick(side, 'Lower')(e)}
         />
@@ -488,6 +494,9 @@ const Dancer = ({
           onDragEnd={handlePartDragEndCallback('Elbow', side)}
           onMouseEnter={handleElbowMouseEnter}
           onMouseLeave={handleElbowMouseLeave}
+          shadowColor={isGlowing ? dancer.colour : null}
+          shadowBlur={isGlowing ? 15 : 0}
+          shadowOpacity={isGlowing ? 1 : 0}
         />
         {renderHand(side)}
       </Group>
@@ -511,9 +520,6 @@ const Dancer = ({
         onTransform={handleTransform}
         onTransformEnd={handleTransformEnd}
         data-testid={`dancer-body-${dancer.id}`}
-        shadowColor={isGlowing ? dancer.colour : null}
-        shadowBlur={isGlowing ? 15 : 0}
-        shadowOpacity={isGlowing ? 1 : 0}
       >
         {renderHead()}
         <Rect
@@ -523,6 +529,9 @@ const Dancer = ({
           fill={dancer.colour}
           y={headSize / 4}
           offsetX={bodyWidth / 2}
+          shadowColor={isGlowing ? dancer.colour : null}
+          shadowBlur={isGlowing ? 15 : 0}
+          shadowOpacity={isGlowing ? 1 : 0}
         />
         {['left', 'right'].map((side) => renderArm(side))}
       </Group>
