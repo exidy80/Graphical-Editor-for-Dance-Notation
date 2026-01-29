@@ -12,6 +12,8 @@ const Canvas = ({ panelId }) => {
   const selectedDancer = useAppStore((state) => state.selectedDancer);
   const selectedHand = useAppStore((state) => state.selectedHand);
   const handFlash = useAppStore((state) => state.handFlash);
+  const symbolFlash = useAppStore((state) => state.symbolFlash);
+  const dancerFlash = useAppStore((state) => state.dancerFlash);
   const handleCanvasClick = useAppStore((state) => state.handleCanvasClick);
   const handleDancerSelection = useAppStore(
     (state) => state.handleDancerSelection,
@@ -69,6 +71,10 @@ const Canvas = ({ panelId }) => {
             selectedShapeId.panelId === panelId &&
             selectedShapeId.shapeId === shape.id;
 
+          // Check if this symbol should glow
+          const isGlowing = symbolFlash.some(
+            (f) => f.panelId === panelId && f.symbolId === shape.id,
+          );
           return (
             <Symbol
               key={shape.id}
@@ -78,6 +84,7 @@ const Canvas = ({ panelId }) => {
               opacity={opacity.symbols.value}
               onShapeSelect={boundHandleShapeSelection}
               onUpdateShapeState={boundUpdateShapeState}
+              isGlowing={isGlowing}
             />
           );
         })}
@@ -113,6 +120,10 @@ const Canvas = ({ panelId }) => {
             (h) => h.panelId === panelId && h.dancerId === dancer.id,
           );
 
+          // Check if this dancer should glow
+          const isGlowing = dancerFlash.some(
+            (f) => f.panelId === panelId && f.dancerId === dancer.id,
+          );
           return (
             <Dancer
               key={dancer.id}
@@ -131,6 +142,7 @@ const Canvas = ({ panelId }) => {
               onUpdateHandRotation={boundUpdateHandRotation}
               onDragStart={startDragMode}
               onDragEnd={endDragMode}
+              isGlowing={isGlowing}
             />
           );
         })}
