@@ -27,9 +27,15 @@ const initialState = () => {
     savedData.panels.length > 0
   ) {
     console.log('Restoring from auto-save...');
+    const loadedZoom = savedData.globalZoomLevel || 1.0;
     return {
-      panelSize: savedData.panelSize || UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
-      globalZoomLevel: savedData.globalZoomLevel || 1.0,
+      globalZoomLevel: loadedZoom,
+      panelSize: {
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * loadedZoom),
+        height: Math.round(
+          UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * loadedZoom,
+        ),
+      },
       selectedPanel: null, // Reset UI state
       selectedHand: null,
       selectedDancer: null,

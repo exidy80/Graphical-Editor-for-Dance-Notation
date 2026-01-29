@@ -197,18 +197,13 @@ const createUISlice = (set, get) => ({
     const state = get();
     const oldZoom = state.globalZoomLevel;
     const newZoom = Math.min(MAX_ZOOM, oldZoom + ZOOM_INCREMENT);
-
     if (oldZoom === newZoom) return; // Already at max
-
-    const newPanelSize = {
-      width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
-      height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
-    };
-
-    // Only change zoom and panel size - positions stay fixed on canvas
     set({
       globalZoomLevel: newZoom,
-      panelSize: newPanelSize,
+      panelSize: {
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
+        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+      },
     });
   },
 
@@ -216,18 +211,13 @@ const createUISlice = (set, get) => ({
     const state = get();
     const oldZoom = state.globalZoomLevel;
     const newZoom = Math.max(MIN_ZOOM, oldZoom - ZOOM_INCREMENT);
-
     if (oldZoom === newZoom) return; // Already at min
-
-    const newPanelSize = {
-      width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
-      height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
-    };
-
-    // Only change zoom and panel size - positions stay fixed on canvas
     set({
       globalZoomLevel: newZoom,
-      panelSize: newPanelSize,
+      panelSize: {
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
+        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+      },
     });
   },
 
