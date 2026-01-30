@@ -1,5 +1,5 @@
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { useAppStore } from '../../stores';
 import Canvas from '../Canvas';
 
@@ -12,11 +12,9 @@ describe('Generalized glow/flash mechanism', () => {
     // Simulate a generalized flash action (not yet implemented)
     useAppStore.getState().queueSymbolFlash(panel.id, symbol.id);
     render(<Canvas panelId={panel.id} />);
-    // This assertion will fail until the feature is implemented
-    // (You would check for a class, style, or prop indicating a glow)
-    // Example (pseudo):
-    // expect(screen.getByTestId(`symbol-${symbol.id}`)).toHaveClass('glow');
-    expect(false).toBe(true);
+    // Assert the symbol is glowing
+    const symbolNode = screen.getByTestId(`symbol-${symbol.id}`);
+    expect(symbolNode.className).toMatch(/glow/);
   });
 
   test('can trigger glow for a dancer body by id', () => {
@@ -25,9 +23,8 @@ describe('Generalized glow/flash mechanism', () => {
     // Simulate a generalized flash action (not yet implemented)
     useAppStore.getState().queueDancerFlash(panel.id, dancer.id);
     render(<Canvas panelId={panel.id} />);
-    // This assertion will fail until the feature is implemented
-    // Example (pseudo):
-    // expect(screen.getByTestId(`dancer-body-${dancer.id}`)).toHaveClass('glow');
-    expect(false).toBe(true);
+    // Assert the dancer body is glowing
+    const dancerNode = screen.getByTestId(`dancer-body-${dancer.id}`);
+    expect(dancerNode.className).toMatch(/glow/);
   });
 });

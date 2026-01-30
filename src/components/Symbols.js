@@ -28,6 +28,7 @@ const Symbol = ({
   opacity,
   onShapeSelect,
   onUpdateShapeState,
+  isGlowing,
 }) => {
   const shapeRef = useRef();
   const trRef = useRef();
@@ -119,6 +120,10 @@ const Symbol = ({
     onClick: handleClick,
     onDragEnd: handleDragEnd,
     strokeScaleEnabled: false,
+    'data-testid': `symbol-${shape.id}`,
+    shadowColor: isGlowing ? shape.stroke || shape.fill || 'yellow' : null,
+    shadowBlur: isGlowing ? 15 : 0,
+    shadowOpacity: isGlowing ? 1 : 0,
   };
 
   // Check if it's a spin symbol

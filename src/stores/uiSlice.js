@@ -8,6 +8,35 @@ const MAX_ZOOM = 2.0;
 const createUISlice = (set, get) => ({
   // State (some initial state set in index.js)
   handFlash: [], // transient effects for visual feedback on hands
+  symbolFlash: [], // transient effects for visual feedback on symbols
+  dancerFlash: [], // transient effects for visual feedback on dancers
+  // Generalized flash for symbols
+  queueSymbolFlash: (panelId, symbolId, duration = 500) => {
+    const entry = { panelId, symbolId };
+    set((state) => ({ symbolFlash: [...state.symbolFlash, entry] }));
+
+    setTimeout(() => {
+      set((state) => ({
+        symbolFlash: state.symbolFlash.filter(
+          (f) => !(f.panelId === panelId && f.symbolId === symbolId),
+        ),
+      }));
+    }, duration);
+  },
+
+  // Generalized flash for dancers
+  queueDancerFlash: (panelId, dancerId, duration = 500) => {
+    const entry = { panelId, dancerId };
+    set((state) => ({ dancerFlash: [...state.dancerFlash, entry] }));
+
+    setTimeout(() => {
+      set((state) => ({
+        dancerFlash: state.dancerFlash.filter(
+          (f) => !(f.panelId === panelId && f.dancerId === dancerId),
+        ),
+      }));
+    }, duration);
+  },
 
   // Hand-locking UI state (group selection)
   lockUi: { active: false, selected: [] },

@@ -31,6 +31,7 @@ const Dancer = ({
   onUpdateHandRotation,
   onDragStart,
   onDragEnd,
+  isGlowing,
 }) => {
   const dancerRef = useRef();
   const headRef = useRef();
@@ -509,6 +510,10 @@ const Dancer = ({
         onDragEnd={handleDragEnd}
         onTransform={handleTransform}
         onTransformEnd={handleTransformEnd}
+        data-testid={`dancer-body-${dancer.id}`}
+        shadowColor={isGlowing ? dancer.colour : null}
+        shadowBlur={isGlowing ? 15 : 0}
+        shadowOpacity={isGlowing ? 1 : 0}
       >
         {renderHead()}
         <Rect

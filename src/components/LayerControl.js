@@ -35,21 +35,21 @@ const MOVEMENT_TYPES = new Set([
   ShapeTypes.SPIN_QUARTER_CCW,
 ]);
 
+// All signal-related types from ShapeTypes
 const SIGNALS_TYPES = new Set([
-  'filledDiamond',
-  'emptyDiamond',
-  'rect',
-  'emptyCircle',
-  'filledCircle',
   ShapeTypes.SIGNAL,
+  ShapeTypes.BLOCK,
+  ShapeTypes.SPLIT_HANDS,
+  ShapeTypes.LINK_HANDS,
+  ShapeTypes.OVERHEAD,
+  ShapeTypes.SHOULDER,
+  ShapeTypes.WAIST,
+  ShapeTypes.HIP,
+  ShapeTypes.KNEE,
 ]);
 
-// Feet: all IMAGE types from shapeMapping
-const FEET_TYPES = new Set(
-  Object.values(shapeMapping)
-    .filter((s) => s.type === ShapeTypes.IMAGE)
-    .map((s) => s.type),
-);
+// Feet: all IMAGE types (feet symbols) from shapeMapping, but use a unique set of keys for all foot shapes
+const FEET_TYPES = new Set([ShapeTypes.IMAGE]);
 
 const LOCATION_TYPES = new Set([ShapeTypes.STAGE_X, ShapeTypes.STAGE_NEXT]);
 
@@ -73,8 +73,11 @@ const LayerControl = () => {
   const [locked, setLocked] = useState([false, false, false, false, false]);
   const panels = useAppStore((state) => state.panels);
   const setPanels = useAppStore((state) => state.setPanels);
+  const queueDancerFlash = useAppStore((state) => state.queueDancerFlash);
+  const queueSymbolFlash = useAppStore((state) => state.queueSymbolFlash);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const setSelectedShapeId = useAppStore((state) => state.setSelectedShapeId);
+  const handleOpacityChange = useAppStore((state) => state.handleOpacityChange);
 
   // Handler: Bring to front (all panels)
   const handleBringToFront = (catIdx) => {
@@ -82,9 +85,14 @@ const LayerControl = () => {
     setPanels(
       panels.map((panel) => {
         if (catKey === 'body') {
-          // Move all dancers to end (front) (no-op unless you want to reorder dancers)
+          // Glow all dancers
+          panel.dancers.forEach((d) => queueDancerFlash(panel.id, d.id));
           return { ...panel, dancers: [...panel.dancers] };
         }
+        // Glow all shapes of this category
+        panel.shapes.forEach((s) => {
+          if (isShapeInCategory(s, catKey)) queueSymbolFlash(panel.id, s.id);
+        });
         // Move all shapes of this category to the end (front)
         const shapesOfCat = panel.shapes.filter((s) =>
           isShapeInCategory(s, catKey),
@@ -103,9 +111,14 @@ const LayerControl = () => {
     setPanels(
       panels.map((panel) => {
         if (catKey === 'body') {
-          // Move all dancers to start (back) (no-op unless you want to reorder dancers)
+          // Glow all dancers
+          panel.dancers.forEach((d) => queueDancerFlash(panel.id, d.id));
           return { ...panel, dancers: [...panel.dancers] };
         }
+        // Glow all shapes of this category
+        panel.shapes.forEach((s) => {
+          if (isShapeInCategory(s, catKey)) queueSymbolFlash(panel.id, s.id);
+        });
         // Move all shapes of this category to the start (back)
         const shapesOfCat = panel.shapes.filter((s) =>
           isShapeInCategory(s, catKey),
@@ -119,23 +132,30 @@ const LayerControl = () => {
   };
 
   // Handler: Lock/Unlock (global)
+  const lockUi = useAppStore((state) => state.lockUi);
   const handleToggleLock = (catIdx) => {
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    if (catKey === 'body') {
+      // Use the same lock mode as Toolbar for dancers
+      setLocked((prev) => {
+        const newLocked = [...prev];
+        newLocked[catIdx] = !newLocked[catIdx];
+        return newLocked;
+      });
+      handleOpacityChange('dancers');
+      return;
+    }
     setLocked((prev) => {
       const newLocked = [...prev];
       newLocked[catIdx] = !newLocked[catIdx];
       // Deselect if any selected shape in any panel is in this category
       if (selectedShapeId && panels) {
-        const catKey = LAYER_CATEGORIES[catIdx].key;
         for (const panel of panels) {
-          if (catKey === 'body') {
-            // Deselect if a dancer is selected (not handled here, but could be in store)
-          } else {
-            const shape = panel.shapes.find(
-              (s) => s.id === selectedShapeId.shapeId,
-            );
-            if (shape && isShapeInCategory(shape, catKey)) {
-              setSelectedShapeId(null);
-            }
+          const shape = panel.shapes.find(
+            (s) => s.id === selectedShapeId.shapeId,
+          );
+          if (shape && isShapeInCategory(shape, catKey)) {
+            setSelectedShapeId(null);
           }
         }
       }
