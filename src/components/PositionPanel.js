@@ -156,7 +156,7 @@ const PositionPanel = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    addPanel();
+                    addPanel(panel.id);
                   }}
                   style={buttonStyle}
                   title="Add Panel"

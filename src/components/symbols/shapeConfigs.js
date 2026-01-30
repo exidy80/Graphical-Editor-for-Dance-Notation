@@ -133,14 +133,14 @@ export const CURVED_LINE_CONFIGS = {
     numPoints: 6,
     radiusIncrement: 30,
     angleIncrement: Math.PI / 5,
-    startAngle: -Math.PI / 2,
+    startAngle: Math.PI / 2,
     pattern: 'arc',
   },
   [ShapeTypes.HALF_CURVED_LINE_DOWN]: {
     numPoints: 6,
     radiusIncrement: 30,
     angleIncrement: -Math.PI / 5,
-    startAngle: Math.PI / 2,
+    startAngle: -Math.PI / 2,
     pattern: 'arc',
   },
 };

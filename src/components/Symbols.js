@@ -68,10 +68,26 @@ const Symbol = ({
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected, isStageOrigin]);
+
   //handles end of transform and updates the state
   const handleTransformEnd = useCallback(
     (e) => {
       const node = shapeRef.current;
+      let newScaleX = node.scaleX();
+
+      const spinConfig = SPIN_CONFIGS[shape.type];
+
+      if (spinConfig) {
+        // Direction (CW / CCW) is encoded in the config, not in the shape
+        const baseSignX = Math.sign(spinConfig.scaleX ?? 1) || 1;
+
+        // Take the magnitude from the transform, but force the config’s sign
+        newScaleX = Math.abs(newScaleX) * baseSignX;
+
+        // Normalize the node so what you see matches what you store
+        node.scaleX(newScaleX);
+      }
+
       const newState = {
         x: node.x(),
         y: node.y(),
@@ -81,7 +97,7 @@ const Symbol = ({
       };
       onUpdateShapeState(newState);
     },
-    [onUpdateShapeState],
+    [onUpdateShapeState, shape.type],
   );
 
   //Attach or detach transformer when selection changes
