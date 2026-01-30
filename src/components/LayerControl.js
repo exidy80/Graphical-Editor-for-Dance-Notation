@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../stores';
 import * as ShapeTypes from '../constants/shapeTypes';
-import { shapeMapping } from './sidebarConstants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import bringToFrontImg from './images/bring-to-front.png';
@@ -46,6 +45,8 @@ const SIGNALS_TYPES = new Set([
   ShapeTypes.WAIST,
   ShapeTypes.HIP,
   ShapeTypes.KNEE,
+  ShapeTypes.DIRECTION_UP,
+  ShapeTypes.DIRECTION_DOWN,
 ]);
 
 // Feet: all IMAGE types (feet symbols) from shapeMapping, but use a unique set of keys for all foot shapes

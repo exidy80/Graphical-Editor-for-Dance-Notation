@@ -250,8 +250,8 @@ const Symbol = ({
         <KonvaImage
           {...commonProps}
           image={image}
-          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
-          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
+          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
+          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
         />
       )}
       {shape.type === ShapeTypes.STAGE_X && (
