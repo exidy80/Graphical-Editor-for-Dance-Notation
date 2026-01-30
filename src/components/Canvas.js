@@ -71,6 +71,10 @@ const Canvas = ({ panelId }) => {
             selectedShapeId.panelId === panelId &&
             selectedShapeId.shapeId === shape.id;
 
+          const isSymbolDisabled =
+            opacity.disabled.includes(shape.id) || opacity.symbols.disabled;
+          const symbolOpacity = isSymbolDisabled ? 0.5 : opacity.symbols.value;
+
           // Check if this symbol should glow
           const isGlowing = symbolFlash.some(
             (f) => f.panelId === panelId && f.symbolId === shape.id,
@@ -80,8 +84,8 @@ const Canvas = ({ panelId }) => {
               key={shape.id}
               shape={shape}
               isSelected={isSelected}
-              disabled={opacity.symbols.disabled}
-              opacity={opacity.symbols.value}
+              disabled={isSymbolDisabled}
+              opacity={symbolOpacity}
               onShapeSelect={boundHandleShapeSelection}
               onUpdateShapeState={boundUpdateShapeState}
               isGlowing={isGlowing}

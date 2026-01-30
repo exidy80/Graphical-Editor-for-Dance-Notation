@@ -76,9 +76,11 @@ const LayerControl = () => {
   const setPanels = useAppStore((state) => state.setPanels);
   const queueDancerFlash = useAppStore((state) => state.queueDancerFlash);
   const queueSymbolFlash = useAppStore((state) => state.queueSymbolFlash);
-  const selectedShapeId = useAppStore((state) => state.selectedShapeId);
-  const setSelectedShapeId = useAppStore((state) => state.setSelectedShapeId);
   const handleOpacityChange = useAppStore((state) => state.handleOpacityChange);
+  const addToDisableList = useAppStore((state) => state.addToDisableList);
+  const removeFromDisableList = useAppStore(
+    (state) => state.removeFromDisableList,
+  );
 
   // Handler: Bring to front (all panels)
   const handleBringToFront = (catIdx) => {
@@ -133,35 +135,34 @@ const LayerControl = () => {
   };
 
   // Handler: Lock/Unlock (global)
-  const lockUi = useAppStore((state) => state.lockUi);
   const handleToggleLock = (catIdx) => {
-    const catKey = LAYER_CATEGORIES[catIdx].key;
-    if (catKey === 'body') {
-      // Use the same lock mode as Toolbar for dancers
-      setLocked((prev) => {
-        const newLocked = [...prev];
-        newLocked[catIdx] = !newLocked[catIdx];
-        return newLocked;
-      });
-      handleOpacityChange('dancers');
-      return;
-    }
+    const isLocking = !locked[catIdx];
     setLocked((prev) => {
       const newLocked = [...prev];
       newLocked[catIdx] = !newLocked[catIdx];
-      // Deselect if any selected shape in any panel is in this category
-      if (selectedShapeId && panels) {
-        for (const panel of panels) {
-          const shape = panel.shapes.find(
-            (s) => s.id === selectedShapeId.shapeId,
-          );
-          if (shape && isShapeInCategory(shape, catKey)) {
-            setSelectedShapeId(null);
-          }
-        }
-      }
       return newLocked;
     });
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    if (catKey === 'body') {
+      // Use the same lock mode as Toolbar for dancers
+      handleOpacityChange('dancers');
+      return;
+    }
+    if (panels) {
+      // go through all panels and collect all the shapes in this category. use reduce.
+      const shapesInCategory = panels.reduce((acc, panel) => {
+        const shapes = panel.shapes.filter((s) => isShapeInCategory(s, catKey));
+        return acc.concat(shapes);
+      }, []);
+      const shapeIdsInCategory = new Set(shapesInCategory.map((s) => s.id));
+      if (isLocking) {
+        // Add all shapes in this category to disable list
+        addToDisableList(shapeIdsInCategory);
+      } else {
+        // Remove all shapes in this category from disable list
+        removeFromDisableList(shapeIdsInCategory);
+      }
+    }
   };
 
   return (

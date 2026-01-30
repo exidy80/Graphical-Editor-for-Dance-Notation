@@ -139,6 +139,7 @@ const createPanelSlice = (set, get, api) => ({
       opacity: {
         dancers: { value: 1, disabled: false },
         symbols: { value: 1, disabled: false },
+        disabled: [],
       },
     });
 

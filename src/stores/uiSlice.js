@@ -44,6 +44,7 @@ const createUISlice = (set, get) => ({
   opacity: {
     dancers: { value: 1, disabled: false },
     symbols: { value: 1, disabled: false },
+    disabled: [],
   },
 
   // Document state (for file handling)
@@ -103,6 +104,25 @@ const createUISlice = (set, get) => ({
       selectedHand: null,
       selectedShapeId: null,
     });
+  },
+
+  addToDisableList: (list) => {
+    set((state) => ({
+      opacity: {
+        ...state.opacity,
+        disabled: [...state.opacity.disabled, ...list],
+      },
+    }));
+  },
+
+  removeFromDisableList: (list) => {
+    const removeSet = new Set(list);
+    set((state) => ({
+      opacity: {
+        ...state.opacity,
+        disabled: state.opacity.disabled.filter((item) => !removeSet.has(item)),
+      },
+    }));
   },
 
   handleOpacityChange: (type) => {

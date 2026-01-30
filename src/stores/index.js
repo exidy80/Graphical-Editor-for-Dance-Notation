@@ -52,6 +52,7 @@ const initialState = () => {
       opacity: {
         dancers: { value: 1, disabled: false },
         symbols: { value: 1, disabled: false },
+        disabled: [],
       },
       _autoSaveTimer: null,
     };
@@ -77,6 +78,7 @@ const initialState = () => {
     opacity: {
       dancers: { value: 1, disabled: false },
       symbols: { value: 1, disabled: false },
+      disabled: [],
     },
     _autoSaveTimer: null,
   };
