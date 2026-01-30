@@ -72,7 +72,6 @@ function isShapeInCategory(shape, catKey) {
 const LayerControl = () => {
   const [locked, setLocked] = useState([false, false, false, false, false]);
   const panels = useAppStore((state) => state.panels);
-  const selectedPanel = useAppStore((state) => state.selectedPanel);
   const setPanels = useAppStore((state) => state.setPanels);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const setSelectedShapeId = useAppStore((state) => state.setSelectedShapeId);
