@@ -22,7 +22,7 @@ const SignalsTab = ({ selectedPanel, handleShapeDraw }) => {
 
   // Shared styles
   const buttonStyle = {
-    height: '40px',
+    height: '30px',
     backgroundColor: 'white',
     border: '2px solid #ddd',
     borderRadius: '5px',
