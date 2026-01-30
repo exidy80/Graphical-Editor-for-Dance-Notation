@@ -2,7 +2,7 @@
 import createInitialPanel from './panelFactory.js';
 import * as ShapeTypes from '../constants/shapeTypes';
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
-import { DEFAULT_OPACITY } from './index.js';
+import { initialState } from './index.js';
 
 const _recenterPanel = (panel, center) => {
   const canvasCenterX = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
@@ -118,27 +118,7 @@ const createPanelSlice = (set, get, api) => ({
       clearAutoSave();
     }
 
-    // First reset zoom and panel size
-    set({
-      globalZoomLevel: 1.0,
-      panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
-    });
-
-    // Now create initial panel with correct size
-    // Reset to initial state with one panel containing two dancers in default positions
-    set({
-      panels: [createInitialPanel()],
-      selectedPanel: null,
-      selectedDancer: null,
-      selectedHand: null,
-      selectedShapeId: null,
-      lockUi: { active: false, selected: [] },
-      documentTitle: 'Untitled Dance',
-      currentFileHandle: null,
-      hasUnsavedChanges: false,
-      lastSaveTime: Date.now(),
-      opacity: { ...DEFAULT_OPACITY },
-    });
+    set(initialState());
 
     // Clear undo/redo history via zundo temporal store
     const temporalStore = api?.temporal;
