@@ -2,6 +2,7 @@
 import createInitialPanel from './panelFactory.js';
 import * as ShapeTypes from '../constants/shapeTypes';
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
+import { DEFAULT_OPACITY } from './index.js';
 
 const _recenterPanel = (panel, center) => {
   const canvasCenterX = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
@@ -136,11 +137,7 @@ const createPanelSlice = (set, get, api) => ({
       currentFileHandle: null,
       hasUnsavedChanges: false,
       lastSaveTime: Date.now(),
-      opacity: {
-        dancers: { value: 1, disabled: false },
-        symbols: { value: 1, disabled: false },
-        disabled: [],
-      },
+      opacity: { ...DEFAULT_OPACITY },
     });
 
     // Clear undo/redo history via zundo temporal store

@@ -15,6 +15,12 @@ import createSerializationSlice from './serializationSlice.js';
 import createKeystrokeSlice from './keystrokeSlice.js';
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
 
+// Single source of truth for default opacity
+export const DEFAULT_OPACITY = {
+  dancers: { value: 1, disabled: false },
+  symbols: { value: 1, disabled: false },
+  disabled: [],
+};
 // Create initial store with auto-save functionality
 const initialState = () => {
   // Try to restore from auto-save first
@@ -49,11 +55,7 @@ const initialState = () => {
       // UI state that's not persisted
       handFlash: [],
       lockUi: { active: false, selected: [] },
-      opacity: {
-        dancers: { value: 1, disabled: false },
-        symbols: { value: 1, disabled: false },
-        disabled: [],
-      },
+      opacity: { ...DEFAULT_OPACITY },
       _autoSaveTimer: null,
     };
   }
@@ -75,11 +77,7 @@ const initialState = () => {
     // UI state
     handFlash: [],
     lockUi: { active: false, selected: [] },
-    opacity: {
-      dancers: { value: 1, disabled: false },
-      symbols: { value: 1, disabled: false },
-      disabled: [],
-    },
+    opacity: { ...DEFAULT_OPACITY },
     _autoSaveTimer: null,
   };
 };

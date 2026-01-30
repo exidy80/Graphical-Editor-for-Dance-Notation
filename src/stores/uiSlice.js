@@ -41,12 +41,6 @@ const createUISlice = (set, get) => ({
   // Hand-locking UI state (group selection)
   lockUi: { active: false, selected: [] },
 
-  opacity: {
-    dancers: { value: 1, disabled: false },
-    symbols: { value: 1, disabled: false },
-    disabled: [],
-  },
-
   // Document state (for file handling)
   documentTitle: 'Untitled Dance',
   currentFileHandle: null,
