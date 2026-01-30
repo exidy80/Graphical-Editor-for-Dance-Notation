@@ -33,13 +33,19 @@ const createPanelSlice = (set, get, api) => ({
   // Actions (initial state for panels and panelSize is set in index.js)
   setPanels: (panels) => set({ panels }),
 
-  // select the newly added panel
-  addPanel: () => {
+  addPanel: (panelId) => {
     const newPanel = createInitialPanel();
-    set((state) => ({
-      panels: [...state.panels, newPanel],
-      selectedPanel: newPanel.id,
-    }));
+    set((state) => {
+      if (!panelId)
+        return {
+          panels: [...state.panels, newPanel],
+          selectedPanel: newPanel.id,
+        };
+      const index = state.panels.findIndex((p) => p.id === panelId);
+      const newPanels = [...state.panels];
+      newPanels.splice(index + 1, 0, newPanel);
+      return { panels: newPanels, selectedPanel: newPanel.id };
+    });
   },
 
   deleteSelectedPanel: (panelId) => {
