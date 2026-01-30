@@ -172,7 +172,7 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
         </defs>
 
         <path
-          d={isUp ? 'M20 24 Q 4 16 20 8' : 'M12 8 Q 28 16 12 24'}
+          d={isUp ? 'M20 24 Q 4 16 20 8' : 'M20 8 Q 4 16 20 24'}
           stroke={lineColor}
           strokeWidth="2"
           strokeDasharray="4 4"
