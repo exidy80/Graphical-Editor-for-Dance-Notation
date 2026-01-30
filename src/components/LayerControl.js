@@ -1,126 +1,275 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useAppStore } from '../stores';
+import * as ShapeTypes from '../constants/shapeTypes';
+import { shapeMapping } from './sidebarConstants';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import bringToFrontImg from './images/bring-to-front.png';
 import sendToBackImg from './images/send-to-back.png';
 
-const LayerControl = () => (
-  <div
-    style={{
-      backgroundColor: '#fff',
-      borderTop: '2px solid #ddd',
-      padding: '15px',
-    }}
-  >
-    <h3
-      style={{
-        margin: '0 0 12px 0',
-        fontSize: '16px',
-        fontWeight: 'bold',
-      }}
-    >
-      Layers
-    </h3>
+// Define type sets for each category
+const MOVEMENT_TYPES = new Set([
+  ShapeTypes.STRAIGHT_LINE,
+  ShapeTypes.STRAIGHT_LINE_UP,
+  ShapeTypes.STRAIGHT_LINE_DOWN,
+  ShapeTypes.QUARTER_CURVED_LINE,
+  ShapeTypes.QUARTER_CURVED_LINE_UP,
+  ShapeTypes.QUARTER_CURVED_LINE_DOWN,
+  ShapeTypes.HALF_CURVED_LINE,
+  ShapeTypes.HALF_CURVED_LINE_UP,
+  ShapeTypes.HALF_CURVED_LINE_DOWN,
+  ShapeTypes.SPIN_TWO,
+  ShapeTypes.SPIN_TWO_CW,
+  ShapeTypes.SPIN_TWO_CCW,
+  ShapeTypes.SPIN_ONE_AND_HALF,
+  ShapeTypes.SPIN_ONE_AND_HALF_CW,
+  ShapeTypes.SPIN_ONE_AND_HALF_CCW,
+  ShapeTypes.SPIN_ONE,
+  ShapeTypes.SPIN_ONE_CW,
+  ShapeTypes.SPIN_ONE_CCW,
+  ShapeTypes.SPIN_HALF,
+  ShapeTypes.SPIN_HALF_CW,
+  ShapeTypes.SPIN_HALF_CCW,
+  ShapeTypes.SPIN_QUARTER,
+  ShapeTypes.SPIN_QUARTER_CW,
+  ShapeTypes.SPIN_QUARTER_CCW,
+]);
+
+const SIGNALS_TYPES = new Set([
+  'filledDiamond',
+  'emptyDiamond',
+  'rect',
+  'emptyCircle',
+  'filledCircle',
+  ShapeTypes.SIGNAL,
+]);
+
+// Feet: all IMAGE types from shapeMapping
+const FEET_TYPES = new Set(
+  Object.values(shapeMapping)
+    .filter((s) => s.type === ShapeTypes.IMAGE)
+    .map((s) => s.type),
+);
+
+const LOCATION_TYPES = new Set([ShapeTypes.STAGE_X, ShapeTypes.STAGE_NEXT]);
+
+const LAYER_CATEGORIES = [
+  { label: 'Body', key: 'body' },
+  { label: 'Movement', key: 'movement' },
+  { label: 'Signals', key: 'signals' },
+  { label: 'Feet', key: 'feet' },
+  { label: 'Location', key: 'location' },
+];
+
+function isShapeInCategory(shape, catKey) {
+  if (catKey === 'movement') return MOVEMENT_TYPES.has(shape.type);
+  if (catKey === 'signals') return SIGNALS_TYPES.has(shape.type);
+  if (catKey === 'feet') return FEET_TYPES.has(shape.type);
+  if (catKey === 'location') return LOCATION_TYPES.has(shape.type);
+  return false;
+}
+
+const LayerControl = () => {
+  const [locked, setLocked] = useState([false, false, false, false, false]);
+  const panels = useAppStore((state) => state.panels);
+  const selectedPanel = useAppStore((state) => state.selectedPanel);
+  const setPanels = useAppStore((state) => state.setPanels);
+  const selectedShapeId = useAppStore((state) => state.selectedShapeId);
+  const setSelectedShapeId = useAppStore((state) => state.setSelectedShapeId);
+
+  // Handler: Bring to front
+  const handleBringToFront = (catIdx) => {
+    if (!selectedPanel) return;
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    setPanels(
+      panels.map((panel) => {
+        if (panel.id !== selectedPanel) return panel;
+        if (catKey === 'body') {
+          // Move all dancers to end (front)
+          return { ...panel, dancers: [...panel.dancers] };
+        }
+        // Move all shapes of this category to the end (front)
+        const shapesOfCat = panel.shapes.filter((s) =>
+          isShapeInCategory(s, catKey),
+        );
+        const shapesOther = panel.shapes.filter(
+          (s) => !isShapeInCategory(s, catKey),
+        );
+        return { ...panel, shapes: [...shapesOther, ...shapesOfCat] };
+      }),
+    );
+  };
+
+  // Handler: Send to back
+  const handleSendToBack = (catIdx) => {
+    if (!selectedPanel) return;
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    setPanels(
+      panels.map((panel) => {
+        if (panel.id !== selectedPanel) return panel;
+        if (catKey === 'body') {
+          // Move all dancers to start (back)
+          return { ...panel, dancers: [...panel.dancers] };
+        }
+        // Move all shapes of this category to the start (back)
+        const shapesOfCat = panel.shapes.filter((s) =>
+          isShapeInCategory(s, catKey),
+        );
+        const shapesOther = panel.shapes.filter(
+          (s) => !isShapeInCategory(s, catKey),
+        );
+        return { ...panel, shapes: [...shapesOfCat, ...shapesOther] };
+      }),
+    );
+  };
+
+  // Handler: Lock/Unlock
+  const handleToggleLock = (catIdx) => {
+    setLocked((prev) => {
+      const newLocked = [...prev];
+      newLocked[catIdx] = !newLocked[catIdx];
+      // Deselect if currently selected shape/dancer is in this category
+      if (selectedShapeId && panels) {
+        const panel = panels.find((p) => p.id === selectedPanel);
+        if (panel) {
+          const catKey = LAYER_CATEGORIES[catIdx].key;
+          if (catKey === 'body') {
+            // Deselect if a dancer is selected (not handled here, but could be in store)
+          } else {
+            const shape = panel.shapes.find(
+              (s) => s.id === selectedShapeId.shapeId,
+            );
+            if (shape && isShapeInCategory(shape, catKey)) {
+              setSelectedShapeId(null);
+            }
+          }
+        }
+      }
+      return newLocked;
+    });
+  };
+
+  return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(5, 1fr)',
-        gap: '8px',
+        backgroundColor: '#fff',
+        borderTop: '2px solid #ddd',
+        padding: '15px',
       }}
     >
-      {/* Column headers */}
-      {['Body', 'Movement', 'Signals', 'Feet', 'Location'].map((label) => (
-        <div
-          key={label}
-          style={{
-            fontSize: '14px',
-            textAlign: 'center',
-            fontWeight: '500',
-            marginBottom: '4px',
-            writingMode: 'vertical-rl',
-            textOrientation: 'mixed',
-            transform: 'rotate(180deg)',
-            height: '70px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {label}
-        </div>
-      ))}
-      {/* Bring to front buttons */}
-      {[...Array(5)].map((_, i) => (
-        <button
-          key={`front-${i}`}
-          style={{
-            padding: '5px',
-            border: '2px solid #333',
-            borderRadius: '4px',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-          }}
-          title="Bring to front"
-        >
-          <img
-            src={bringToFrontImg}
-            alt="Bring to front"
-            style={{ width: 28, height: 28 }}
-          />
-        </button>
-      ))}
-      {/* Send to back buttons */}
-      {[...Array(5)].map((_, i) => (
-        <button
-          key={`back-${i}`}
-          style={{
-            padding: '5px',
-            border: '2px solid #333',
-            borderRadius: '4px',
-            backgroundColor: '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-          }}
-          title="Send to back"
-        >
-          <img
-            src={sendToBackImg}
-            alt="Send to back"
-            style={{ width: 28, height: 28 }}
-          />
-        </button>
-      ))}
-      {/* Lock/Unlock toggles */}
-      {[...Array(5)].map((_, i) => (
-        <button
-          key={`lock-${i}`}
-          style={{
-            width: '38px',
-            height: '38px',
-            border: '2px solid #333',
-            borderRadius: '4px',
-            backgroundColor: i >= 3 ? '#999' : '#fff',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '20px',
-            padding: 0,
-          }}
-          title={i >= 3 ? 'Locked' : 'Unlocked'}
-        >
-          <FontAwesomeIcon icon={i >= 3 ? faLock : faLockOpen} />
-        </button>
-      ))}
+      <h3
+        style={{
+          margin: '0 0 12px 0',
+          fontSize: '16px',
+          fontWeight: 'bold',
+        }}
+      >
+        Layers
+      </h3>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '8px',
+        }}
+      >
+        {/* Column headers */}
+        {LAYER_CATEGORIES.map((cat) => (
+          <div
+            key={cat.key}
+            style={{
+              fontSize: '14px',
+              textAlign: 'center',
+              fontWeight: '500',
+              marginBottom: '4px',
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)',
+              height: '70px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {cat.label}
+          </div>
+        ))}
+        {/* Bring to front buttons */}
+        {LAYER_CATEGORIES.map((cat, i) => (
+          <button
+            key={`front-${cat.key}`}
+            style={{
+              padding: '5px',
+              border: '2px solid #333',
+              borderRadius: '4px',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+            }}
+            title="Bring to front"
+            onClick={() => handleBringToFront(i)}
+          >
+            <img
+              src={bringToFrontImg}
+              alt="Bring to front"
+              style={{ width: 28, height: 28 }}
+            />
+          </button>
+        ))}
+        {/* Send to back buttons */}
+        {LAYER_CATEGORIES.map((cat, i) => (
+          <button
+            key={`back-${cat.key}`}
+            style={{
+              padding: '5px',
+              border: '2px solid #333',
+              borderRadius: '4px',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+            }}
+            title="Send to back"
+            onClick={() => handleSendToBack(i)}
+          >
+            <img
+              src={sendToBackImg}
+              alt="Send to back"
+              style={{ width: 28, height: 28 }}
+            />
+          </button>
+        ))}
+        {/* Lock/Unlock toggles */}
+        {LAYER_CATEGORIES.map((cat, i) => (
+          <button
+            key={`lock-${cat.key}`}
+            style={{
+              width: '38px',
+              height: '38px',
+              border: '2px solid #333',
+              borderRadius: '4px',
+              backgroundColor: locked[i] ? '#999' : '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              padding: 0,
+            }}
+            title={locked[i] ? 'Locked' : 'Unlocked'}
+            onClick={() => handleToggleLock(i)}
+          >
+            <FontAwesomeIcon icon={locked[i] ? faLock : faLockOpen} />
+          </button>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default LayerControl;
