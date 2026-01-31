@@ -106,6 +106,7 @@ const LayerControl = () => {
         return { ...panel, shapes: [...shapesOther, ...shapesOfCat] };
       }),
     );
+    _handleLock(catIdx, false);
   };
 
   // Handler: Send to back (all panels)
@@ -134,17 +135,18 @@ const LayerControl = () => {
     );
   };
 
-  // Handler: Lock/Unlock (global)
-  const handleToggleLock = (catIdx) => {
-    const isLocking = !locked[catIdx];
+  const _handleLock = (catIdx, shouldLock = true) => {
+    // if catIdx is already in the correct state, do nothing
+    if (locked[catIdx] === shouldLock) return;
     setLocked((prev) => {
       const newLocked = [...prev];
-      newLocked[catIdx] = !newLocked[catIdx];
+      newLocked[catIdx] = shouldLock;
       return newLocked;
     });
     const catKey = LAYER_CATEGORIES[catIdx].key;
     if (catKey === 'body') {
       // Use the same lock mode as Toolbar for dancers
+      // if we are at this point, we know we are changing the lock state
       handleOpacityChange('dancers');
       return;
     }
@@ -155,7 +157,7 @@ const LayerControl = () => {
         return acc.concat(shapes);
       }, []);
       const shapeIdsInCategory = new Set(shapesInCategory.map((s) => s.id));
-      if (isLocking) {
+      if (shouldLock) {
         // Add all shapes in this category to disable list
         addToDisableList(shapeIdsInCategory);
       } else {
@@ -163,6 +165,12 @@ const LayerControl = () => {
         removeFromDisableList(shapeIdsInCategory);
       }
     }
+  };
+
+  // Handler: Lock/Unlock (global)
+  const handleToggleLock = (catIdx) => {
+    const isLocking = !locked[catIdx];
+    _handleLock(catIdx, isLocking);
   };
 
   return (
