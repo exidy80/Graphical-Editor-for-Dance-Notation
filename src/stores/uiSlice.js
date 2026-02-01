@@ -1,5 +1,6 @@
 // UI state slice - handles selection state, opacity, visual effects, and other UI concerns
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
+import { LAYER_KEYS } from '../utils/layersConfig.js';
 
 const ZOOM_INCREMENT = 0.1;
 const MIN_ZOOM = 1.0;
@@ -8,14 +9,46 @@ const MAX_ZOOM = 2.0;
 const createUISlice = (set, get) => ({
   // State (some initial state set in index.js)
   handFlash: [], // transient effects for visual feedback on hands
+  symbolFlash: [], // transient effects for visual feedback on symbols
+  dancerFlash: [], // transient effects for visual feedback on dancers
+  // Generalized flash for symbols
+  queueSymbolFlash: (panelId, symbolId, duration = 500) => {
+    const entry = { panelId, symbolId };
+    set((state) => ({ symbolFlash: [...state.symbolFlash, entry] }));
+
+    setTimeout(() => {
+      set((state) => ({
+        symbolFlash: state.symbolFlash.filter(
+          (f) => !(f.panelId === panelId && f.symbolId === symbolId),
+        ),
+      }));
+    }, duration);
+  },
+
+  // Generalized flash for dancers
+  queueDancerFlash: (panelId, dancerId, duration = 500) => {
+    const entry = { panelId, dancerId };
+    set((state) => ({ dancerFlash: [...state.dancerFlash, entry] }));
+
+    setTimeout(() => {
+      set((state) => ({
+        dancerFlash: state.dancerFlash.filter(
+          (f) => !(f.panelId === panelId && f.dancerId === dancerId),
+        ),
+      }));
+    }, duration);
+  },
 
   // Hand-locking UI state (group selection)
   lockUi: { active: false, selected: [] },
 
-  opacity: {
-    dancers: { value: 1, disabled: false },
-    symbols: { value: 1, disabled: false },
-  },
+  // Layer order
+  layerOrder: LAYER_KEYS,
+  setLayerOrder: (updater) =>
+    set((state) => ({
+      layerOrder:
+        typeof updater === 'function' ? updater(state.layerOrder) : updater,
+    })),
 
   // Document state (for file handling)
   documentTitle: 'Untitled Dance',
@@ -74,6 +107,25 @@ const createUISlice = (set, get) => ({
       selectedHand: null,
       selectedShapeId: null,
     });
+  },
+
+  addToDisableList: (list) => {
+    set((state) => ({
+      opacity: {
+        ...state.opacity,
+        disabled: [...state.opacity.disabled, ...list],
+      },
+    }));
+  },
+
+  removeFromDisableList: (list) => {
+    const removeSet = new Set(list);
+    set((state) => ({
+      opacity: {
+        ...state.opacity,
+        disabled: state.opacity.disabled.filter((item) => !removeSet.has(item)),
+      },
+    }));
   },
 
   handleOpacityChange: (type) => {
@@ -168,18 +220,13 @@ const createUISlice = (set, get) => ({
     const state = get();
     const oldZoom = state.globalZoomLevel;
     const newZoom = Math.min(MAX_ZOOM, oldZoom + ZOOM_INCREMENT);
-
     if (oldZoom === newZoom) return; // Already at max
-
-    const newPanelSize = {
-      width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
-      height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
-    };
-
-    // Only change zoom and panel size - positions stay fixed on canvas
     set({
       globalZoomLevel: newZoom,
-      panelSize: newPanelSize,
+      panelSize: {
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
+        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+      },
     });
   },
 
@@ -187,18 +234,13 @@ const createUISlice = (set, get) => ({
     const state = get();
     const oldZoom = state.globalZoomLevel;
     const newZoom = Math.max(MIN_ZOOM, oldZoom - ZOOM_INCREMENT);
-
     if (oldZoom === newZoom) return; // Already at min
-
-    const newPanelSize = {
-      width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
-      height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
-    };
-
-    // Only change zoom and panel size - positions stay fixed on canvas
     set({
       globalZoomLevel: newZoom,
-      panelSize: newPanelSize,
+      panelSize: {
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
+        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+      },
     });
   },
 

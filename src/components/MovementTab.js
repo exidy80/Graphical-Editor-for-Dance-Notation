@@ -25,7 +25,7 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
 
   // Shared styles
   const buttonStyle = {
-    height: '50px',
+    height: '30px',
     width: '50px',
     backgroundColor: 'white',
     border: '2px solid #ddd',
@@ -53,7 +53,7 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
 
   const indicatorStyle = {
     width: '50px',
-    height: '40px',
+    height: '30px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',

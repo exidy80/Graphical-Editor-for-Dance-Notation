@@ -15,11 +15,35 @@ import createSerializationSlice from './serializationSlice.js';
 import createKeystrokeSlice from './keystrokeSlice.js';
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
 
+const createInitialState = () => ({
+  panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
+  globalZoomLevel: 1.0,
+  selectedPanel: null,
+  selectedHand: null,
+  selectedDancer: null,
+  selectedShapeId: null,
+  panels: [createInitialPanel()],
+  hasUnsavedChanges: false,
+  lastSaveTime: Date.now(),
+  // Document state
+  documentTitle: 'Untitled Dance',
+  currentFileHandle: null,
+  // UI state
+  handFlash: [],
+  lockUi: { active: false, selected: [] },
+  opacity: {
+    dancers: { value: 1, disabled: false },
+    symbols: { value: 1, disabled: false },
+    disabled: [],
+  },
+  _autoSaveTimer: null,
+});
+
 // Create initial store with auto-save functionality
-const initialState = () => {
+export const initialState = () => {
+  const initialStoreState = createInitialState();
   // Try to restore from auto-save first
   const savedData = loadFromLocalStorage();
-
   if (
     savedData &&
     savedData.panels &&
@@ -27,53 +51,22 @@ const initialState = () => {
     savedData.panels.length > 0
   ) {
     console.log('Restoring from auto-save...');
+    const loadedZoom = savedData.globalZoomLevel || 1.0;
     return {
-      panelSize: savedData.panelSize || UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
-      globalZoomLevel: savedData.globalZoomLevel || 1.0,
-      selectedPanel: null, // Reset UI state
-      selectedHand: null,
-      selectedDancer: null,
-      selectedShapeId: null,
-      panels: savedData.panels,
-      hasUnsavedChanges: false,
-      lastSaveTime: Date.now(),
-      // Document state
-      documentTitle: 'Untitled Dance',
-      currentFileHandle: null,
-      // UI state that's not persisted
-      handFlash: [],
-      lockUi: { active: false, selected: [] },
-      opacity: {
-        dancers: { value: 1, disabled: false },
-        symbols: { value: 1, disabled: false },
+      ...initialStoreState,
+      globalZoomLevel: loadedZoom,
+      panelSize: {
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * loadedZoom),
+        height: Math.round(
+          UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * loadedZoom,
+        ),
       },
-      _autoSaveTimer: null,
+      panels: savedData.panels,
     };
   }
 
   // Default initial state
-  return {
-    panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
-    globalZoomLevel: 1.0,
-    selectedPanel: null,
-    selectedHand: null,
-    selectedDancer: null,
-    selectedShapeId: null,
-    panels: [createInitialPanel()],
-    hasUnsavedChanges: false,
-    lastSaveTime: Date.now(),
-    // Document state
-    documentTitle: 'Untitled Dance',
-    currentFileHandle: null,
-    // UI state
-    handFlash: [],
-    lockUi: { active: false, selected: [] },
-    opacity: {
-      dancers: { value: 1, disabled: false },
-      symbols: { value: 1, disabled: false },
-    },
-    _autoSaveTimer: null,
-  };
+  return initialStoreState;
 };
 
 export const useAppStore = create(

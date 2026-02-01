@@ -1,0 +1,213 @@
+import React, { useState } from 'react';
+import { useAppStore } from '../stores';
+import { LAYER_CATEGORIES, isShapeInCategory } from '../utils/layersConfig.js';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import bringToFrontImg from './images/bring-to-front.png';
+import sendToBackImg from './images/send-to-back.png';
+
+const LayerControl = () => {
+  const [locked, setLocked] = useState(() =>
+    new Array(LAYER_CATEGORIES.length).fill(false),
+  );
+  const panels = useAppStore((state) => state.panels);
+  const queueDancerFlash = useAppStore((state) => state.queueDancerFlash);
+  const queueSymbolFlash = useAppStore((state) => state.queueSymbolFlash);
+  const handleOpacityChange = useAppStore((state) => state.handleOpacityChange);
+  const addToDisableList = useAppStore((state) => state.addToDisableList);
+  const removeFromDisableList = useAppStore(
+    (state) => state.removeFromDisableList,
+  );
+  const setLayerOrder = useAppStore((state) => state.setLayerOrder);
+
+  const _queueFlashForCategory = (catKey) => {
+    panels.forEach((panel) => {
+      if (catKey === 'body') {
+        panel.dancers.forEach((d) => queueDancerFlash(panel.id, d.id));
+      } else {
+        panel.shapes.forEach((s) => {
+          if (isShapeInCategory(s, catKey)) {
+            queueSymbolFlash(panel.id, s.id);
+          }
+        });
+      }
+    });
+  };
+
+  // Handler: Bring to front (all panels)
+  const handleBringToFront = (catIdx) => {
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    _queueFlashForCategory(catKey);
+    _handleLock(catIdx, false);
+    setLayerOrder((prev) => [...prev.filter((k) => k !== catKey), catKey]);
+  };
+
+  // Handler: Send to back (all panels)
+  const handleSendToBack = (catIdx) => {
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    _queueFlashForCategory(catKey);
+    setLayerOrder((prev) => [catKey, ...prev.filter((k) => k !== catKey)]);
+  };
+
+  const _handleLock = (catIdx, shouldLock = true) => {
+    // if catIdx is already in the correct state, do nothing
+    if (locked[catIdx] === shouldLock) return;
+    setLocked((prev) => {
+      const newLocked = [...prev];
+      newLocked[catIdx] = shouldLock;
+      return newLocked;
+    });
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    if (catKey === 'body') {
+      // Use the same lock mode as Toolbar for dancers
+      // if we are at this point, we know we are changing the lock state
+      handleOpacityChange('dancers');
+      return;
+    }
+    if (panels) {
+      // go through all panels and collect all the shapes in this category. use reduce.
+      const shapesInCategory = panels.reduce((acc, panel) => {
+        const shapes = panel.shapes.filter((s) => isShapeInCategory(s, catKey));
+        return acc.concat(shapes);
+      }, []);
+      const shapeIdsInCategory = new Set(shapesInCategory.map((s) => s.id));
+      if (shouldLock) {
+        // Add all shapes in this category to disable list
+        addToDisableList(shapeIdsInCategory);
+      } else {
+        // Remove all shapes in this category from disable list
+        removeFromDisableList(shapeIdsInCategory);
+      }
+    }
+  };
+
+  // Handler: Lock/Unlock (global)
+  const handleToggleLock = (catIdx) => {
+    const isLocking = !locked[catIdx];
+    _handleLock(catIdx, isLocking);
+  };
+
+  return (
+    <div
+      style={{
+        backgroundColor: '#fff',
+        borderTop: '2px solid #ddd',
+        padding: '15px',
+      }}
+    >
+      <h3
+        style={{
+          margin: '0 0 12px 0',
+          fontSize: '16px',
+          fontWeight: 'bold',
+        }}
+      >
+        Layers
+      </h3>
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(5, 1fr)',
+          gap: '8px',
+        }}
+      >
+        {/* Column headers */}
+        {LAYER_CATEGORIES.map((cat) => (
+          <div
+            key={cat.key}
+            style={{
+              fontSize: '14px',
+              textAlign: 'center',
+              fontWeight: '500',
+              marginBottom: '4px',
+              writingMode: 'vertical-rl',
+              textOrientation: 'mixed',
+              transform: 'rotate(180deg)',
+              height: '70px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {cat.label}
+          </div>
+        ))}
+        {/* Bring to front buttons */}
+        {LAYER_CATEGORIES.map((cat, i) => (
+          <button
+            key={`front-${cat.key}`}
+            style={{
+              padding: '5px',
+              border: '2px solid #333',
+              borderRadius: '4px',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+            }}
+            title="Bring to front"
+            onClick={() => handleBringToFront(i)}
+          >
+            <img
+              src={bringToFrontImg}
+              alt="Bring to front"
+              style={{ width: 28, height: 28 }}
+            />
+          </button>
+        ))}
+        {/* Send to back buttons */}
+        {LAYER_CATEGORIES.map((cat, i) => (
+          <button
+            key={`back-${cat.key}`}
+            style={{
+              padding: '5px',
+              border: '2px solid #333',
+              borderRadius: '4px',
+              backgroundColor: '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '10px',
+            }}
+            title="Send to back"
+            onClick={() => handleSendToBack(i)}
+          >
+            <img
+              src={sendToBackImg}
+              alt="Send to back"
+              style={{ width: 28, height: 28 }}
+            />
+          </button>
+        ))}
+        {/* Lock/Unlock toggles */}
+        {LAYER_CATEGORIES.map((cat, i) => (
+          <button
+            key={`lock-${cat.key}`}
+            style={{
+              width: '38px',
+              height: '38px',
+              border: '2px solid #333',
+              borderRadius: '4px',
+              backgroundColor: locked[i] ? '#999' : '#fff',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              padding: 0,
+            }}
+            title={locked[i] ? 'Locked' : 'Unlocked'}
+            onClick={() => handleToggleLock(i)}
+          >
+            <FontAwesomeIcon icon={locked[i] ? faLock : faLockOpen} />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default LayerControl;

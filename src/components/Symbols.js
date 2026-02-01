@@ -28,6 +28,7 @@ const Symbol = ({
   opacity,
   onShapeSelect,
   onUpdateShapeState,
+  isGlowing,
 }) => {
   const shapeRef = useRef();
   const trRef = useRef();
@@ -119,6 +120,10 @@ const Symbol = ({
     onClick: handleClick,
     onDragEnd: handleDragEnd,
     strokeScaleEnabled: false,
+    'data-testid': `symbol-${shape.id}`,
+    shadowColor: isGlowing ? shape.stroke || shape.fill || 'yellow' : null,
+    shadowBlur: isGlowing ? 15 : 0,
+    shadowOpacity: isGlowing ? 1 : 0,
   };
 
   // Check if it's a spin symbol
@@ -245,8 +250,8 @@ const Symbol = ({
         <KonvaImage
           {...commonProps}
           image={image}
-          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
-          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR}
+          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
+          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
         />
       )}
       {shape.type === ShapeTypes.STAGE_X && (
