@@ -1,5 +1,6 @@
 // UI state slice - handles selection state, opacity, visual effects, and other UI concerns
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
+import { LAYER_KEYS } from '../utils/layersConfig.js';
 
 const ZOOM_INCREMENT = 0.1;
 const MIN_ZOOM = 1.0;
@@ -40,6 +41,14 @@ const createUISlice = (set, get) => ({
 
   // Hand-locking UI state (group selection)
   lockUi: { active: false, selected: [] },
+
+  // Layer order
+  layerOrder: LAYER_KEYS,
+  setLayerOrder: (updater) =>
+    set((state) => ({
+      layerOrder:
+        typeof updater === 'function' ? updater(state.layerOrder) : updater,
+    })),
 
   // Document state (for file handling)
   documentTitle: 'Untitled Dance',

@@ -4,6 +4,7 @@ import Dancer from './Dancer';
 import Symbol from './Symbols';
 import { useAppStore } from '../stores';
 import { UI_DIMENSIONS } from '../utils/dimensions';
+import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 
 const Canvas = ({ panelId }) => {
   const panels = useAppStore((state) => state.panels);
@@ -29,6 +30,7 @@ const Canvas = ({ panelId }) => {
     (state) => state.handleShapeSelection,
   );
   const updateShapeState = useAppStore((state) => state.updateShapeState);
+  const layerOrder = useAppStore((state) => state.layerOrder);
 
   const panel = panels.find((p) => p.id === panelId);
   if (!panel) return null;
@@ -42,6 +44,22 @@ const Canvas = ({ panelId }) => {
     (panelSize.width - UI_DIMENSIONS.CANVAS_SIZE.width) / 2;
   const viewportOffsetY =
     (panelSize.height - UI_DIMENSIONS.CANVAS_SIZE.height) / 2;
+
+  const SHAPE_LAYER_KEYS = LAYER_KEYS.filter((key) => key !== 'body');
+
+  const shapesByCategory = Object.fromEntries(
+    SHAPE_LAYER_KEYS.map((key) => [key, []]),
+  );
+
+  // bucket shapes by category
+  shapes.forEach((shape) => {
+    for (const key of SHAPE_LAYER_KEYS) {
+      if (isShapeInCategory(shape, key)) {
+        shapesByCategory[key].push(shape);
+        break; // assume a shape belongs to at most one category
+      }
+    }
+  });
 
   //Triggers if the user clicks on the canvas itself
   const handleCanvasClickInternal = (e) => {
@@ -58,97 +76,105 @@ const Canvas = ({ panelId }) => {
       onMouseDown={handleCanvasClickInternal} // Lets you deselect the dancer/shape currently selected by clicking an empty area
     >
       <Layer x={viewportOffsetX} y={viewportOffsetY}>
-        {shapes.map((shape) => {
-          // Create bound functions that inject panelId and shapeId
-          const boundUpdateShapeState = (newState) =>
-            updateShapeState(panelId, shape.id, newState);
-          const boundHandleShapeSelection = () =>
-            handleShapeSelection(panelId, shape.id);
+        {layerOrder.map((layerKey) => {
+          if (layerKey === 'body') {
+            return dancers.map((dancer, index) => {
+              // Create bound functions that inject panelId and dancerId
+              const boundUpdateDancerState = (newState) =>
+                updateDancerState(panelId, dancer.id, newState);
+              const boundUpdateHandPosition = (side, newPos) =>
+                updateHandPosition(panelId, dancer.id, side, newPos);
+              const boundUpdateHandRotation = (side, rotation) =>
+                updateHandRotation(panelId, dancer.id, side, rotation);
+              const boundHandleDancerSelection = () =>
+                handleDancerSelection(panelId, dancer.id);
+              const boundHandleHandClick = (handSide) =>
+                handleHandClick(panelId, dancer.id, handSide);
 
-          // Check if this shape is selected
-          const isSelected =
-            selectedShapeId &&
-            selectedShapeId.panelId === panelId &&
-            selectedShapeId.shapeId === shape.id;
+              // Check if this dancer is selected
+              const isSelected =
+                selectedDancer &&
+                selectedDancer.panelId === panelId &&
+                selectedDancer.dancerId === dancer.id;
 
-          const isSymbolDisabled =
-            opacity.disabled.includes(shape.id) || opacity.symbols.disabled;
-          const symbolOpacity = isSymbolDisabled ? 0.5 : opacity.symbols.value;
+              // Check if any hand of this dancer is selected
+              const selectedHandSide =
+                selectedHand &&
+                selectedHand.panelId === panelId &&
+                selectedHand.dancerId === dancer.id
+                  ? selectedHand.handSide
+                  : null;
 
-          // Check if this symbol should glow
-          const isGlowing = symbolFlash.some(
-            (f) => f.panelId === panelId && f.symbolId === shape.id,
-          );
-          return (
-            <Symbol
-              key={shape.id}
-              shape={shape}
-              isSelected={isSelected}
-              disabled={isSymbolDisabled}
-              opacity={symbolOpacity}
-              onShapeSelect={boundHandleShapeSelection}
-              onUpdateShapeState={boundUpdateShapeState}
-              isGlowing={isGlowing}
-            />
-          );
-        })}
-        {dancers.map((dancer, index) => {
-          // Create bound functions that inject panelId and dancerId
-          const boundUpdateDancerState = (newState) =>
-            updateDancerState(panelId, dancer.id, newState);
-          const boundUpdateHandPosition = (side, newPos) =>
-            updateHandPosition(panelId, dancer.id, side, newPos);
-          const boundUpdateHandRotation = (side, rotation) =>
-            updateHandRotation(panelId, dancer.id, side, rotation);
-          const boundHandleDancerSelection = () =>
-            handleDancerSelection(panelId, dancer.id);
-          const boundHandleHandClick = (handSide) =>
-            handleHandClick(panelId, dancer.id, handSide);
+              // Get flash state for this dancer's hands
+              const dancerHandFlash = handFlash.filter(
+                (h) => h.panelId === panelId && h.dancerId === dancer.id,
+              );
 
-          // Check if this dancer is selected
-          const isSelected =
-            selectedDancer &&
-            selectedDancer.panelId === panelId &&
-            selectedDancer.dancerId === dancer.id;
+              // Check if this dancer should glow
+              const isGlowing = dancerFlash.some(
+                (f) => f.panelId === panelId && f.dancerId === dancer.id,
+              );
+              return (
+                <Dancer
+                  key={dancer.id}
+                  dancer={dancer}
+                  chosenHead={headShapes[index]}
+                  chosenHandShapes={handShapes[index]}
+                  isSelected={isSelected}
+                  selectedHandSide={selectedHandSide}
+                  handFlash={dancerHandFlash}
+                  disabled={opacity.dancers.disabled}
+                  opacity={opacity.dancers.value}
+                  onDancerSelect={boundHandleDancerSelection}
+                  onHandClick={boundHandleHandClick}
+                  onUpdateDancerState={boundUpdateDancerState}
+                  onUpdateHandPosition={boundUpdateHandPosition}
+                  onUpdateHandRotation={boundUpdateHandRotation}
+                  onDragStart={startDragMode}
+                  onDragEnd={endDragMode}
+                  isGlowing={isGlowing}
+                />
+              );
+            });
+          }
 
-          // Check if any hand of this dancer is selected
-          const selectedHandSide =
-            selectedHand &&
-            selectedHand.panelId === panelId &&
-            selectedHand.dancerId === dancer.id
-              ? selectedHand.handSide
-              : null;
+          const list = shapesByCategory[layerKey];
+          return list.map((shape) => {
+            // Create bound functions that inject panelId and shapeId
+            const boundUpdateShapeState = (newState) =>
+              updateShapeState(panelId, shape.id, newState);
+            const boundHandleShapeSelection = () =>
+              handleShapeSelection(panelId, shape.id);
 
-          // Get flash state for this dancer's hands
-          const dancerHandFlash = handFlash.filter(
-            (h) => h.panelId === panelId && h.dancerId === dancer.id,
-          );
+            // Check if this shape is selected
+            const isSelected =
+              selectedShapeId &&
+              selectedShapeId.panelId === panelId &&
+              selectedShapeId.shapeId === shape.id;
 
-          // Check if this dancer should glow
-          const isGlowing = dancerFlash.some(
-            (f) => f.panelId === panelId && f.dancerId === dancer.id,
-          );
-          return (
-            <Dancer
-              key={dancer.id}
-              dancer={dancer}
-              chosenHead={headShapes[index]}
-              chosenHandShapes={handShapes[index]}
-              isSelected={isSelected}
-              selectedHandSide={selectedHandSide}
-              handFlash={dancerHandFlash}
-              disabled={opacity.dancers.disabled}
-              opacity={opacity.dancers.value}
-              onDancerSelect={boundHandleDancerSelection}
-              onHandClick={boundHandleHandClick}
-              onUpdateDancerState={boundUpdateDancerState}
-              onUpdateHandPosition={boundUpdateHandPosition}
-              onUpdateHandRotation={boundUpdateHandRotation}
-              onDragStart={startDragMode}
-              onDragEnd={endDragMode}
-              isGlowing={isGlowing}
-            />
-          );
+            const isSymbolDisabled =
+              opacity.disabled.includes(shape.id) || opacity.symbols.disabled;
+            const symbolOpacity = isSymbolDisabled
+              ? 0.5
+              : opacity.symbols.value;
+
+            // Check if this symbol should glow
+            const isGlowing = symbolFlash.some(
+              (f) => f.panelId === panelId && f.symbolId === shape.id,
+            );
+            return (
+              <Symbol
+                key={shape.id}
+                shape={shape}
+                isSelected={isSelected}
+                disabled={isSymbolDisabled}
+                opacity={symbolOpacity}
+                onShapeSelect={boundHandleShapeSelection}
+                onUpdateShapeState={boundUpdateShapeState}
+                isGlowing={isGlowing}
+              />
+            );
+          });
         })}
       </Layer>
     </Stage>
