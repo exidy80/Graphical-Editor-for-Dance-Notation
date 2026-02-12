@@ -5,12 +5,11 @@ import { UI_DIMENSIONS } from '../utils/dimensions.js';
 import { initialState } from './index.js';
 
 const _recenterPanel = (panel, center) => {
-  const canvasCenterX = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
-  const canvasCenterY = UI_DIMENSIONS.CANVAS_SIZE.height / 2;
+  const visualCenter = UI_DIMENSIONS.PANEL_VISUAL_CENTER;
 
   // recenter based on provided center point
-  const offsetX = canvasCenterX - center.x;
-  const offsetY = canvasCenterY - center.y;
+  const offsetX = visualCenter.x - center.x;
+  const offsetY = visualCenter.y - center.y;
 
   const recenteredPanel = {
     ...panel,
@@ -83,10 +82,10 @@ const createPanelSlice = (set, get, api) => ({
       (shape) => shape.type === ShapeTypes.STAGE_X,
     );
 
-    // move stageX to center
+    // move stageX to visual center
     if (stageX) {
-      stageX.x = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
-      stageX.y = UI_DIMENSIONS.CANVAS_SIZE.height / 2;
+      stageX.x = UI_DIMENSIONS.PANEL_VISUAL_CENTER.x;
+      stageX.y = UI_DIMENSIONS.PANEL_VISUAL_CENTER.y;
     }
 
     set((state) => {
@@ -171,14 +170,29 @@ const createPanelSlice = (set, get, api) => ({
         const currentCenterX =
           stageXMarker?.x ||
           stageNextMarker?.x ||
-          UI_DIMENSIONS.CANVAS_SIZE.width / 2;
+          UI_DIMENSIONS.PANEL_VISUAL_CENTER.x;
         const currentCenterY =
           stageXMarker?.y ||
           stageNextMarker?.y ||
-          UI_DIMENSIONS.CANVAS_SIZE.height / 2;
+          UI_DIMENSIONS.PANEL_VISUAL_CENTER.y;
 
         // Apply offset to all dancers and shapes
-        return _recenterPanel(panel, { x: currentCenterX, y: currentCenterY });
+        const recenteredPanel = _recenterPanel(panel, {
+          x: currentCenterX,
+          y: currentCenterY,
+        });
+
+        const stageX = recenteredPanel.shapes?.find(
+          (s) => s.type === ShapeTypes.STAGE_X,
+        );
+
+        // place stageX at visual center
+        if (stageX) {
+          stageX.x = UI_DIMENSIONS.PANEL_VISUAL_CENTER.x;
+          stageX.y = UI_DIMENSIONS.PANEL_VISUAL_CENTER.y;
+        }
+
+        return recenteredPanel;
       });
 
       return { panels: recenteredPanels };
