@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Canvas from './Canvas';
 import { useAppStore } from '../stores';
+import { UI_DIMENSIONS } from '../utils/dimensions';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faClone,
@@ -193,7 +194,10 @@ const PositionPanel = () => {
                 borderTop: '1px solid #e0e0e0',
                 display: 'flex',
                 flexDirection: 'column',
-                flex: expandedNotesPanel === panel.id ? '1 1 auto' : '0 0 50px',
+                flex:
+                  expandedNotesPanel === panel.id
+                    ? '1 1 auto'
+                    : `0 0 ${UI_DIMENSIONS.PANEL_NOTES_HEIGHT}px`,
                 overflow: 'hidden',
                 minHeight: '0',
               }}
@@ -267,7 +271,7 @@ const PositionPanel = () => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '8px',
-                    height: '50px',
+                    height: `${UI_DIMENSIONS.PANEL_NOTES_HEIGHT}px`,
                     boxSizing: 'border-box',
                     cursor: 'pointer',
                   }}

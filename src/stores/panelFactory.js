@@ -2,30 +2,19 @@ import { v4 as uuidv4 } from 'uuid';
 import { createStageX, createStageNext } from '../constants/shapeTypes';
 import { UI_DIMENSIONS } from '../utils/dimensions';
 
-// Fixed canvas size - positions are absolute on this canvas
-// The panel is a viewport window into this canvas
-const CANVAS_SIZE = UI_DIMENSIONS.CANVAS_SIZE;
-
 // Factory function to create initial panels with default dancer positions and shapes
 const createInitialPanel = () => {
-  // Positions are ALWAYS based on fixed canvas size, regardless of zoom/panel size
-  // Original positions were relative to DEFAULT_PANEL_SIZE (300x300)
-  // At 100% zoom, viewport shows canvas center (150-450), so add 150 to panel positions
   const DEFAULT_PANEL_SIZE = UI_DIMENSIONS.DEFAULT_PANEL_SIZE;
-  const viewportOffset = (CANVAS_SIZE.width - DEFAULT_PANEL_SIZE.width) / 2; // 150
-
-  const canvasCenterX = CANVAS_SIZE.width / 2; // 300
-  const topY = DEFAULT_PANEL_SIZE.height * 0.13 + viewportOffset; // 39 + 150 = 189
-  const bottomY = DEFAULT_PANEL_SIZE.height * 0.73 + viewportOffset; // 219 + 150 = 369
-  const stageMarkersY = DEFAULT_PANEL_SIZE.height * 0.42 + viewportOffset; // 126 + 150 = 276
+  const panelVisualCenter = UI_DIMENSIONS.PANEL_VISUAL_CENTER;
+  const dancerYOffset = (DEFAULT_PANEL_SIZE.height * 0.6) / 2;
 
   return {
     id: uuidv4(),
     dancers: [
       {
         id: uuidv4(),
-        x: canvasCenterX,
-        y: topY,
+        x: panelVisualCenter.x,
+        y: panelVisualCenter.y - dancerYOffset,
         colour: 'red',
         rotation: 180,
         scaleX: 1,
@@ -43,8 +32,8 @@ const createInitialPanel = () => {
       },
       {
         id: uuidv4(),
-        x: canvasCenterX,
-        y: bottomY,
+        x: panelVisualCenter.x,
+        y: panelVisualCenter.y + dancerYOffset,
         colour: 'blue',
         rotation: 0,
         scaleX: 1,
@@ -67,8 +56,14 @@ const createInitialPanel = () => {
       { left: 'Waist', right: 'Waist' },
     ],
     shapes: [
-      { id: uuidv4(), ...createStageX(canvasCenterX - 3, stageMarkersY) },
-      { id: uuidv4(), ...createStageNext(canvasCenterX - 3, stageMarkersY) },
+      {
+        id: uuidv4(),
+        ...createStageX(panelVisualCenter.x, panelVisualCenter.y),
+      },
+      {
+        id: uuidv4(),
+        ...createStageNext(panelVisualCenter.x, panelVisualCenter.y),
+      },
     ],
     locks: [],
     notes: '',
