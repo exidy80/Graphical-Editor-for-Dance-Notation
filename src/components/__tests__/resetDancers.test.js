@@ -49,7 +49,7 @@ describe('Reset Dancers Functionality', () => {
     const dancer1 = panel.dancers[0];
     expect(dancer1.colour).toBe('red');
     expect(dancer1.x).toBe(300); // Centered on 600x600 canvas
-    expect(dancer1.y).toBe(189); // (0.13 * 300) + 150 viewport offset
+    expect(dancer1.y).toBe(185); // Visual center - dancer offset
     expect(dancer1.rotation).toBe(180);
     expect(dancer1.leftHandPos).toEqual({ x: -30, y: -40 });
     expect(dancer1.rightHandPos).toEqual({ x: 30, y: -40 });
@@ -60,7 +60,7 @@ describe('Reset Dancers Functionality', () => {
     const dancer2 = panel.dancers[1];
     expect(dancer2.colour).toBe('blue');
     expect(dancer2.x).toBe(300); // Centered on 600x600 canvas
-    expect(dancer2.y).toBe(369); // (0.73 * 300) + 150 viewport offset
+    expect(dancer2.y).toBe(365); // Visual center + dancer offset
     expect(dancer2.rotation).toBe(0);
     expect(dancer2.leftHandPos).toEqual({ x: -30, y: -40 });
     expect(dancer2.rightHandPos).toEqual({ x: 30, y: -40 });
@@ -179,7 +179,7 @@ describe('Reset Dancers Functionality', () => {
 
     // Verify dancers are reset to initial positions (fixed canvas coordinates)
     expect(resetPanel.dancers[0].x).toBe(300); // Canvas center
-    expect(resetPanel.dancers[0].y).toBe(189); // (0.13 * 300) + 150 viewport offset
+    expect(resetPanel.dancers[0].y).toBe(185); // Visual center - dancer offset
     expect(resetPanel.dancers[0].colour).toBe('red');
     expect(resetPanel.dancers[0].rotation).toBe(180);
     expect(resetPanel.locks).toEqual([]);

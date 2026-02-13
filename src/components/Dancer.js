@@ -3,6 +3,7 @@ import {
   Group,
   Line,
   RegularPolygon,
+  Path,
   Rect,
   Arc,
   Circle,
@@ -32,6 +33,7 @@ const Dancer = ({
   onDragStart,
   onDragEnd,
   isGlowing,
+  renderOnly = 'all', // 'all', 'body', or 'arms'
 }) => {
   const dancerRef = useRef();
   const headRef = useRef();
@@ -276,7 +278,9 @@ const Dancer = ({
   }, [dancer, chosenHandShapes, bodyWidth, headSize]);
 
   useEffect(() => {
-    if (isSelected && dancerRef.current) {
+    if (renderOnly !== 'all') return;
+
+    if (isSelected && dancerRef.current && transformerRef.current) {
       transformerRef.current.nodes([dancerRef.current]);
       transformerRef.current.getLayer().batchDraw();
     }
@@ -291,13 +295,21 @@ const Dancer = ({
     selectedHandSide,
     resetHandTransformer,
     attachHandTransformer,
+    renderOnly,
   ]);
 
   useEffect(() => {
+    if (renderOnly !== 'all') return;
+
     resetHandTransformer();
     // Timeout here to make sure the reset happens before reattaching when hand shape changed
     setTimeout(attachHandTransformer, 0);
-  }, [chosenHandShapes, resetHandTransformer, attachHandTransformer]);
+  }, [
+    chosenHandShapes,
+    resetHandTransformer,
+    attachHandTransformer,
+    renderOnly,
+  ]);
 
   const renderHead = () => {
     const baseProps = {
@@ -330,8 +342,17 @@ const Dancer = ({
         );
       case 'Upright':
       default:
+        // 90-degree apex isosceles triangle pointing up
+        // Match original RegularPolygon positioning
+        const apexY = -headSize / 2; // -15
+        const baseY = headSize / 4 + headSize / 8; // 7.5 to match body overlap
+        const triangleHeight = baseY - apexY; // ~22.5
+        const baseHalfWidth = triangleHeight; // For 90° apex: tan(45°) = 1, so base half-width = height
         return (
-          <RegularPolygon {...baseProps} sides={3} radius={headSize / 2} />
+          <Path
+            {...baseProps}
+            data={`M 0,${apexY} L ${-baseHalfWidth},${baseY} L ${baseHalfWidth},${baseY} Z`}
+          />
         );
     }
   };
@@ -511,8 +532,10 @@ const Dancer = ({
         rotation={dancer.rotation}
         scaleX={dancer.scaleX || 1}
         scaleY={dancer.scaleY || 1}
-        opacity={opacity}
-        draggable={!disabled}
+        opacity={
+          renderOnly === 'all' && (isSelected || selectedHandSide) ? 0 : opacity
+        }
+        draggable={!disabled && (renderOnly === 'body' || renderOnly === 'all')}
         ref={dancerRef}
         onDragStart={handleDragStart}
         onDragMove={handleDragMove}
@@ -521,21 +544,26 @@ const Dancer = ({
         onTransformEnd={handleTransformEnd}
         data-testid={`dancer-body-${dancer.id}`}
       >
-        {renderHead()}
-        <Rect
-          ref={bodyRef}
-          width={bodyWidth}
-          height={bodyHeight}
-          fill={dancer.colour}
-          y={headSize / 4}
-          offsetX={bodyWidth / 2}
-          shadowColor={isGlowing ? dancer.colour : null}
-          shadowBlur={isGlowing ? 15 : 0}
-          shadowOpacity={isGlowing ? 1 : 0}
-        />
-        {['left', 'right'].map((side) => renderArm(side))}
+        {(renderOnly === 'all' || renderOnly === 'body') && (
+          <>
+            {renderHead()}
+            <Rect
+              ref={bodyRef}
+              width={bodyWidth}
+              height={bodyHeight}
+              fill={dancer.colour}
+              y={headSize / 4}
+              offsetX={bodyWidth / 2}
+              shadowColor={isGlowing ? dancer.colour : null}
+              shadowBlur={isGlowing ? 15 : 0}
+              shadowOpacity={isGlowing ? 1 : 0}
+            />
+          </>
+        )}
+        {(renderOnly === 'all' || renderOnly === 'arms') &&
+          ['left', 'right'].map((side) => renderArm(side))}
       </Group>
-      {isSelected && (
+      {isSelected && renderOnly === 'all' && (
         <Transformer
           ref={transformerRef}
           boundBoxFunc={(oldBox, newBox) =>
@@ -549,7 +577,7 @@ const Dancer = ({
           onTransformEnd={handleTransformEnd}
         />
       )}
-      {selectedHandSide && (
+      {selectedHandSide && renderOnly === 'all' && (
         <Transformer
           ref={handTransformerRef}
           resizeEnabled={false}
