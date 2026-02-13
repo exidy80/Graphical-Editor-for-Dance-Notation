@@ -5,12 +5,13 @@ import { useAppStore } from '../stores';
 const CanvasSizeControl = () => {
   const increaseCanvasSize = useAppStore((state) => state.increaseCanvasSize);
   const decreaseCanvasSize = useAppStore((state) => state.decreaseCanvasSize);
-  const canIncreaseCanvasSize = useAppStore((state) => state.canIncreaseCanvasSize);
-  const canDecreaseCanvasSize = useAppStore((state) => state.canDecreaseCanvasSize);
+  const canIncreaseCanvasSize = useAppStore(
+    (state) => state.canIncreaseCanvasSize,
+  );
+  const canDecreaseCanvasSize = useAppStore(
+    (state) => state.canDecreaseCanvasSize,
+  );
   const globalCanvasSize = useAppStore((state) => state.globalCanvasSize);
-
-  // Format canvas size as percentage
-  const canvasSizePercentage = Math.round(globalCanvasSize * 100);
 
   return (
     <ButtonGroup className="canvas-size-control">
@@ -35,7 +36,7 @@ const CanvasSizeControl = () => {
           minWidth: '80px',
         }}
       >
-        Canvas Size {canvasSizePercentage}%
+        Canvas Size: {globalCanvasSize.toFixed(1)}
       </Button>
       <Button
         onClick={increaseCanvasSize}
