@@ -3,7 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { Dropdown, ButtonGroup, Button } from 'react-bootstrap';
 import { useAppStore } from '../stores';
 import PanelFileHandler from './PanelFileHandler';
-import ZoomControl from './ZoomControl';
+import CanvasSizeControl from './CanvasSizeControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrash,
@@ -292,7 +292,7 @@ const Toolbar = () => {
               disabled={!selectedDancer}
               style={selectedDancer ? colouredButtonStyle : {}}
             >
-              {selectedDancer ? 'Select Head' : 'Select Head'}
+              Select Body
             </Dropdown.Toggle>
             <Dropdown.Menu>
               {/* Options for shape of head */}
@@ -366,8 +366,8 @@ const Toolbar = () => {
             </Button>
           </ButtonGroup>
 
-          {/* Global zoom control */}
-          <ZoomControl />
+          {/* Global canvas size control */}
+          <CanvasSizeControl />
 
           <ButtonGroup className="custom-btn-group">
             <Button

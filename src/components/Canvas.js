@@ -38,8 +38,8 @@ const Canvas = ({ panelId }) => {
   const { dancers, headShapes, handShapes, shapes } = panel;
 
   // Calculate viewport offset to center on the canvas
-  // At 100% zoom (300x300 panel), we offset by -150 to show center region
-  // At 200% zoom (600x600 panel), we offset by 0 to show entire canvas (0-600)
+  // At 100% canvas size (300x300 panel), we offset by -150 to show center region
+  // At 200% canvas size (600x600 panel), we offset by 0 to show entire canvas (0-600)
   const viewportOffsetX =
     (panelSize.width - UI_DIMENSIONS.CANVAS_SIZE.width) / 2;
   const viewportOffsetY =
@@ -78,26 +78,13 @@ const Canvas = ({ panelId }) => {
       <Layer x={viewportOffsetX} y={viewportOffsetY}>
         {layerOrder.map((layerKey) => {
           if (layerKey === 'body') {
-            return dancers.map((dancer, index) => {
-              // Create bound functions that inject panelId and dancerId
-              const boundUpdateDancerState = (newState) =>
-                updateDancerState(panelId, dancer.id, newState);
-              const boundUpdateHandPosition = (side, newPos) =>
-                updateHandPosition(panelId, dancer.id, side, newPos);
-              const boundUpdateHandRotation = (side, rotation) =>
-                updateHandRotation(panelId, dancer.id, side, rotation);
-              const boundHandleDancerSelection = () =>
-                handleDancerSelection(panelId, dancer.id);
-              const boundHandleHandClick = (handSide) =>
-                handleHandClick(panelId, dancer.id, handSide);
-
-              // Check if this dancer is selected
+            // Helper to create dancer props
+            const getDancerProps = (dancer, index) => {
               const isSelected =
                 selectedDancer &&
                 selectedDancer.panelId === panelId &&
                 selectedDancer.dancerId === dancer.id;
 
-              // Check if any hand of this dancer is selected
               const selectedHandSide =
                 selectedHand &&
                 selectedHand.panelId === panelId &&
@@ -105,37 +92,71 @@ const Canvas = ({ panelId }) => {
                   ? selectedHand.handSide
                   : null;
 
-              // Get flash state for this dancer's hands
               const dancerHandFlash = handFlash.filter(
                 (h) => h.panelId === panelId && h.dancerId === dancer.id,
               );
 
-              // Check if this dancer should glow
               const isGlowing = dancerFlash.some(
                 (f) => f.panelId === panelId && f.dancerId === dancer.id,
               );
+
+              return {
+                dancer,
+                chosenHead: headShapes[index],
+                chosenHandShapes: handShapes[index],
+                isSelected,
+                selectedHandSide,
+                handFlash: dancerHandFlash,
+                disabled: opacity.dancers.disabled,
+                opacity: opacity.dancers.value,
+                onDancerSelect: () => handleDancerSelection(panelId, dancer.id),
+                onHandClick: (handSide) =>
+                  handleHandClick(panelId, dancer.id, handSide),
+                onUpdateDancerState: (newState) =>
+                  updateDancerState(panelId, dancer.id, newState),
+                onUpdateHandPosition: (side, newPos) =>
+                  updateHandPosition(panelId, dancer.id, side, newPos),
+                onUpdateHandRotation: (side, rotation) =>
+                  updateHandRotation(panelId, dancer.id, side, rotation),
+                onDragStart: startDragMode,
+                onDragEnd: endDragMode,
+                isGlowing,
+              };
+            };
+
+            // Render all dancer bodies first, then all arms
+            const bodies = dancers.map((dancer, index) => (
+              <Dancer
+                key={`${dancer.id}-body`}
+                {...getDancerProps(dancer, index)}
+                renderOnly="body"
+              />
+            ));
+
+            const arms = dancers.map((dancer, index) => (
+              <Dancer
+                key={`${dancer.id}-arms`}
+                {...getDancerProps(dancer, index)}
+                renderOnly="arms"
+              />
+            ));
+
+            // Add one invisible complete dancer for transformers and interaction
+            const interactionLayer = dancers.map((dancer, index) => {
+              const props = getDancerProps(dancer, index);
+              // Only render transformers for selected dancers
+              if (!props.isSelected && !props.selectedHandSide) return null;
+
               return (
                 <Dancer
-                  key={dancer.id}
-                  dancer={dancer}
-                  chosenHead={headShapes[index]}
-                  chosenHandShapes={handShapes[index]}
-                  isSelected={isSelected}
-                  selectedHandSide={selectedHandSide}
-                  handFlash={dancerHandFlash}
-                  disabled={opacity.dancers.disabled}
-                  opacity={opacity.dancers.value}
-                  onDancerSelect={boundHandleDancerSelection}
-                  onHandClick={boundHandleHandClick}
-                  onUpdateDancerState={boundUpdateDancerState}
-                  onUpdateHandPosition={boundUpdateHandPosition}
-                  onUpdateHandRotation={boundUpdateHandRotation}
-                  onDragStart={startDragMode}
-                  onDragEnd={endDragMode}
-                  isGlowing={isGlowing}
+                  key={`${dancer.id}-interaction`}
+                  {...props}
+                  renderOnly="all"
                 />
               );
             });
+
+            return [...bodies, ...arms, ...interactionLayer];
           }
 
           const list = shapesByCategory[layerKey];

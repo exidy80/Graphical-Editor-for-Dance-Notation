@@ -2,9 +2,9 @@
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
 import { LAYER_KEYS } from '../utils/layersConfig.js';
 
-const ZOOM_INCREMENT = 0.1;
-const MIN_ZOOM = 1.0;
-const MAX_ZOOM = 2.0;
+const CANVAS_SIZE_INCREMENT = 0.2;
+const MIN_CANVAS_SIZE = 1.0;
+const MAX_CANVAS_SIZE = 4.0;
 
 const createUISlice = (set, get) => ({
   // State (some initial state set in index.js)
@@ -214,51 +214,51 @@ const createUISlice = (set, get) => ({
     });
   },
 
-  // Global zoom functions
-  // Zoom is a viewport into fixed 600x600 canvas - positions don't change
-  zoomIn: () => {
+  // Global canvas size functions
+  // Canvas size is a viewport into fixed 600x600 canvas - positions don't change
+  increaseCanvasSize: () => {
     const state = get();
-    const oldZoom = state.globalZoomLevel;
-    const newZoom = Math.min(MAX_ZOOM, oldZoom + ZOOM_INCREMENT);
-    if (oldZoom === newZoom) return; // Already at max
+    const oldSize = state.globalCanvasSize;
+    const newSize = Math.min(MAX_CANVAS_SIZE, oldSize + CANVAS_SIZE_INCREMENT);
+    if (oldSize === newSize) return; // Already at max
     set({
-      globalZoomLevel: newZoom,
+      globalCanvasSize: newSize,
       panelSize: {
-        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
-        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newSize),
+        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newSize),
       },
     });
   },
 
-  zoomOut: () => {
+  decreaseCanvasSize: () => {
     const state = get();
-    const oldZoom = state.globalZoomLevel;
-    const newZoom = Math.max(MIN_ZOOM, oldZoom - ZOOM_INCREMENT);
-    if (oldZoom === newZoom) return; // Already at min
+    const oldSize = state.globalCanvasSize;
+    const newSize = Math.max(MIN_CANVAS_SIZE, oldSize - CANVAS_SIZE_INCREMENT);
+    if (oldSize === newSize) return; // Already at min
     set({
-      globalZoomLevel: newZoom,
+      globalCanvasSize: newSize,
       panelSize: {
-        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newZoom),
-        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newZoom),
+        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * newSize),
+        height: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * newSize),
       },
     });
   },
 
-  resetZoom: () => {
+  resetCanvasSize: () => {
     set({
-      globalZoomLevel: MIN_ZOOM,
+      globalCanvasSize: MIN_CANVAS_SIZE,
       panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
     });
   },
 
-  canZoomIn: () => {
+  canIncreaseCanvasSize: () => {
     const state = get();
-    return state.globalZoomLevel < MAX_ZOOM;
+    return state.globalCanvasSize < MAX_CANVAS_SIZE;
   },
 
-  canZoomOut: () => {
+  canDecreaseCanvasSize: () => {
     const state = get();
-    return state.globalZoomLevel > MIN_ZOOM;
+    return state.globalCanvasSize > MIN_CANVAS_SIZE;
   },
 });
 

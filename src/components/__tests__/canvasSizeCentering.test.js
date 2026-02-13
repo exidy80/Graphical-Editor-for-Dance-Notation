@@ -5,14 +5,14 @@ import { UI_DIMENSIONS } from '../../utils/dimensions';
 // Conceptual model:
 // - There is a fixed "canvas" that is 2x the default panel size (600x600)
 // - The panel is a viewport/window into this canvas
-// - At 100% zoom (300x300), we see the center portion of the canvas
-// - At 200% zoom (600x600), we see the entire canvas
-// - Content positions are fixed on the canvas, zoom just changes viewport size
+// - At 100% canvas size (300x300), we see the center portion of the canvas
+// - At 200% canvas size (600x600), we see the entire canvas
+// - Content positions are fixed on the canvas, canvas size just changes viewport size
 // - The viewport is always centered on the canvas
 
 const CANVAS_SIZE = UI_DIMENSIONS.CANVAS_SIZE;
 
-describe('Zoom Centering and Positioning', () => {
+describe('Canvas Size Centering and Positioning', () => {
   beforeEach(() => {
     const { getState } = useAppStore;
     act(() => {
@@ -22,13 +22,13 @@ describe('Zoom Centering and Positioning', () => {
         selectedDancer: null,
         selectedHand: null,
         selectedShapeId: null,
-        globalZoomLevel: 1.0,
+        globalCanvasSize: 1.0,
         panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
       });
     });
   });
 
-  describe('Initial positioning at 100% zoom', () => {
+  describe('Initial positioning at 100% canvas size', () => {
     test('X and O markers should be positioned at center of the canvas (not panel)', () => {
       const { getState } = useAppStore;
 
@@ -47,11 +47,11 @@ describe('Zoom Centering and Positioning', () => {
       expect(stageX).toBeDefined();
       expect(stageNext).toBeDefined();
 
-      // Both should be at canvas center (absolute positions)
-      expect(stageX.x).toBeCloseTo(canvasCenterX - 3, 0);
-      expect(stageX.y).toBe(276); // (0.42 * 300) + 150
-      expect(stageNext.x).toBeCloseTo(canvasCenterX - 3, 0);
-      expect(stageNext.y).toBe(276); // (0.42 * 300) + 150
+      // Both should be at panel visual center (absolute positions)
+      expect(stageX.x).toBe(300); // Canvas center X
+      expect(stageX.y).toBe(275); // Visual center Y
+      expect(stageNext.x).toBe(300); // Canvas center X
+      expect(stageNext.y).toBe(275); // Visual center Y
     });
 
     test('dancers should be positioned relative to canvas center', () => {
@@ -68,17 +68,17 @@ describe('Zoom Centering and Positioning', () => {
       expect(panel.dancers[0].x).toBe(canvasCenterX);
       expect(panel.dancers[1].x).toBe(canvasCenterX);
 
-      // Dancers should be at specific positions on canvas (panel pos + viewport offset of 150)
-      expect(panel.dancers[0].y).toBe(189); // (0.13 * 300) + 150
-      expect(panel.dancers[1].y).toBe(369); // (0.73 * 300) + 150
+      // Dancers should be at positions relative to visual center
+      expect(panel.dancers[0].y).toBe(185); // Visual center - dancer offset
+      expect(panel.dancers[1].y).toBe(365); // Visual center + dancer offset
     });
   });
 
-  describe('Positioning after zoom - content stays fixed', () => {
-    test('markers maintain absolute positions when zooming in', () => {
+  describe('Positioning after canvas size change - content stays fixed', () => {
+    test('markers maintain absolute positions when increasing canvas size', () => {
       const { getState } = useAppStore;
 
-      // Add panel at default zoom
+      // Add panel at default canvas size
       act(() => {
         getState().addPanel();
       });
@@ -90,24 +90,26 @@ describe('Zoom Centering and Positioning', () => {
       const initialX = initialStageX.x;
       const initialY = initialStageX.y;
 
-      // Zoom in
+      // Increase canvas size
       act(() => {
-        getState().zoomIn();
-        getState().zoomIn();
+        getState().increaseCanvasSize();
+        getState().increaseCanvasSize();
       });
 
-      const zoomedPanel = getState().panels[0];
-      const zoomedStageX = zoomedPanel.shapes.find((s) => s.type === 'stageX');
+      const enlargedPanel = getState().panels[0];
+      const enlargedStageX = enlargedPanel.shapes.find(
+        (s) => s.type === 'stageX',
+      );
 
       // Positions should NOT change - they're fixed on the canvas
-      expect(zoomedStageX.x).toBe(initialX);
-      expect(zoomedStageX.y).toBe(initialY);
+      expect(enlargedStageX.x).toBe(initialX);
+      expect(enlargedStageX.y).toBe(initialY);
     });
 
-    test('dancers maintain absolute positions when zooming in', () => {
+    test('dancers maintain absolute positions when increasing canvas size', () => {
       const { getState } = useAppStore;
 
-      // Add panel at default zoom
+      // Add panel at default canvas size
       act(() => {
         getState().addPanel();
       });
@@ -118,25 +120,25 @@ describe('Zoom Centering and Positioning', () => {
       const initialDancer2X = initialPanel.dancers[1].x;
       const initialDancer2Y = initialPanel.dancers[1].y;
 
-      // Zoom in
+      // Increase canvas size
       act(() => {
-        getState().zoomIn();
-        getState().zoomIn();
+        getState().increaseCanvasSize();
+        getState().increaseCanvasSize();
       });
 
-      const zoomedPanel = getState().panels[0];
+      const enlargedPanel = getState().panels[0];
 
       // Positions should NOT change
-      expect(zoomedPanel.dancers[0].x).toBe(initialDancer1X);
-      expect(zoomedPanel.dancers[0].y).toBe(initialDancer1Y);
-      expect(zoomedPanel.dancers[1].x).toBe(initialDancer2X);
-      expect(zoomedPanel.dancers[1].y).toBe(initialDancer2Y);
+      expect(enlargedPanel.dancers[0].x).toBe(initialDancer1X);
+      expect(enlargedPanel.dancers[0].y).toBe(initialDancer1Y);
+      expect(enlargedPanel.dancers[1].x).toBe(initialDancer2X);
+      expect(enlargedPanel.dancers[1].y).toBe(initialDancer2Y);
     });
 
-    test('markers maintain absolute positions when zooming out', () => {
+    test('markers maintain absolute positions when decreasing canvas size', () => {
       const { getState } = useAppStore;
 
-      // Add panel at default zoom
+      // Add panel at default canvas size
       act(() => {
         getState().addPanel();
       });
@@ -148,24 +150,26 @@ describe('Zoom Centering and Positioning', () => {
       const initialX = initialStageX.x;
       const initialY = initialStageX.y;
 
-      // Zoom out
+      // Decrease canvas size
       act(() => {
-        getState().zoomOut();
-        getState().zoomOut();
+        getState().decreaseCanvasSize();
+        getState().decreaseCanvasSize();
       });
 
-      const zoomedPanel = getState().panels[0];
-      const zoomedStageX = zoomedPanel.shapes.find((s) => s.type === 'stageX');
+      const reducedPanel = getState().panels[0];
+      const reducedStageX = reducedPanel.shapes.find(
+        (s) => s.type === 'stageX',
+      );
 
       // Positions should NOT change
-      expect(zoomedStageX.x).toBe(initialX);
-      expect(zoomedStageX.y).toBe(initialY);
+      expect(reducedStageX.x).toBe(initialX);
+      expect(reducedStageX.y).toBe(initialY);
     });
 
-    test('dancers maintain absolute positions when zooming out', () => {
+    test('dancers maintain absolute positions when decreasing canvas size', () => {
       const { getState } = useAppStore;
 
-      // Add panel at default zoom
+      // Add panel at default canvas size
       act(() => {
         getState().addPanel();
       });
@@ -174,22 +178,22 @@ describe('Zoom Centering and Positioning', () => {
       const initialDancer1X = initialPanel.dancers[0].x;
       const initialDancer1Y = initialPanel.dancers[0].y;
 
-      // Zoom out
+      // Decrease canvas size
       act(() => {
-        getState().zoomOut();
-        getState().zoomOut();
+        getState().decreaseCanvasSize();
+        getState().decreaseCanvasSize();
       });
 
-      const zoomedPanel = getState().panels[0];
+      const reducedPanel = getState().panels[0];
 
       // Positions should NOT change
-      expect(zoomedPanel.dancers[0].x).toBe(initialDancer1X);
-      expect(zoomedPanel.dancers[0].y).toBe(initialDancer1Y);
+      expect(reducedPanel.dancers[0].x).toBe(initialDancer1X);
+      expect(reducedPanel.dancers[0].y).toBe(initialDancer1Y);
     });
   });
 
-  describe('New panels created at different zoom levels', () => {
-    test('new panel at zoomed level should have same absolute positions as at 100%', () => {
+  describe('New panels created at different canvas sizes', () => {
+    test('new panel at different canvas size should have same absolute positions as at 100%', () => {
       const { getState } = useAppStore;
 
       // Create panel at 100%
@@ -203,40 +207,40 @@ describe('Zoom Centering and Positioning', () => {
       const stage100X = panel100.shapes.find((s) => s.type === 'stageX').x;
       const stage100Y = panel100.shapes.find((s) => s.type === 'stageX').y;
 
-      // Zoom in
+      // Increase canvas size
       act(() => {
-        getState().zoomIn();
-        getState().zoomIn();
+        getState().increaseCanvasSize();
+        getState().increaseCanvasSize();
       });
 
-      // Create new panel at zoomed level
+      // Create new panel at increased canvas size
       act(() => {
         getState().addPanel();
       });
 
-      const panelZoomed = getState().panels[1];
+      const panelEnlarged = getState().panels[1];
 
       // New panel should have same absolute positions
-      expect(panelZoomed.dancers[0].x).toBe(dancer100X);
-      expect(panelZoomed.dancers[0].y).toBe(dancer100Y);
-      expect(panelZoomed.shapes.find((s) => s.type === 'stageX').x).toBe(
+      expect(panelEnlarged.dancers[0].x).toBe(dancer100X);
+      expect(panelEnlarged.dancers[0].y).toBe(dancer100Y);
+      expect(panelEnlarged.shapes.find((s) => s.type === 'stageX').x).toBe(
         stage100X,
       );
-      expect(panelZoomed.shapes.find((s) => s.type === 'stageX').y).toBe(
+      expect(panelEnlarged.shapes.find((s) => s.type === 'stageX').y).toBe(
         stage100Y,
       );
     });
   });
 
   describe('Reset functionality', () => {
-    test('reset after zoom should create panel with canvas-centered content at 100%', () => {
+    test('reset after canvas size change should create panel with canvas-centered content at 100%', () => {
       const { getState } = useAppStore;
 
-      // Zoom in
+      // Increase canvas size
       act(() => {
-        getState().zoomIn();
-        getState().zoomIn();
-        getState().zoomIn();
+        getState().increaseCanvasSize();
+        getState().increaseCanvasSize();
+        getState().increaseCanvasSize();
       });
 
       // Reset
@@ -248,8 +252,8 @@ describe('Zoom Centering and Positioning', () => {
       const panel = state.panels[0];
       const panelSize = state.panelSize;
 
-      // Should be back at 100% zoom
-      expect(state.globalZoomLevel).toBe(1.0);
+      // Should be back at 100% canvas size
+      expect(state.globalCanvasSize).toBe(1.0);
       expect(panelSize).toEqual(UI_DIMENSIONS.DEFAULT_PANEL_SIZE);
 
       // Content should be at canvas center positions
@@ -258,8 +262,8 @@ describe('Zoom Centering and Positioning', () => {
       expect(panel.dancers[1].x).toBe(canvasCenterX);
 
       const stageX = panel.shapes.find((s) => s.type === 'stageX');
-      expect(stageX.x).toBeCloseTo(canvasCenterX - 3, 0);
-      expect(stageX.y).toBe(276); // (0.42 * 300) + 150
+      expect(stageX.x).toBe(canvasCenterX); // Visual center X
+      expect(stageX.y).toBe(275); // Visual center Y
     });
   });
 });

@@ -17,7 +17,7 @@ import { UI_DIMENSIONS } from '../utils/dimensions.js';
 
 const createInitialState = () => ({
   panelSize: UI_DIMENSIONS.DEFAULT_PANEL_SIZE,
-  globalZoomLevel: 1.0,
+  globalCanvasSize: 1.0,
   selectedPanel: null,
   selectedHand: null,
   selectedDancer: null,
@@ -51,14 +51,16 @@ export const initialState = () => {
     savedData.panels.length > 0
   ) {
     console.log('Restoring from auto-save...');
-    const loadedZoom = savedData.globalZoomLevel || 1.0;
+    const loadedCanvasSize = savedData.globalCanvasSize || 1.0;
     return {
       ...initialStoreState,
-      globalZoomLevel: loadedZoom,
+      globalCanvasSize: loadedCanvasSize,
       panelSize: {
-        width: Math.round(UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * loadedZoom),
+        width: Math.round(
+          UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width * loadedCanvasSize,
+        ),
         height: Math.round(
-          UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * loadedZoom,
+          UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height * loadedCanvasSize,
         ),
       },
       panels: savedData.panels,

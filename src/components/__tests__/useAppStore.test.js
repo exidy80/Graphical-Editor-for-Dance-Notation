@@ -315,7 +315,7 @@ describe('useAppStore', () => {
     const { getState, setState } = useAppStore;
     const panel = getState().panels[0];
     const centerX = UI_DIMENSIONS.CANVAS_SIZE.width / 2;
-    const centerY = UI_DIMENSIONS.CANVAS_SIZE.height / 2;
+    const centerY = UI_DIMENSIONS.PANEL_VISUAL_CENTER.y;
 
     // Set selected panel for shape drawing
     act(() => setState({ selectedPanel: panel.id }, false));

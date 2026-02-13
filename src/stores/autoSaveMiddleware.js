@@ -5,7 +5,7 @@ const AUTO_SAVE_KEY = 'dance-notation-autosave';
 const CONSEQUENTIAL_PROPERTIES = new Set([
   'panels',
   'panelSize',
-  'globalZoomLevel',
+  'globalCanvasSize',
 ]);
 
 const saveToLocalStorage = (data) => {
@@ -65,8 +65,8 @@ const autoSaveMiddleware = (config) => (set, get, api) => {
       (CONSEQUENTIAL_PROPERTIES.has('panelSize') &&
         JSON.stringify(prevState.panelSize) !==
           JSON.stringify(newState.panelSize)) ||
-      (CONSEQUENTIAL_PROPERTIES.has('globalZoomLevel') &&
-        prevState.globalZoomLevel !== newState.globalZoomLevel);
+      (CONSEQUENTIAL_PROPERTIES.has('globalCanvasSize') &&
+        prevState.globalCanvasSize !== newState.globalCanvasSize);
 
     if (hasConsequentialChanges && !newState.hasUnsavedChanges) {
       // Use internal update to avoid infinite recursion
@@ -82,7 +82,7 @@ const autoSaveMiddleware = (config) => (set, get, api) => {
         const saveData = {
           panels: currentState.panels,
           panelSize: currentState.panelSize,
-          globalZoomLevel: currentState.globalZoomLevel,
+          globalCanvasSize: currentState.globalCanvasSize,
         };
         saveToLocalStorage(saveData);
         console.log('Auto-saved to localStorage');

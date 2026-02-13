@@ -21,7 +21,7 @@ beforeEach(() => {
 
 test('renders head and hand dropdowns and lock controls', () => {
   render(<Toolbar />);
-  expect(screen.getByText('Select Head')).toBeInTheDocument();
+  expect(screen.getByText('Select Body')).toBeInTheDocument();
   expect(screen.getByText('Select Hand')).toBeInTheDocument();
   expect(screen.getByText('Hold Hands')).toBeInTheDocument();
   expect(screen.getByText('Delete Symbol')).toBeInTheDocument();
@@ -63,13 +63,11 @@ test('hand selection dropdown is enabled when hand is selected', () => {
     useAppStore
       .getState()
       .setSelectedDancer({ panelId: panel.id, dancerId: dancer.id });
-    useAppStore
-      .getState()
-      .setSelectedHand({
-        panelId: panel.id,
-        dancerId: dancer.id,
-        handSide: 'left',
-      });
+    useAppStore.getState().setSelectedHand({
+      panelId: panel.id,
+      dancerId: dancer.id,
+      handSide: 'left',
+    });
   });
 
   rerender(<Toolbar />);
