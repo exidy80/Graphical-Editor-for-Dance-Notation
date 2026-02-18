@@ -299,11 +299,17 @@ const Toolbar = () => {
               <Dropdown.Item onClick={() => handleHeadSelection('Upright')}>
                 Upright
               </Dropdown.Item>
+              <Dropdown.Item onClick={() => handleHeadSelection('Duck')}>
+                Duck
+              </Dropdown.Item>
               <Dropdown.Item onClick={() => handleHeadSelection('Bow')}>
                 Bow
               </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHeadSelection('Duck')}>
-                Duck
+              <Dropdown.Item onClick={() => handleHeadSelection('Bend Knees')}>
+                Bend Knees
+              </Dropdown.Item>
+              <Dropdown.Item onClick={() => handleHeadSelection('Squat')}>
+                Squat
               </Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>
