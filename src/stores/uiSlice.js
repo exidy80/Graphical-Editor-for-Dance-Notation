@@ -128,6 +128,19 @@ const createUISlice = (set, get) => ({
     }));
   },
 
+  addToHideList: (list) => {
+    set((state) => ({
+      hideList: [...new Set([...state.hideList, ...list])],
+    }));
+  },
+
+  removeFromHideList: (list) => {
+    const removeSet = new Set(list);
+    set((state) => ({
+      hideList: state.hideList.filter((item) => !removeSet.has(item)),
+    }));
+  },
+
   handleOpacityChange: (type) => {
     set((state) => ({
       opacity: {
