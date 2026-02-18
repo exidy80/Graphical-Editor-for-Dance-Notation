@@ -10,6 +10,7 @@ const Canvas = ({ panelId }) => {
   const panels = useAppStore((state) => state.panels);
   const panelSize = useAppStore((state) => state.panelSize);
   const opacity = useAppStore((state) => state.opacity);
+  const hideList = useAppStore((state) => state.hideList);
   const selectedDancer = useAppStore((state) => state.selectedDancer);
   const selectedHand = useAppStore((state) => state.selectedHand);
   const handFlash = useAppStore((state) => state.handFlash);
@@ -78,6 +79,11 @@ const Canvas = ({ panelId }) => {
       <Layer x={viewportOffsetX} y={viewportOffsetY}>
         {layerOrder.map((layerKey) => {
           if (layerKey === 'body') {
+            // Filter out hidden dancers
+            const visibleDancers = dancers.filter(
+              (d) => !hideList.includes('body'),
+            );
+
             // Helper to create dancer props
             const getDancerProps = (dancer, index) => {
               const isSelected =
@@ -125,7 +131,7 @@ const Canvas = ({ panelId }) => {
             };
 
             // Render all dancer bodies first, then all arms
-            const bodies = dancers.map((dancer, index) => (
+            const bodies = visibleDancers.map((dancer, index) => (
               <Dancer
                 key={`${dancer.id}-body`}
                 {...getDancerProps(dancer, index)}
@@ -133,7 +139,7 @@ const Canvas = ({ panelId }) => {
               />
             ));
 
-            const arms = dancers.map((dancer, index) => (
+            const arms = visibleDancers.map((dancer, index) => (
               <Dancer
                 key={`${dancer.id}-arms`}
                 {...getDancerProps(dancer, index)}
@@ -142,7 +148,7 @@ const Canvas = ({ panelId }) => {
             ));
 
             // Add one invisible complete dancer for transformers and interaction
-            const interactionLayer = dancers.map((dancer, index) => {
+            const interactionLayer = visibleDancers.map((dancer, index) => {
               const props = getDancerProps(dancer, index);
               // Only render transformers for selected dancers
               if (!props.isSelected && !props.selectedHandSide) return null;
@@ -160,42 +166,44 @@ const Canvas = ({ panelId }) => {
           }
 
           const list = shapesByCategory[layerKey];
-          return list.map((shape) => {
-            // Create bound functions that inject panelId and shapeId
-            const boundUpdateShapeState = (newState) =>
-              updateShapeState(panelId, shape.id, newState);
-            const boundHandleShapeSelection = () =>
-              handleShapeSelection(panelId, shape.id);
+          return list
+            .filter((shape) => !hideList.includes(shape.id))
+            .map((shape) => {
+              // Create bound functions that inject panelId and shapeId
+              const boundUpdateShapeState = (newState) =>
+                updateShapeState(panelId, shape.id, newState);
+              const boundHandleShapeSelection = () =>
+                handleShapeSelection(panelId, shape.id);
 
-            // Check if this shape is selected
-            const isSelected =
-              selectedShapeId &&
-              selectedShapeId.panelId === panelId &&
-              selectedShapeId.shapeId === shape.id;
+              // Check if this shape is selected
+              const isSelected =
+                selectedShapeId &&
+                selectedShapeId.panelId === panelId &&
+                selectedShapeId.shapeId === shape.id;
 
-            const isSymbolDisabled =
-              opacity.disabled.includes(shape.id) || opacity.symbols.disabled;
-            const symbolOpacity = isSymbolDisabled
-              ? 0.5
-              : opacity.symbols.value;
+              const isSymbolDisabled =
+                opacity.disabled.includes(shape.id) || opacity.symbols.disabled;
+              const symbolOpacity = isSymbolDisabled
+                ? 0.5
+                : opacity.symbols.value;
 
-            // Check if this symbol should glow
-            const isGlowing = symbolFlash.some(
-              (f) => f.panelId === panelId && f.symbolId === shape.id,
-            );
-            return (
-              <Symbol
-                key={shape.id}
-                shape={shape}
-                isSelected={isSelected}
-                disabled={isSymbolDisabled}
-                opacity={symbolOpacity}
-                onShapeSelect={boundHandleShapeSelection}
-                onUpdateShapeState={boundUpdateShapeState}
-                isGlowing={isGlowing}
-              />
-            );
-          });
+              // Check if this symbol should glow
+              const isGlowing = symbolFlash.some(
+                (f) => f.panelId === panelId && f.symbolId === shape.id,
+              );
+              return (
+                <Symbol
+                  key={shape.id}
+                  shape={shape}
+                  isSelected={isSelected}
+                  disabled={isSymbolDisabled}
+                  opacity={symbolOpacity}
+                  onShapeSelect={boundHandleShapeSelection}
+                  onUpdateShapeState={boundUpdateShapeState}
+                  isGlowing={isGlowing}
+                />
+              );
+            });
         })}
       </Layer>
     </Stage>

@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useAppStore } from '../stores';
 import { LAYER_CATEGORIES, isShapeInCategory } from '../utils/layersConfig.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faLock, faLockOpen } from '@fortawesome/free-solid-svg-icons';
+import {
+  faLock,
+  faLockOpen,
+  faEye,
+  faEyeSlash,
+} from '@fortawesome/free-solid-svg-icons';
 import bringToFrontImg from './images/bring-to-front.png';
 import sendToBackImg from './images/send-to-back.png';
 
@@ -10,6 +15,10 @@ const LayerControl = () => {
   const [locked, setLocked] = useState(() =>
     new Array(LAYER_CATEGORIES.length).fill(false),
   );
+  const [hidden, setHidden] = useState(() =>
+    new Array(LAYER_CATEGORIES.length).fill(false),
+  );
+  const [isExpanded, setIsExpanded] = useState(false);
   const panels = useAppStore((state) => state.panels);
   const queueDancerFlash = useAppStore((state) => state.queueDancerFlash);
   const queueSymbolFlash = useAppStore((state) => state.queueSymbolFlash);
@@ -18,6 +27,8 @@ const LayerControl = () => {
   const removeFromDisableList = useAppStore(
     (state) => state.removeFromDisableList,
   );
+  const addToHideList = useAppStore((state) => state.addToHideList);
+  const removeFromHideList = useAppStore((state) => state.removeFromHideList);
   const setLayerOrder = useAppStore((state) => state.setLayerOrder);
 
   const _queueFlashForCategory = (catKey) => {
@@ -87,125 +98,195 @@ const LayerControl = () => {
     _handleLock(catIdx, isLocking);
   };
 
+  // Handler: Hide/Show (global)
+  const handleToggleHide = (catIdx) => {
+    const isHiding = !hidden[catIdx];
+    _handleHide(catIdx, isHiding);
+  };
+
+  const _handleHide = (catIdx, shouldHide = true) => {
+    // if catIdx is already in the correct state, do nothing
+    if (hidden[catIdx] === shouldHide) return;
+    setHidden((prev) => {
+      const newHidden = [...prev];
+      newHidden[catIdx] = shouldHide;
+      return newHidden;
+    });
+    const catKey = LAYER_CATEGORIES[catIdx].key;
+    if (catKey === 'body') {
+      if (shouldHide) {
+        addToHideList(new Set(['body']));
+      } else {
+        removeFromHideList(new Set(['body']));
+      }
+      return;
+    }
+    if (panels) {
+      const shapesInCategory = panels.reduce((acc, panel) => {
+        const shapes = panel.shapes.filter((s) => isShapeInCategory(s, catKey));
+        return acc.concat(shapes);
+      }, []);
+      const shapeIdsInCategory = new Set(shapesInCategory.map((s) => s.id));
+      if (shouldHide) {
+        addToHideList(shapeIdsInCategory);
+      } else {
+        removeFromHideList(shapeIdsInCategory);
+      }
+    }
+  };
+
   return (
     <div
+      onMouseEnter={() => setIsExpanded(true)}
+      onMouseLeave={() => setIsExpanded(false)}
       style={{
         backgroundColor: '#fff',
         borderTop: '2px solid #ddd',
-        padding: '15px',
+        padding: isExpanded ? '15px' : '12px 15px',
+        minHeight: isExpanded ? 'auto' : '20px',
+        transition: 'all 0.2s ease',
       }}
     >
       <h3
         style={{
-          margin: '0 0 12px 0',
-          fontSize: '16px',
-          fontWeight: 'bold',
+          margin: 0,
+          fontSize: '14px',
+          fontWeight: isExpanded ? 'bold' : 'bold',
+          color: isExpanded ? 'inherit' : '#666',
+          cursor: 'pointer',
         }}
       >
         Layers
       </h3>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(5, 1fr)',
-          gap: '8px',
-        }}
-      >
-        {/* Column headers */}
-        {LAYER_CATEGORIES.map((cat) => (
-          <div
-            key={cat.key}
-            style={{
-              fontSize: '14px',
-              textAlign: 'center',
-              fontWeight: '500',
-              marginBottom: '4px',
-              writingMode: 'vertical-rl',
-              textOrientation: 'mixed',
-              transform: 'rotate(180deg)',
-              height: '70px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {cat.label}
-          </div>
-        ))}
-        {/* Bring to front buttons */}
-        {LAYER_CATEGORIES.map((cat, i) => (
-          <button
-            key={`front-${cat.key}`}
-            style={{
-              padding: '5px',
-              border: '2px solid #333',
-              borderRadius: '4px',
-              backgroundColor: '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '10px',
-            }}
-            title="Bring to front"
-            onClick={() => handleBringToFront(i)}
-          >
-            <img
-              src={bringToFrontImg}
-              alt="Bring to front"
-              style={{ width: 28, height: 28 }}
-            />
-          </button>
-        ))}
-        {/* Send to back buttons */}
-        {LAYER_CATEGORIES.map((cat, i) => (
-          <button
-            key={`back-${cat.key}`}
-            style={{
-              padding: '5px',
-              border: '2px solid #333',
-              borderRadius: '4px',
-              backgroundColor: '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '10px',
-            }}
-            title="Send to back"
-            onClick={() => handleSendToBack(i)}
-          >
-            <img
-              src={sendToBackImg}
-              alt="Send to back"
-              style={{ width: 28, height: 28 }}
-            />
-          </button>
-        ))}
-        {/* Lock/Unlock toggles */}
-        {LAYER_CATEGORIES.map((cat, i) => (
-          <button
-            key={`lock-${cat.key}`}
-            style={{
-              width: '38px',
-              height: '38px',
-              border: '2px solid #333',
-              borderRadius: '4px',
-              backgroundColor: locked[i] ? '#999' : '#fff',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '20px',
-              padding: 0,
-            }}
-            title={locked[i] ? 'Locked' : 'Unlocked'}
-            onClick={() => handleToggleLock(i)}
-          >
-            <FontAwesomeIcon icon={locked[i] ? faLock : faLockOpen} />
-          </button>
-        ))}
-      </div>
+      {isExpanded && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(5, 1fr)',
+            gap: '8px',
+            marginTop: '12px',
+          }}
+        >
+          {/* Column headers */}
+          {LAYER_CATEGORIES.map((cat) => (
+            <div
+              key={cat.key}
+              style={{
+                fontSize: '14px',
+                textAlign: 'center',
+                fontWeight: '500',
+                marginBottom: '4px',
+                writingMode: 'vertical-rl',
+                textOrientation: 'mixed',
+                transform: 'rotate(180deg)',
+                height: '70px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                pointerEvents: 'none',
+              }}
+            >
+              {cat.label}
+            </div>
+          ))}
+          {/* Bring to front buttons */}
+          {LAYER_CATEGORIES.map((cat, i) => (
+            <button
+              key={`front-${cat.key}`}
+              style={{
+                padding: '5px',
+                border: '2px solid #333',
+                borderRadius: '4px',
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+              }}
+              title="Bring to front"
+              onClick={() => handleBringToFront(i)}
+            >
+              <img
+                src={bringToFrontImg}
+                alt="Bring to front"
+                style={{ width: 28, height: 28 }}
+              />
+            </button>
+          ))}
+          {/* Send to back buttons */}
+          {LAYER_CATEGORIES.map((cat, i) => (
+            <button
+              key={`back-${cat.key}`}
+              style={{
+                padding: '5px',
+                border: '2px solid #333',
+                borderRadius: '4px',
+                backgroundColor: '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+              }}
+              title="Send to back"
+              onClick={() => handleSendToBack(i)}
+            >
+              <img
+                src={sendToBackImg}
+                alt="Send to back"
+                style={{ width: 28, height: 28 }}
+              />
+            </button>
+          ))}
+          {/* Hide/Show toggles */}
+          {LAYER_CATEGORIES.map((cat, i) => (
+            <button
+              key={`hide-${cat.key}`}
+              style={{
+                width: '38px',
+                height: '38px',
+                border: '2px solid #333',
+                borderRadius: '4px',
+                backgroundColor: hidden[i] ? '#ddd' : '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                padding: 0,
+              }}
+              title={hidden[i] ? 'Hidden' : 'Visible'}
+              onClick={() => handleToggleHide(i)}
+            >
+              <FontAwesomeIcon icon={hidden[i] ? faEyeSlash : faEye} />
+            </button>
+          ))}
+          {/* Lock/Unlock toggles */}
+          {LAYER_CATEGORIES.map((cat, i) => (
+            <button
+              key={`lock-${cat.key}`}
+              style={{
+                width: '38px',
+                height: '38px',
+                border: '2px solid #333',
+                borderRadius: '4px',
+                backgroundColor: locked[i] ? '#999' : '#fff',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                padding: 0,
+              }}
+              title={locked[i] ? 'Locked' : 'Unlocked'}
+              onClick={() => handleToggleLock(i)}
+            >
+              <FontAwesomeIcon icon={locked[i] ? faLock : faLockOpen} />
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

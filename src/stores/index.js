@@ -36,6 +36,7 @@ const createInitialState = () => ({
     symbols: { value: 1, disabled: false },
     disabled: [],
   },
+  hideList: [], // Elements to hide (dancers or shape IDs)
   _autoSaveTimer: null,
 });
 
