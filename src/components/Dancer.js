@@ -314,25 +314,61 @@ const Dancer = ({
   const renderHead = () => {
     const baseProps = {
       ref: headRef,
-      fill: dancer.colour,
       opacity: opacity,
       onClick: disabled ? null : onDancerSelect,
     };
 
+    const filledProps = {
+      ...baseProps,
+      fill: dancer.colour,
+    };
+
+    const unfilledProps = {
+      ...baseProps,
+      stroke: dancer.colour,
+      fill: 'transparent',
+      strokeWidth: 2,
+    };
+
+    const baseHalfWidth = bodyWidth / 4; // 15
+    const triangleHeight = baseHalfWidth; // For 90° apex: tan(45°) = 1, so base half-width = height
+    const baseY = headSize / 4; // 7.5, at the shoulders
+    const apexY = baseY - triangleHeight; // -7.5
+
     switch (chosenHead) {
-      case 'Bow':
+      case 'Duck':
+        // Open triangle (unfilled)
         return (
-          <Rect
-            {...baseProps}
-            width={bodyWidth / 2}
-            height={bodyHeight * 2}
-            x={-15}
+          <Path
+            {...unfilledProps}
+            data={`M 0,${apexY} L ${-baseHalfWidth},${baseY} L ${baseHalfWidth},${baseY} Z`}
           />
         );
-      case 'Duck':
+      case 'Bow':
+        // Closed triangle (filled)
+        return (
+          <Path
+            {...filledProps}
+            data={`M 0,${apexY} L ${-baseHalfWidth},${baseY} L ${baseHalfWidth},${baseY} Z`}
+          />
+        );
+      case 'Bend Knees':
+        // Open semi-circle (unfilled)
         return (
           <Arc
-            {...baseProps}
+            {...unfilledProps}
+            outerRadius={15}
+            rotation={180}
+            angle={180}
+            y={10}
+            innerRadius={0}
+          />
+        );
+      case 'Squat':
+        // Closed semi-circle (filled)
+        return (
+          <Arc
+            {...filledProps}
             outerRadius={15}
             rotation={180}
             angle={180}
@@ -342,16 +378,13 @@ const Dancer = ({
         );
       case 'Upright':
       default:
-        // 90-degree apex isosceles triangle pointing up
-        // Match original RegularPolygon positioning
-        const apexY = -headSize / 2; // -15
-        const baseY = headSize / 4 + headSize / 8; // 7.5 to match body overlap
-        const triangleHeight = baseY - apexY; // ~22.5
-        const baseHalfWidth = triangleHeight; // For 90° apex: tan(45°) = 1, so base half-width = height
+        // Filled rectangle (default)
         return (
-          <Path
-            {...baseProps}
-            data={`M 0,${apexY} L ${-baseHalfWidth},${baseY} L ${baseHalfWidth},${baseY} Z`}
+          <Rect
+            {...filledProps}
+            width={bodyWidth / 2}
+            height={bodyHeight * 2}
+            x={-15}
           />
         );
     }
