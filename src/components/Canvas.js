@@ -6,7 +6,7 @@ import { useAppStore } from '../stores';
 import { UI_DIMENSIONS } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 
-const Canvas = ({ panelId }) => {
+const Canvas = ({ panelId, panelViewportSize }) => {
   const panels = useAppStore((state) => state.panels);
   const panelSize = useAppStore((state) => state.panelSize);
   const opacity = useAppStore((state) => state.opacity);
@@ -17,6 +17,8 @@ const Canvas = ({ panelId }) => {
   const symbolFlash = useAppStore((state) => state.symbolFlash);
   const dancerFlash = useAppStore((state) => state.dancerFlash);
   const handleCanvasClick = useAppStore((state) => state.handleCanvasClick);
+  const selectedPanel = useAppStore((state) => state.selectedPanel);
+  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
   const handleDancerSelection = useAppStore(
     (state) => state.handleDancerSelection,
   );
@@ -33,18 +35,18 @@ const Canvas = ({ panelId }) => {
   const updateShapeState = useAppStore((state) => state.updateShapeState);
   const layerOrder = useAppStore((state) => state.layerOrder);
 
+  const effectivePanelSize = panelViewportSize || panelSize;
+  const isMagnified = magnifyEnabled && selectedPanel === panelId;
+  const contentScale = isMagnified ? UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE : 1;
+  const scaledCanvasWidth = UI_DIMENSIONS.CANVAS_SIZE.width * contentScale;
+  const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
+  const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
+  const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
+
   const panel = panels.find((p) => p.id === panelId);
   if (!panel) return null;
 
   const { dancers, headShapes, handShapes, shapes } = panel;
-
-  // Calculate viewport offset to center on the canvas
-  // At 100% canvas size (300x300 panel), we offset by -150 to show center region
-  // At 200% canvas size (600x600 panel), we offset by 0 to show entire canvas (0-600)
-  const viewportOffsetX =
-    (panelSize.width - UI_DIMENSIONS.CANVAS_SIZE.width) / 2;
-  const viewportOffsetY =
-    (panelSize.height - UI_DIMENSIONS.CANVAS_SIZE.height) / 2;
 
   const SHAPE_LAYER_KEYS = LAYER_KEYS.filter((key) => key !== 'body');
 
@@ -72,11 +74,16 @@ const Canvas = ({ panelId }) => {
   //Konva stage
   return (
     <Stage
-      width={panelSize.width - 4} //Slightly smaller than container
-      height={panelSize.height - 4}
-      onMouseDown={handleCanvasClickInternal} // Lets you deselect the dancer/shape currently selected by clicking an empty area
+      width={effectivePanelSize.width - 4} //Slightly smaller than container
+      height={effectivePanelSize.height - 4}
+      onMouseDown={handleCanvasClickInternal}
     >
-      <Layer x={viewportOffsetX} y={viewportOffsetY}>
+      <Layer
+        x={baseOffsetX}
+        y={baseOffsetY}
+        scaleX={contentScale}
+        scaleY={contentScale}
+      >
         {layerOrder.map((layerKey) => {
           if (layerKey === 'body') {
             // Filter out hidden dancers

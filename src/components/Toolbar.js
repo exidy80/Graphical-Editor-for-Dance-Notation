@@ -22,6 +22,8 @@ const Toolbar = () => {
   const selectedDancer = useAppStore((state) => state.selectedDancer);
   const handleDelete = useAppStore((state) => state.handleDelete);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
+  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
+  const toggleMagnify = useAppStore((state) => state.toggleMagnify);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const panels = useAppStore((state) => state.panels);
   const setLockModeActive = useAppStore((state) => state.setLockModeActive);
@@ -33,8 +35,6 @@ const Toolbar = () => {
   );
   const resetDancers = useAppStore((state) => state.resetDancers);
   const recenterAllPanels = useAppStore((state) => state.recenterAllPanels);
-  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
-  const toggleMagnify = useAppStore((state) => state.toggleMagnify);
   const documentTitle = useAppStore((state) => state.documentTitle);
   const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
   const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);
