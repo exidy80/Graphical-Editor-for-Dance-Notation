@@ -13,7 +13,7 @@ const AppContent = () => {
   const setSelectedPanel = useAppStore((state) => state.setSelectedPanel);
 
   useEffect(() => {
-    document.title = 'DanceMarks';
+    document.title = 'Choreolis - Graphical Editor for Dance Notation';
   }, []);
 
   // Auto-select first panel on startup if no panel is selected
