@@ -21,6 +21,7 @@ const Sidebar = () => {
 
   return (
     <div
+      className="sidebar"
       style={{
         width: '280px',
         height: '100vh',

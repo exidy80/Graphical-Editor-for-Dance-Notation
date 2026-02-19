@@ -7,13 +7,12 @@ import CanvasSizeControl from './CanvasSizeControl';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faTrash,
-  faLockOpen,
-  faLock,
   faLink,
   faUnlink,
   faRefresh,
   faFilePdf,
   faCompressArrowsAlt,
+  faSearchPlus,
 } from '@fortawesome/free-solid-svg-icons';
 
 const Toolbar = () => {
@@ -21,8 +20,6 @@ const Toolbar = () => {
   const handleHandSelection = useAppStore((state) => state.handleHandSelection);
   const selectedHand = useAppStore((state) => state.selectedHand);
   const selectedDancer = useAppStore((state) => state.selectedDancer);
-  const opacity = useAppStore((state) => state.opacity);
-  const handleOpacityChange = useAppStore((state) => state.handleOpacityChange);
   const handleDelete = useAppStore((state) => state.handleDelete);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
@@ -36,6 +33,8 @@ const Toolbar = () => {
   );
   const resetDancers = useAppStore((state) => state.resetDancers);
   const recenterAllPanels = useAppStore((state) => state.recenterAllPanels);
+  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
+  const toggleMagnify = useAppStore((state) => state.toggleMagnify);
   const documentTitle = useAppStore((state) => state.documentTitle);
   const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
   const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);
@@ -243,6 +242,17 @@ const Toolbar = () => {
     }
   };
 
+  const pdfLink = (
+    <button
+      onClick={exportPanelsToPDF}
+      className="toolbar-link"
+      title="Export all panels to PDF"
+      type="button"
+    >
+      <FontAwesomeIcon icon={faFilePdf} /> Save to PDF
+    </button>
+  );
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
       {/* Document Title - Centered at top */}
@@ -283,211 +293,193 @@ const Toolbar = () => {
         </h1>
       </div>
 
-      <div className="perspective-selection">
-        <div className="options-group">
-          <Dropdown className="custom-dropdown">
-            <Dropdown.Toggle
-              variant={selectedDancer ? 'primary' : 'outline-secondary'}
-              id="head-dropdown"
-              disabled={!selectedDancer}
-              style={selectedDancer ? colouredButtonStyle : {}}
-            >
-              Select Body
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {/* Options for shape of head */}
-              <Dropdown.Item onClick={() => handleHeadSelection('Upright')}>
-                Upright
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHeadSelection('Duck')}>
-                Duck
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHeadSelection('Bow')}>
-                Bow
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHeadSelection('Bend Knees')}>
-                Bend Knees
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHeadSelection('Squat')}>
-                Squat
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-
-          <Dropdown className="custom-dropdown">
-            <Dropdown.Toggle
-              variant={selectedHand ? 'primary' : 'outline-secondary'}
-              id="hand-dropdown"
-              disabled={!selectedHand}
-              style={selectedHand ? colouredButtonStyle : {}}
-            >
-              {selectedHand ? 'Select Hand' : 'Select Hand'}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              {/* Options for shape of hand */}
-              <Dropdown.Item onClick={() => handleHandSelection('Overhead')}>
-                Overhead
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHandSelection('Shoulder')}>
-                Shoulder
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHandSelection('Waist')}>
-                Waist
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHandSelection('Hip')}>
-                Hip
-              </Dropdown.Item>
-              <Dropdown.Item onClick={() => handleHandSelection('Knee')}>
-                Knee
-              </Dropdown.Item>
-            </Dropdown.Menu>
-          </Dropdown>
-
-          <ButtonGroup className="custom-btn-group">
-            {/* Toggles the opacity of the dancers */}
-            <Button
-              onClick={() => handleOpacityChange('dancers')}
-              variant={
-                opacity.dancers.value === 1 ? 'outline-primary' : 'primary'
-              }
-              className="icon-button"
-            >
-              <FontAwesomeIcon
-                icon={opacity.dancers.value === 1 ? faLockOpen : faLock}
-              />
-              <span className="button-text">Dancers</span>
-            </Button>
-            {/* Toggles the opacity of the shapes */}
-            <Button
-              onClick={() => handleOpacityChange('symbols')}
-              variant={
-                opacity.symbols.value === 1 ? 'outline-primary' : 'primary'
-              }
-              className="icon-button"
-            >
-              <FontAwesomeIcon
-                icon={opacity.symbols.value === 1 ? faLockOpen : faLock}
-              />
-              <span className="button-text">Symbols</span>
-            </Button>
-          </ButtonGroup>
-
-          {/* Global canvas size control */}
-          <CanvasSizeControl />
-
-          <ButtonGroup className="custom-btn-group">
-            <Button
-              onClick={() => {
-                if (!lockUi.active && selectedPanel) {
-                  // One-click: lock any overlapping hands in current panel
-                  lockOverlappingHands(selectedPanel);
-                } else {
-                  setLockModeActive(!lockUi.active);
-                }
-              }}
-              variant={lockUi.active ? 'primary' : 'outline-primary'}
-              className="icon-button"
-            >
-              <FontAwesomeIcon icon={faLink} />
-              <span className="button-text">Hold Hands</span>
-            </Button>
-            <Button
-              onClick={() => {
-                if (!selectedHand) return;
-                const lock = getLockForHand(
-                  selectedHand.panelId,
-                  selectedHand.dancerId,
-                  selectedHand.handSide,
-                );
-                if (lock) removeLockById(selectedHand.panelId, lock.id);
-              }}
-              variant={
-                selectedHand &&
-                getLockForHand(
-                  selectedHand?.panelId,
-                  selectedHand?.dancerId,
-                  selectedHand?.handSide,
-                )
-                  ? 'danger'
-                  : 'outline-danger'
-              }
-              className="icon-button"
-              disabled={
-                !selectedHand ||
-                !getLockForHand(
-                  selectedHand?.panelId,
-                  selectedHand?.dancerId,
-                  selectedHand?.handSide,
-                )
-              }
-            >
-              <FontAwesomeIcon icon={faUnlink} />
-              <span className="button-text">Release Hands</span>
-            </Button>
-          </ButtonGroup>
-
-          {/* Deletes the currently selected shape */}
-          <Button
-            onClick={() => selectedShapeId && handleDelete(selectedShapeId)}
-            variant={selectedShapeId ? 'danger' : 'outline-danger'}
-            className="icon-button"
-            disabled={!selectedShapeId}
-            style={selectedShapeId ? colouredButtonStyle : {}}
-          >
-            <FontAwesomeIcon icon={faTrash} />
-            <span className="button-text">Delete Symbol</span>
-          </Button>
+      <div className="perspective-selection toolbar-layout">
+        <div className="toolbar-section toolbar-section-file toolbar-section-fixed">
+          <PanelFileHandler
+            className="toolbar-links-grid"
+            extraLinks={pdfLink}
+            extraLinksPosition="afterOpen"
+          />
         </div>
 
-        <div className="file-handler">
-          {/* Export panels to PDF */}
-          <Button
-            onClick={exportPanelsToPDF}
-            variant="outline-primary"
-            className="icon-button"
-            title="Export all panels to PDF"
-          >
-            <FontAwesomeIcon icon={faFilePdf} />
-            <span className="button-text">Save to PDF...</span>
-          </Button>
-          {/* Recenter all panels */}
-          <Button
-            onClick={() => {
-              if (
-                window.confirm(
-                  'Recenter all panels? This will move all dancers and shapes to center the stage markers.',
-                )
-              ) {
-                recenterAllPanels();
-              }
-            }}
-            variant="outline-success"
-            className="icon-button"
-            title="Recenter all panels to center the stage markers"
-          >
-            <FontAwesomeIcon icon={faCompressArrowsAlt} />
-            <span className="button-text">Recenter Panels</span>
-          </Button>
-          {/* Reset to default state */}
-          <Button
-            onClick={() => {
-              if (
-                window.confirm(
-                  'Reset all dancers to default state? This will clear all panels and dancers.',
-                )
-              ) {
-                resetDancers();
-              }
-            }}
-            variant="outline-danger"
-            className="icon-button"
-            title="Reset all dancers to default state"
-          >
-            <FontAwesomeIcon icon={faRefresh} />
-            <span className="button-text">Reset Dancers</span>
-          </Button>
-          {/* Renders the save/load component */}
-          <PanelFileHandler />
+        <div className="toolbar-section toolbar-section-panel">
+          <div className="toolbar-stack">
+            <CanvasSizeControl />
+            <Button
+              onClick={toggleMagnify}
+              variant={magnifyEnabled ? 'primary' : 'outline-primary'}
+              className="icon-button"
+              title="Magnify selected panel"
+            >
+              <FontAwesomeIcon icon={faSearchPlus} />
+              <span className="button-text">Magnify</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="toolbar-section toolbar-section-elements">
+          <div className="toolbar-stack">
+            <Button
+              onClick={() => selectedShapeId && handleDelete(selectedShapeId)}
+              variant={selectedShapeId ? 'danger' : 'outline-danger'}
+              className="icon-button"
+              disabled={!selectedShapeId}
+              style={selectedShapeId ? colouredButtonStyle : {}}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+              <span className="button-text">Delete Symbol</span>
+            </Button>
+            <ButtonGroup className="custom-btn-group">
+              <Button
+                onClick={() => {
+                  if (!lockUi.active && selectedPanel) {
+                    lockOverlappingHands(selectedPanel);
+                  } else {
+                    setLockModeActive(!lockUi.active);
+                  }
+                }}
+                variant={lockUi.active ? 'primary' : 'outline-primary'}
+                className="icon-button"
+              >
+                <FontAwesomeIcon icon={faLink} />
+                <span className="button-text">Hold Hands</span>
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!selectedHand) return;
+                  const lock = getLockForHand(
+                    selectedHand.panelId,
+                    selectedHand.dancerId,
+                    selectedHand.handSide,
+                  );
+                  if (lock) removeLockById(selectedHand.panelId, lock.id);
+                }}
+                variant={
+                  selectedHand &&
+                  getLockForHand(
+                    selectedHand?.panelId,
+                    selectedHand?.dancerId,
+                    selectedHand?.handSide,
+                  )
+                    ? 'danger'
+                    : 'outline-danger'
+                }
+                className="icon-button"
+                disabled={
+                  !selectedHand ||
+                  !getLockForHand(
+                    selectedHand?.panelId,
+                    selectedHand?.dancerId,
+                    selectedHand?.handSide,
+                  )
+                }
+              >
+                <FontAwesomeIcon icon={faUnlink} />
+                <span className="button-text">Release Hands</span>
+              </Button>
+            </ButtonGroup>
+          </div>
+        </div>
+
+        <div className="toolbar-section toolbar-section-reset">
+          <div className="toolbar-stack">
+            <Button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    'Reset all dancers to default state? This will clear all panels and dancers.',
+                  )
+                ) {
+                  resetDancers();
+                }
+              }}
+              variant="outline-danger"
+              className="icon-button"
+              title="Reset all dancers to default state"
+            >
+              <FontAwesomeIcon icon={faRefresh} />
+              <span className="button-text">Reset Dancers</span>
+            </Button>
+            <Button
+              onClick={() => {
+                if (
+                  window.confirm(
+                    'Recenter all panels? This will move all dancers and shapes to center the stage markers.',
+                  )
+                ) {
+                  recenterAllPanels();
+                }
+              }}
+              variant="outline-success"
+              className="icon-button"
+              title="Recenter all panels to center the stage markers"
+            >
+              <FontAwesomeIcon icon={faCompressArrowsAlt} />
+              <span className="button-text">Reset Panels</span>
+            </Button>
+          </div>
+        </div>
+
+        <div className="toolbar-section toolbar-section-selection toolbar-section-fixed">
+          <div className="toolbar-stack">
+            <Dropdown className="custom-dropdown">
+              <Dropdown.Toggle
+                variant={selectedDancer ? 'primary' : 'outline-secondary'}
+                id="head-dropdown"
+                disabled={!selectedDancer}
+                style={selectedDancer ? colouredButtonStyle : {}}
+              >
+                Select Body
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => handleHeadSelection('Upright')}>
+                  Upright
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHeadSelection('Duck')}>
+                  Duck
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHeadSelection('Bow')}>
+                  Bow
+                </Dropdown.Item>
+                <Dropdown.Item
+                  onClick={() => handleHeadSelection('Bend Knees')}
+                >
+                  Bend Knees
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHeadSelection('Squat')}>
+                  Squat
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+
+            <Dropdown className="custom-dropdown">
+              <Dropdown.Toggle
+                variant={selectedHand ? 'primary' : 'outline-secondary'}
+                id="hand-dropdown"
+                disabled={!selectedHand}
+                style={selectedHand ? colouredButtonStyle : {}}
+              >
+                {selectedHand ? 'Select Hand' : 'Select Hand'}
+              </Dropdown.Toggle>
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={() => handleHandSelection('Overhead')}>
+                  Overhead
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHandSelection('Shoulder')}>
+                  Shoulder
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHandSelection('Waist')}>
+                  Waist
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHandSelection('Hip')}>
+                  Hip
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => handleHandSelection('Knee')}>
+                  Knee
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
         </div>
       </div>
     </div>

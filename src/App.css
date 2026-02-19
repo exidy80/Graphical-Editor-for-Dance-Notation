@@ -39,17 +39,57 @@
 .perspective-selection {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  gap: 16px;
   padding: 15px;
   background-color: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
   margin-bottom: 20px;
 }
 
-.options-group {
+.toolbar-layout {
+  width: 100%;
+}
+
+.toolbar-section {
+  flex: 1 1 0;
   display: flex;
-  gap: 10px;
-  align-items: center; /* Ensure vertical alignment */
+  justify-content: center;
+  align-items: center;
+}
+
+.toolbar-section-fixed {
+  flex: 0 0 auto;
+}
+
+.toolbar-links-column {
+  display: flex;
+  align-items: flex-start;
+}
+
+.panel-file-handler {
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 8px 18px;
+  align-items: center;
+  justify-items: center;
+}
+
+.toolbar-link {
+  color: #0d6efd;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+.toolbar-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
 }
 
 .custom-dropdown .dropdown-toggle,
@@ -108,13 +148,6 @@
   margin-left: 5px;
 }
 
-.file-handler {
-  margin-left: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
 
 .colour-toggle.react-toggle--checked .react-toggle-track {
   background-color: #ff0000 !important; /* Red when checked */
@@ -138,12 +171,7 @@
     align-items: stretch;
   }
 
-  .options-group {
-    margin-bottom: 10px;
-  }
-
-  .file-handler {
-    margin-left: 0;
-    margin-top: 10px;
+  .toolbar-section {
+    justify-content: flex-start;
   }
 }

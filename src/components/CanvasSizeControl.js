@@ -32,6 +32,8 @@ const CanvasSizeControl = () => {
         disabled
         style={{
           borderRadius: 0,
+          color: 'black',
+          borderColor: '#0d6efd',
           cursor: 'default',
           minWidth: '80px',
         }}
