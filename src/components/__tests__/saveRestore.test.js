@@ -305,15 +305,25 @@ describe('Save/Restore Functionality', () => {
         .getState()
         .deserializePanel(oldPanelData);
 
-      // Should have both stageX and stageNext
-      expect(deserialized.shapes).toHaveLength(2);
+      // Should have stageCenter (added first), stageX, and stageNext
+      expect(deserialized.shapes).toHaveLength(3);
 
+      const stageCenter = deserialized.shapes.find(
+        (s) => s.type === ShapeTypes.STAGE_CENTER,
+      );
       const stageX = deserialized.shapes.find(
         (s) => s.type === ShapeTypes.STAGE_X,
       );
       const stageNext = deserialized.shapes.find(
         (s) => s.type === ShapeTypes.STAGE_NEXT,
       );
+
+      expect(stageCenter).toBeDefined();
+      expect(stageCenter.radius).toBe(5);
+      expect(stageCenter.fill).toBe('green');
+      expect(stageCenter.draggable).toBe(false);
+      expect(stageCenter.x).toBe(stageX.x);
+      expect(stageCenter.y).toBe(stageX.y);
 
       expect(stageX).toBeDefined();
       expect(stageNext).toBeDefined();

@@ -44,6 +44,7 @@ export const SHAPE_DIMENSIONS = {
   image: { width: 60, height: 60 }, // Images scaled to 0.3 by default in Symbols.js
   stageX: { width: 20, height: 20 },
   stageNext: { width: 20, height: 20 },
+  stageCenter: { width: 10, height: 10 }, // Small green circle
   default: { width: 50, height: 50 },
 };
 

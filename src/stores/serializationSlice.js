@@ -1,6 +1,10 @@
 import { v4 as uuidv4 } from 'uuid';
 import * as ShapeTypes from '../constants/shapeTypes';
-import { createStageNext, createStageX } from '../constants/shapeTypes';
+import {
+  createStageNext,
+  createStageX,
+  createStageCenter,
+} from '../constants/shapeTypes';
 
 // Serialization slice - handles converting panels to/from JSON for save/load operations
 const createSerializationSlice = (set, get) => ({
@@ -44,6 +48,9 @@ const createSerializationSlice = (set, get) => ({
         y: shape.y || 0,
         width: shape.width,
         height: shape.height,
+        radius: shape.radius,
+        text: shape.text,
+        fontSize: shape.fontSize,
         draggable: shape.draggable !== false, // Default to true unless explicitly false
         rotation: shape.rotation || 0,
         scaleX: shape.scaleX || 1,
@@ -114,6 +121,14 @@ const createSerializationSlice = (set, get) => ({
           fill: defaults.fill,
         };
       }
+      if (shape.type === ShapeTypes.STAGE_CENTER && !shape.radius) {
+        const defaults = createStageCenter();
+        return {
+          ...newShape,
+          radius: defaults.radius,
+          fill: defaults.fill,
+        };
+      }
 
       return newShape;
     });
@@ -133,6 +148,26 @@ const createSerializationSlice = (set, get) => ({
         newShapes.push({
           id: uuidv4(),
           ...createStageNext(stageX.x, stageX.y),
+        });
+      }
+    }
+
+    // BACKWARD COMPATIBILITY: Add stageCenter if it doesn't exist
+    // Older saved files created before stageCenter was introduced
+    // This ensures all panels have the stageCenter marker
+    const hasStageCenter = newShapes.some(
+      (shape) => shape.type === ShapeTypes.STAGE_CENTER,
+    );
+    if (!hasStageCenter) {
+      const stageX = newShapes.find(
+        (shape) => shape.type === ShapeTypes.STAGE_X,
+      );
+      if (stageX) {
+        // Add stageCenter at the same position as stageX
+        // It should be at the beginning of the shapes array to render underneath
+        newShapes.unshift({
+          id: uuidv4(),
+          ...createStageCenter(stageX.x, stageX.y),
         });
       }
     }

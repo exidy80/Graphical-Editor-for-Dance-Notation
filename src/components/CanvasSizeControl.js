@@ -38,7 +38,7 @@ const CanvasSizeControl = () => {
           minWidth: '80px',
         }}
       >
-        Canvas Size: {globalCanvasSize.toFixed(1)}
+        Canvas: {globalCanvasSize.toFixed(1)}
       </Button>
       <Button
         onClick={increaseCanvasSize}

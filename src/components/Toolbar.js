@@ -415,7 +415,7 @@ const Toolbar = () => {
               title="Recenter all panels to center the stage markers"
             >
               <FontAwesomeIcon icon={faCompressArrowsAlt} />
-              <span className="button-text">Reset Panels</span>
+              <span className="button-text">Recenter Panels</span>
             </Button>
           </div>
         </div>

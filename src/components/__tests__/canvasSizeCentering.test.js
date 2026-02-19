@@ -40,18 +40,22 @@ describe('Canvas Size Centering and Positioning', () => {
       const canvasCenterX = CANVAS_SIZE.width / 2;
       const canvasCenterY = CANVAS_SIZE.height * 0.42;
 
-      // Find stageX and stageNext markers
+      // Find stageX, stageNext, and stageCenter markers
       const stageX = panel.shapes.find((s) => s.type === 'stageX');
       const stageNext = panel.shapes.find((s) => s.type === 'stageNext');
+      const stageCenter = panel.shapes.find((s) => s.type === 'stageCenter');
 
       expect(stageX).toBeDefined();
       expect(stageNext).toBeDefined();
+      expect(stageCenter).toBeDefined();
 
-      // Both should be at panel visual center (absolute positions)
+      // All three should be at panel visual center (absolute positions)
       expect(stageX.x).toBe(300); // Canvas center X
       expect(stageX.y).toBe(275); // Visual center Y
       expect(stageNext.x).toBe(300); // Canvas center X
       expect(stageNext.y).toBe(275); // Visual center Y
+      expect(stageCenter.x).toBe(300); // Canvas center X
+      expect(stageCenter.y).toBe(275); // Visual center Y
     });
 
     test('dancers should be positioned relative to canvas center', () => {
