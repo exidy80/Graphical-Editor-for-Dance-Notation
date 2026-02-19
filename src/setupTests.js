@@ -6,6 +6,38 @@ import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
 global.TextDecoder = TextDecoder;
 
+// Mock ResizeObserver for tests
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock window.matchMedia for tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query) => {
+    const listeners = [];
+    return {
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: jest.fn(), // Deprecated
+      removeListener: jest.fn(), // Deprecated
+      addEventListener: jest.fn((event, handler) => {
+        listeners.push(handler);
+      }),
+      removeEventListener: jest.fn((event, handler) => {
+        const index = listeners.indexOf(handler);
+        if (index > -1) {
+          listeners.splice(index, 1);
+        }
+      }),
+      dispatchEvent: jest.fn(),
+    };
+  }),
+});
+
 // Silence specific deprecated act warning emitted by RTL + react-dom/test-utils bridge
 const originalConsoleError = console.error;
 console.error = (...args) => {

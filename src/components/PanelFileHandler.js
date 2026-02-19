@@ -3,7 +3,11 @@ import { useAppStore } from '../stores';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSave, faFolderOpen } from '@fortawesome/free-solid-svg-icons';
 
-const PanelFileHandler = () => {
+const PanelFileHandler = ({
+  className = '',
+  extraLinks = null,
+  extraLinksPosition = 'afterOpen',
+}) => {
   const panels = useAppStore((state) => state.panels);
   const serializePanel = useAppStore((state) => state.serializePanel);
   const deserializePanel = useAppStore((state) => state.deserializePanel);
@@ -231,42 +235,34 @@ const PanelFileHandler = () => {
     });
   }, [handleSave, handleSaveAs, handleOpen, setFileOperationTriggers]);
 
-  const linkStyle = {
-    //Styling for upload/download buttons
-    color: 'blue',
-    textDecoration: 'underline',
-    cursor: 'pointer',
-    background: 'none',
-    border: 'none',
-    padding: '0',
-    font: 'inherit',
-  };
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+    <div className={`panel-file-handler ${className}`.trim()}>
       <button
         onClick={handleOpen}
-        style={linkStyle}
+        className="toolbar-link"
         title="Open a dance notation file"
       >
         <FontAwesomeIcon icon={faFolderOpen} /> Open
       </button>
+      {extraLinksPosition === 'afterOpen' ? extraLinks : null}
       <button
         onClick={handleSave}
-        style={linkStyle}
+        className="toolbar-link"
         title={
           currentFileHandle ? 'Save to current file' : 'Save dance notation'
         }
       >
         <FontAwesomeIcon icon={faSave} /> Save
       </button>
+      {extraLinksPosition === 'afterSave' ? extraLinks : null}
       <button
         onClick={handleSaveAs}
-        style={linkStyle}
+        className="toolbar-link"
         title="Save dance notation with a new name"
       >
         <FontAwesomeIcon icon={faSave} /> Save As...
       </button>
+      {extraLinksPosition === 'afterSaveAs' ? extraLinks : null}
       <input
         type="file"
         accept=".json"

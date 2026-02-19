@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../stores';
 import { LAYER_CATEGORIES, isShapeInCategory } from '../utils/layersConfig.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -19,6 +19,8 @@ const LayerControl = () => {
     new Array(LAYER_CATEGORIES.length).fill(false),
   );
   const [isExpanded, setIsExpanded] = useState(false);
+  const [usePopup, setUsePopup] = useState(false);
+
   const panels = useAppStore((state) => state.panels);
   const queueDancerFlash = useAppStore((state) => state.queueDancerFlash);
   const queueSymbolFlash = useAppStore((state) => state.queueSymbolFlash);
@@ -30,6 +32,26 @@ const LayerControl = () => {
   const addToHideList = useAppStore((state) => state.addToHideList);
   const removeFromHideList = useAppStore((state) => state.removeFromHideList);
   const setLayerOrder = useAppStore((state) => state.setLayerOrder);
+
+  // Use media query to determine if we should use popup approach
+  // On small screens (height < 1000px), use popup to save space
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(max-height: 900px)');
+
+    const handleChange = (e) => {
+      setUsePopup(e.matches);
+    };
+
+    // Set initial value
+    setUsePopup(mediaQuery.matches);
+
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, []);
 
   const _queueFlashForCategory = (catKey) => {
     panels.forEach((panel) => {
@@ -135,15 +157,18 @@ const LayerControl = () => {
     }
   };
 
+  // Determine if we should show expanded or use popup
+  const shouldShowExpanded = usePopup ? isExpanded : true;
+
   return (
     <div
-      onMouseEnter={() => setIsExpanded(true)}
-      onMouseLeave={() => setIsExpanded(false)}
+      onMouseEnter={() => usePopup && setIsExpanded(true)}
+      onMouseLeave={() => usePopup && setIsExpanded(false)}
       style={{
         backgroundColor: '#fff',
         borderTop: '2px solid #ddd',
-        padding: isExpanded ? '15px' : '12px 15px',
-        minHeight: isExpanded ? 'auto' : '20px',
+        padding: shouldShowExpanded ? '15px' : '12px 15px',
+        minHeight: shouldShowExpanded ? 'auto' : '20px',
         transition: 'all 0.2s ease',
       }}
     >
@@ -151,14 +176,14 @@ const LayerControl = () => {
         style={{
           margin: 0,
           fontSize: '14px',
-          fontWeight: isExpanded ? 'bold' : 'bold',
-          color: isExpanded ? 'inherit' : '#666',
-          cursor: 'pointer',
+          fontWeight: 'bold',
+          color: shouldShowExpanded ? 'inherit' : '#666',
+          cursor: usePopup ? 'pointer' : 'default',
         }}
       >
         Layers
       </h3>
-      {isExpanded && (
+      {shouldShowExpanded && (
         <div
           style={{
             display: 'grid',
