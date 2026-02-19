@@ -3,6 +3,7 @@
 // Stage markers
 export const STAGE_X = 'stageX';
 export const STAGE_NEXT = 'stageNext';
+export const STAGE_CENTER = 'stageCenter';
 
 // Spin types (two full rotations)
 export const SPIN_TWO = 'spinTwo';
@@ -88,4 +89,13 @@ export const createStageNext = (x = 147, y = 127) => ({
   text: '+',
   fontSize: 24,
   fill: 'black',
+});
+
+export const createStageCenter = (x = 147, y = 127) => ({
+  type: STAGE_CENTER,
+  x,
+  y,
+  radius: 5,
+  draggable: false,
+  fill: 'green',
 });

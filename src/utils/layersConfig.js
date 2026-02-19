@@ -58,7 +58,11 @@ const SIGNALS_TYPES = new Set([
 
 const FEET_TYPES = new Set([ShapeTypes.IMAGE]);
 
-const LOCATION_TYPES = new Set([ShapeTypes.STAGE_X, ShapeTypes.STAGE_NEXT]);
+const LOCATION_TYPES = new Set([
+  ShapeTypes.STAGE_X,
+  ShapeTypes.STAGE_NEXT,
+  ShapeTypes.STAGE_CENTER,
+]);
 
 // 4. Shared classifier
 export function isShapeInCategory(shape, catKey) {

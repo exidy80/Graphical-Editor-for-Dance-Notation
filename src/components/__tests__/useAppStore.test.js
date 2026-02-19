@@ -60,6 +60,15 @@ describe('useAppStore', () => {
     expect(panels.length).toBeGreaterThan(0);
     const firstPanel = panels[0];
 
+    // Check for stageCenter (green dot)
+    const stageCenter = firstPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_CENTER,
+    );
+    expect(stageCenter).toBeDefined();
+    expect(stageCenter.radius).toBe(5);
+    expect(stageCenter.fill).toBe('green');
+    expect(stageCenter.draggable).toBe(false);
+
     // Check for stageX (origin marker)
     const stageX = firstPanel.shapes.find((s) => s.type === ShapeTypes.STAGE_X);
     expect(stageX).toBeDefined();
@@ -74,9 +83,11 @@ describe('useAppStore', () => {
     expect(stageNext.text).toBe('+');
     expect(stageNext.fill).toBe('black');
 
-    // Both should be at same initial position
+    // All three should be at same initial position
     expect(stageX.x).toBe(stageNext.x);
     expect(stageX.y).toBe(stageNext.y);
+    expect(stageCenter.x).toBe(stageX.x);
+    expect(stageCenter.y).toBe(stageX.y);
   });
 
   test('select dancer toggles selection', () => {
@@ -383,6 +394,24 @@ describe('useAppStore', () => {
     );
     expect(clonedStageX.x).toBeCloseTo(centerX, 5);
     expect(clonedStageX.y).toBeCloseTo(centerY, 5);
+
+    // Verify stageCenter is offset relative to stageNext (which goes to center)
+    const originalStageCenter = updatedPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_CENTER,
+    );
+    const clonedStageCenter = clonedPanel.shapes.find(
+      (s) => s.type === ShapeTypes.STAGE_CENTER,
+    );
+    expect(clonedStageCenter).toBeDefined();
+    // stageCenter should have moved by the same delta as other symbols
+    expect(clonedStageCenter.x).toBeCloseTo(
+      originalStageCenter.x + expectedDeltaX,
+      5,
+    );
+    expect(clonedStageCenter.y).toBeCloseTo(
+      originalStageCenter.y + expectedDeltaY,
+      5,
+    );
 
     // Verify dancer shifted by the same delta
     const clonedDancer = clonedPanel.dancers[0];

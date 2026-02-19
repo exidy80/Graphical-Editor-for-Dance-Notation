@@ -38,6 +38,7 @@ const Symbol = ({
 
   //check if its the stage marker
   const isStageOrigin = shape.type === ShapeTypes.STAGE_X;
+  const isStageCenter = shape.type === ShapeTypes.STAGE_CENTER;
 
   const handleDragEnd = useCallback(
     (e) => {
@@ -52,15 +53,21 @@ const Symbol = ({
 
   const handleClick = useCallback(
     (e) => {
-      if (disabled || isStageOrigin) return;
+      if (disabled || isStageOrigin || isStageCenter) return;
 
       onShapeSelect();
     },
-    [disabled, isStageOrigin, onShapeSelect],
+    [disabled, isStageOrigin, isStageCenter, onShapeSelect],
   );
 
   useEffect(() => {
-    if (isSelected && !isStageOrigin && trRef.current && shapeRef.current) {
+    if (
+      isSelected &&
+      !isStageOrigin &&
+      !isStageCenter &&
+      trRef.current &&
+      shapeRef.current
+    ) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     } else if (!isSelected && trRef.current) {
@@ -68,7 +75,7 @@ const Symbol = ({
       trRef.current.nodes([]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageOrigin]);
+  }, [isSelected, isStageOrigin, isStageCenter]);
 
   //handles end of transform and updates the state
   const handleTransformEnd = useCallback(
@@ -113,7 +120,7 @@ const Symbol = ({
     ref: shapeRef,
     ...shape,
     opacity: opacity,
-    draggable: !disabled,
+    draggable: !disabled && !isStageCenter,
     scaleX: shape.scaleX || 1,
     scaleY: shape.scaleY || 1,
     rotation: shape.rotation || 0,
@@ -136,7 +143,7 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageOrigin && (
+        {isSelected && !isStageOrigin && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -157,7 +164,7 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageOrigin && (
+        {isSelected && !isStageOrigin && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -184,7 +191,7 @@ const Symbol = ({
           hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
           dash={[10, 5]}
         />
-        {isSelected && !isStageOrigin && (
+        {isSelected && !isStageOrigin && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -210,7 +217,7 @@ const Symbol = ({
           strokeWidth={3}
           hitStrokeWidth={10}
         />
-        {isSelected && !isStageOrigin && (
+        {isSelected && !isStageOrigin && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -260,8 +267,8 @@ const Symbol = ({
           text={shape.text}
           fontSize={shape.fontSize}
           fill={shape.fill}
-          offsetX={10}
-          offsetY={10}
+          offsetX={8.3}
+          offsetY={8.3}
         />
       )}
       {shape.type === ShapeTypes.STAGE_NEXT && (
@@ -270,9 +277,12 @@ const Symbol = ({
           text={shape.text}
           fontSize={shape.fontSize}
           fill={shape.fill}
-          offsetX={10}
-          offsetY={10}
+          offsetX={8.3}
+          offsetY={8.3}
         />
+      )}
+      {shape.type === ShapeTypes.STAGE_CENTER && (
+        <Circle {...commonProps} radius={shape.radius} fill={shape.fill} />
       )}
       {shape.type === ShapeTypes.KNEE && (
         <Circle
@@ -320,7 +330,7 @@ const Symbol = ({
           strokeWidth={1}
         />
       )}
-      {isSelected && !isStageOrigin && (
+      {isSelected && !isStageOrigin && !isStageCenter && (
         <Transformer
           ref={trRef}
           centeredScaling={true}
