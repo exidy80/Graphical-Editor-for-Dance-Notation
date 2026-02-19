@@ -22,6 +22,8 @@ const Toolbar = () => {
   const selectedDancer = useAppStore((state) => state.selectedDancer);
   const handleDelete = useAppStore((state) => state.handleDelete);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
+  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
+  const toggleMagnify = useAppStore((state) => state.toggleMagnify);
   const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const panels = useAppStore((state) => state.panels);
   const setLockModeActive = useAppStore((state) => state.setLockModeActive);
@@ -33,8 +35,6 @@ const Toolbar = () => {
   );
   const resetDancers = useAppStore((state) => state.resetDancers);
   const recenterAllPanels = useAppStore((state) => state.recenterAllPanels);
-  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
-  const toggleMagnify = useAppStore((state) => state.toggleMagnify);
   const documentTitle = useAppStore((state) => state.documentTitle);
   const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
   const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);
@@ -379,6 +379,84 @@ const Toolbar = () => {
               </Button>
             </ButtonGroup>
           </div>
+          </ButtonGroup>
+
+          {/* Global canvas size control */}
+          <CanvasSizeControl />
+
+          <Button
+            onClick={toggleMagnify}
+            variant={magnifyEnabled ? 'primary' : 'outline-primary'}
+            className="icon-button"
+            disabled={!selectedPanel}
+            title="Magnify selected panel (4x canvas, 2x content)"
+          >
+            <FontAwesomeIcon icon={faSearchPlus} />
+            <span className="button-text">Magnify</span>
+          </Button>
+
+          <ButtonGroup className="custom-btn-group">
+            <Button
+              onClick={() => {
+                if (!lockUi.active && selectedPanel) {
+                  // One-click: lock any overlapping hands in current panel
+                  lockOverlappingHands(selectedPanel);
+                } else {
+                  setLockModeActive(!lockUi.active);
+                }
+              }}
+              variant={lockUi.active ? 'primary' : 'outline-primary'}
+              className="icon-button"
+            >
+              <FontAwesomeIcon icon={faLink} />
+              <span className="button-text">Hold Hands</span>
+            </Button>
+            <Button
+              onClick={() => {
+                if (!selectedHand) return;
+                const lock = getLockForHand(
+                  selectedHand.panelId,
+                  selectedHand.dancerId,
+                  selectedHand.handSide,
+                );
+                if (lock) removeLockById(selectedHand.panelId, lock.id);
+              }}
+              variant={
+                selectedHand &&
+                getLockForHand(
+                  selectedHand?.panelId,
+                  selectedHand?.dancerId,
+                  selectedHand?.handSide,
+                )
+                  ? 'danger'
+                  : 'outline-danger'
+              }
+              className="icon-button"
+              disabled={
+                !selectedHand ||
+                !getLockForHand(
+                  selectedHand?.panelId,
+                  selectedHand?.dancerId,
+                  selectedHand?.handSide,
+                )
+              }
+            >
+              <FontAwesomeIcon icon={faUnlink} />
+              <span className="button-text">Release Hands</span>
+            </Button>
+          </ButtonGroup>
+
+          {/* Deletes the currently selected shape */}
+          <Button
+            onClick={() => selectedShapeId && handleDelete(selectedShapeId)}
+            variant={selectedShapeId ? 'danger' : 'outline-danger'}
+            className="icon-button"
+            disabled={!selectedShapeId}
+            style={selectedShapeId ? colouredButtonStyle : {}}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+            <span className="button-text">Delete Symbol</span>
+          </Button>
         </div>
 
         <div className="toolbar-section toolbar-section-reset">

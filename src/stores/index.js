@@ -31,6 +31,7 @@ const createInitialState = () => ({
   // UI state
   handFlash: [],
   lockUi: { active: false, selected: [] },
+  magnifyEnabled: false,
   opacity: {
     dancers: { value: 1, disabled: false },
     symbols: { value: 1, disabled: false },

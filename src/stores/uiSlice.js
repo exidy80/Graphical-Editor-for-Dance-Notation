@@ -11,6 +11,7 @@ const createUISlice = (set, get) => ({
   handFlash: [], // transient effects for visual feedback on hands
   symbolFlash: [], // transient effects for visual feedback on symbols
   dancerFlash: [], // transient effects for visual feedback on dancers
+  magnifyEnabled: false,
   // Generalized flash for symbols
   queueSymbolFlash: (panelId, symbolId, duration = 500) => {
     const entry = { panelId, symbolId };
@@ -68,6 +69,11 @@ const createUISlice = (set, get) => ({
       opacity: typeof updater === 'function' ? updater(state.opacity) : updater,
     })),
 
+  toggleMagnify: () => {
+    const { magnifyEnabled } = get();
+    set({ magnifyEnabled: !magnifyEnabled });
+  },
+
   queueHandFlash: (panelId, members, duration = 500) => {
     const entries = members.map((m) => ({
       panelId,
@@ -102,7 +108,6 @@ const createUISlice = (set, get) => ({
 
   handleCanvasClick: () => {
     set({
-      selectedPanel: null,
       selectedDancer: null,
       selectedHand: null,
       selectedShapeId: null,

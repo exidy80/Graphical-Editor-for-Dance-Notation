@@ -15,6 +15,7 @@ const PositionPanel = () => {
   const panels = useAppStore((state) => state.panels);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const panelSize = useAppStore((state) => state.panelSize);
+  const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
   const handlePanelSelection = useAppStore(
     (state) => state.handlePanelSelection,
   );
@@ -40,6 +41,19 @@ const PositionPanel = () => {
       textarea.selectionStart = textarea.selectionEnd = textarea.value.length;
     }
   }, [expandedNotesPanel]);
+
+  useEffect(() => {
+    if (!magnifyEnabled || !selectedPanel) return;
+    const panelElement = panelRefs.current[selectedPanel];
+    const gridElement = document.querySelector('.position-panel-grid');
+    if (!panelElement || !gridElement) return;
+
+    gridElement.scrollTo({
+      top: panelElement.offsetTop,
+      left: panelElement.offsetLeft,
+      behavior: 'smooth',
+    });
+  }, [magnifyEnabled, selectedPanel]);
 
   const optionsBarHeight = 40; //size of bar at top of panel
 
@@ -98,6 +112,20 @@ const PositionPanel = () => {
     <>
       {(dragPreviewPanels || panels).map((panel) => {
         const isSelected = selectedPanel === panel.id; //find selected panel
+        const isMagnified = magnifyEnabled && isSelected;
+        const displayPanelSize = isMagnified
+          ? {
+              width:
+                UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width *
+                UI_DIMENSIONS.MAGNIFY_CANVAS_SCALE,
+              height:
+                UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height *
+                UI_DIMENSIONS.MAGNIFY_CANVAS_SCALE,
+            }
+          : panelSize;
+        const columnSpan = isMagnified
+          ? Math.ceil(displayPanelSize.width / panelSize.width)
+          : 1;
 
         return (
           <div
@@ -110,8 +138,8 @@ const PositionPanel = () => {
             onDragOver={(e) => handleDragOver(e, panel.id)}
             onDragEnd={handleDragEnd}
             style={{
-              width: panelSize.width,
-              height: panelSize.height + optionsBarHeight, //calculate full size
+              width: displayPanelSize.width,
+              height: displayPanelSize.height + optionsBarHeight, //calculate full size
               border: `2px solid ${isSelected ? '#007bff' : '#e0e0e0'}`,
               transition: 'border-color 0.2s ease-in-out', //glow around panel transition
               display: 'flex',
@@ -119,6 +147,7 @@ const PositionPanel = () => {
               boxSizing: 'border-box',
               overflow: 'hidden',
               borderRadius: '8px',
+              gridColumn: `span ${columnSpan}`,
             }}
           >
             <div
@@ -184,7 +213,7 @@ const PositionPanel = () => {
                 minHeight: '0',
               }}
             >
-              <Canvas panelId={panel.id} />
+              <Canvas panelId={panel.id} panelViewportSize={displayPanelSize} />
             </div>
             {/* Notes Section */}
             <div
