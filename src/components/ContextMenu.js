@@ -17,7 +17,7 @@ const ContextMenu = () => {
   const setSelectedPanel = useAppStore((state) => state.setSelectedPanel);
   const updateShapeState = useAppStore((state) => state.updateShapeState);
   const panels = useAppStore((state) => state.panels);
-  const localToAbsolute = useAppStore((state) => state._localToAbsolute);
+  const hasOverlappingHands = useAppStore((state) => state.hasOverlappingHands);
   const getLockForHand = useAppStore((state) => state.getLockForHand);
   const removeLockById = useAppStore((state) => state.removeLockById);
   const lockOverlappingHands = useAppStore(
@@ -96,42 +96,6 @@ const ContextMenu = () => {
     handleHandSelection(handShape);
   };
 
-  const getHandLocalPos = (dancer, side) => {
-    if (!dancer) return null;
-    return dancer[`${side}HandPos`] || null;
-  };
-
-  const hasOverlappingHand = () => {
-    const panel = panels.find((p) => p.id === target.panelId);
-    if (!panel) return false;
-
-    const dancer = panel.dancers.find((d) => d.id === target.dancerId);
-    if (!dancer) return false;
-
-    const handLocal = getHandLocalPos(dancer, target.handSide);
-    if (!handLocal) return false;
-
-    const handAbs = localToAbsolute(dancer, handLocal);
-    const tolerance = 12;
-    const tol2 = tolerance * tolerance;
-
-    for (const other of panel.dancers) {
-      for (const side of [SIDES.LEFT, SIDES.RIGHT]) {
-        if (other.id === target.dancerId && side === target.handSide) {
-          continue;
-        }
-        const otherLocal = getHandLocalPos(other, side);
-        if (!otherLocal) continue;
-        const otherAbs = localToAbsolute(other, otherLocal);
-        const dx = handAbs.x - otherAbs.x;
-        const dy = handAbs.y - otherAbs.y;
-        if (dx * dx + dy * dy <= tol2) return true;
-      }
-    }
-
-    return false;
-  };
-
   const getShapeForTarget = () => {
     const panel = panels.find((p) => p.id === target.panelId);
     if (!panel) return null;
@@ -205,7 +169,11 @@ const ContextMenu = () => {
       target.dancerId,
       target.handSide,
     );
-    const canHoldHands = hasOverlappingHand();
+    const canHoldHands = hasOverlappingHands(
+      target.panelId,
+      target.dancerId,
+      target.handSide,
+    );
 
     return (
       <>

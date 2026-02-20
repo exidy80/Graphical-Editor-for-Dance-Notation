@@ -30,6 +30,7 @@ const Toolbar = () => {
   const lockUi = useAppStore((state) => state.lockUi);
   const getLockForHand = useAppStore((state) => state.getLockForHand);
   const removeLockById = useAppStore((state) => state.removeLockById);
+  const hasOverlappingHands = useAppStore((state) => state.hasOverlappingHands);
   const lockOverlappingHands = useAppStore(
     (state) => state.lockOverlappingHands,
   );
@@ -56,6 +57,10 @@ const Toolbar = () => {
   };
 
   const selectedColour = getSelectedColour();
+
+  const canHoldHands = selectedPanel
+    ? hasOverlappingHands(selectedPanel)
+    : false;
 
   const colouredButtonStyle = selectedColour
     ? {
@@ -379,6 +384,7 @@ const Toolbar = () => {
                 }}
                 variant={lockUi.active ? 'primary' : 'outline-dark'}
                 className="icon-button"
+                disabled={!lockUi.active && !canHoldHands}
               >
                 <FontAwesomeIcon icon={faLink} />
                 <span className="button-text">Hold Hands</span>
