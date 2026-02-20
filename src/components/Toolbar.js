@@ -278,9 +278,24 @@ const Toolbar = () => {
             color: '#212529',
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
           }}
         >
-          {documentTitle}
+          <span
+            style={{
+              maxWidth: '70vw',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: 'inline-block',
+            }}
+            title={documentTitle}
+          >
+            {documentTitle}
+          </span>
           {hasUnsavedChanges && (
             <span
               style={{
