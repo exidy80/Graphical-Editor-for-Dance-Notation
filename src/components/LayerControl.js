@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../stores';
 import { LAYER_CATEGORIES, isShapeInCategory } from '../utils/layersConfig.js';
+import * as ShapeTypes from '../constants/shapeTypes';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faLock,
@@ -148,7 +149,14 @@ const LayerControl = () => {
         const shapes = panel.shapes.filter((s) => isShapeInCategory(s, catKey));
         return acc.concat(shapes);
       }, []);
-      const shapeIdsInCategory = new Set(shapesInCategory.map((s) => s.id));
+      // Stage center should remain visible even when the Location layer is hidden.
+      const filteredShapes =
+        catKey === 'location'
+          ? shapesInCategory.filter(
+              (shape) => shape.type !== ShapeTypes.STAGE_CENTER,
+            )
+          : shapesInCategory;
+      const shapeIdsInCategory = new Set(filteredShapes.map((s) => s.id));
       if (shouldHide) {
         addToHideList(shapeIdsInCategory);
       } else {
