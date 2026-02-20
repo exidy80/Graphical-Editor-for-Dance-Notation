@@ -17,7 +17,7 @@ const CanvasSizeControl = () => {
     <ButtonGroup className="canvas-size-control">
       <Button
         onClick={decreaseCanvasSize}
-        variant="outline-primary"
+        variant="outline-dark"
         disabled={!canDecreaseCanvasSize()}
         title="Decrease canvas size"
         style={{
@@ -28,12 +28,10 @@ const CanvasSizeControl = () => {
         −
       </Button>
       <Button
-        variant="outline-secondary"
+        variant="outline-dark"
         disabled
         style={{
           borderRadius: 0,
-          color: 'black',
-          borderColor: '#0d6efd',
           cursor: 'default',
           minWidth: '80px',
         }}
@@ -42,7 +40,7 @@ const CanvasSizeControl = () => {
       </Button>
       <Button
         onClick={increaseCanvasSize}
-        variant="outline-primary"
+        variant="outline-dark"
         disabled={!canIncreaseCanvasSize()}
         title="Increase canvas size"
         style={{
