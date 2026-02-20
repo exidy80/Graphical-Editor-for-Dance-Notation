@@ -406,7 +406,7 @@ const Toolbar = () => {
                     selectedHand?.dancerId,
                     selectedHand?.handSide,
                   )
-                    ? 'danger'
+                    ? 'dark'
                     : 'outline-dark'
                 }
                 className="icon-button"
