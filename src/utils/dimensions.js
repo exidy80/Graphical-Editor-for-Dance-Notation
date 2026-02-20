@@ -61,7 +61,6 @@ export const SHAPE_STYLE = {
 const DEFAULT_PANEL_SIZE = { width: 300, height: 300 };
 const CANVAS_SIZE = { width: 600, height: 600 }; // Fixed canvas size that panels are viewports into
 const PANEL_NOTES_HEIGHT = 50;
-const MAGNIFY_CANVAS_SCALE = 4;
 const MAGNIFY_CONTENT_SCALE = 2;
 const PANEL_VISUAL_CENTER = {
   x: CANVAS_SIZE.width / 2,
@@ -73,7 +72,6 @@ export const UI_DIMENSIONS = {
   CANVAS_SIZE,
   PANEL_NOTES_HEIGHT,
   PANEL_VISUAL_CENTER,
-  MAGNIFY_CANVAS_SCALE,
   MAGNIFY_CONTENT_SCALE,
   MIN_TRANSFORM_SIZE: 5, // Minimum width/height for transforms
 };

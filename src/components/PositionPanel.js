@@ -113,14 +113,12 @@ const PositionPanel = () => {
       {(dragPreviewPanels || panels).map((panel) => {
         const isSelected = selectedPanel === panel.id; //find selected panel
         const isMagnified = magnifyEnabled && isSelected;
+        // Magnified panel is panelSize × MAGNIFY_CONTENT_SCALE so the visible
+        // canvas coordinate range is preserved (just zoomed in).
         const displayPanelSize = isMagnified
           ? {
-              width:
-                UI_DIMENSIONS.DEFAULT_PANEL_SIZE.width *
-                UI_DIMENSIONS.MAGNIFY_CANVAS_SCALE,
-              height:
-                UI_DIMENSIONS.DEFAULT_PANEL_SIZE.height *
-                UI_DIMENSIONS.MAGNIFY_CANVAS_SCALE,
+              width: panelSize.width * UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE,
+              height: panelSize.height * UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE,
             }
           : panelSize;
         const columnSpan = isMagnified
