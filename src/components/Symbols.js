@@ -119,6 +119,8 @@ const Symbol = ({
   const commonProps = {
     ref: shapeRef,
     ...shape,
+    shapeId: shape.id,
+    shapeType: shape.type,
     opacity: opacity,
     draggable: !disabled && !isStageCenter,
     scaleX: shape.scaleX || 1,
