@@ -237,6 +237,87 @@ const createKeystrokeSlice = (set, get, api) => ({
       priority: 2,
     });
 
+    // Ctrl/Cmd + arrow keys - nudge selection by 1px
+    registerKeystroke('ArrowLeft', {
+      description: 'Nudge selection left by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(-1, 0);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowLeft', {
+      description: 'Nudge selection left by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(-1, 0);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Nudge selection right by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(1, 0);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Nudge selection right by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(1, 0);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowUp', {
+      description: 'Nudge selection up by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, -1);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowUp', {
+      description: 'Nudge selection up by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, -1);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowDown', {
+      description: 'Nudge selection down by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, 1);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowDown', {
+      description: 'Nudge selection down by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, 1);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
     // Delete key configurations - shared between Delete and Backspace
     const deleteKeyConfig = {
       description: 'Delete selected symbol',
@@ -494,6 +575,33 @@ const createKeystrokeSlice = (set, get, api) => ({
           rotation: (shape.rotation || 0) + degrees,
         });
     }
+  },
+
+  _nudgeSelection: (dx, dy) => {
+    const { selectedItems, updateDancerState, updateShapeState, panels } =
+      get();
+    if (!selectedItems.length) return;
+
+    selectedItems.forEach((item) => {
+      const panel = panels.find((p) => p.id === item.panelId);
+      if (!panel) return;
+
+      if (item.type === 'dancer') {
+        const dancer = panel.dancers.find((d) => d.id === item.id);
+        if (!dancer) return;
+        updateDancerState(item.panelId, item.id, {
+          x: (dancer.x || 0) + dx,
+          y: (dancer.y || 0) + dy,
+        });
+      } else if (item.type === 'shape') {
+        const shape = panel.shapes.find((s) => s.id === item.id);
+        if (!shape) return;
+        updateShapeState(item.panelId, item.id, {
+          x: (shape.x || 0) + dx,
+          y: (shape.y || 0) + dy,
+        });
+      }
+    });
   },
 
   // Help and documentation
