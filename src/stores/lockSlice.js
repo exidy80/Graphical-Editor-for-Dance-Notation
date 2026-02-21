@@ -87,6 +87,26 @@ const createLockSlice = (set, get) => ({
     const { lockUi } = get();
     if (!lockUi.selected || lockUi.selected.length < 2) return;
 
+    const panel = get().panels.find((p) => p.id === panelId);
+    if (!panel) return;
+
+    const existingMemberKeys = new Set(
+      (panel.locks || []).flatMap((lock) =>
+        (lock.members || []).map((m) => `${m.dancerId}:${m.side}`),
+      ),
+    );
+    const seen = new Set();
+    const filtered = lockUi.selected.filter((member) => {
+      const key = `${member.dancerId}:${member.side}`;
+      if (seen.has(key) || existingMemberKeys.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if (filtered.length < 2) {
+      set((state) => ({ lockUi: { ...state.lockUi, selected: [] } }));
+      return;
+    }
+
     const { v4: uuidv4 } = require('uuid');
     set((state) => ({
       panels: state.panels.map((p) =>
@@ -95,7 +115,7 @@ const createLockSlice = (set, get) => ({
               ...p,
               locks: [
                 ...(p.locks || []),
-                { id: uuidv4(), members: [...lockUi.selected] },
+                { id: uuidv4(), members: [...filtered] },
               ],
             }
           : p,

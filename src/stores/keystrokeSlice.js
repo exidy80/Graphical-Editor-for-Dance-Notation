@@ -84,6 +84,17 @@ const createKeystrokeSlice = (set, get, api) => ({
   handleKeystroke: (key, event) => {
     if (!key || !event) return;
 
+    const target = event.target;
+    if (target) {
+      const tag = target.tagName ? target.tagName.toLowerCase() : '';
+      const isEditableTarget =
+        tag === 'input' ||
+        tag === 'textarea' ||
+        tag === 'select' ||
+        target.isContentEditable === true;
+      if (isEditableTarget) return;
+    }
+
     const { keystrokes } = get();
     const currentContext = get().getCurrentKeystrokeContext();
 
@@ -98,13 +109,13 @@ const createKeystrokeSlice = (set, get, api) => ({
     const contextKey = createKeystrokeKey(key, modifiers, currentContext);
     const globalKey = createKeystrokeKey(key, modifiers, 'global');
 
-    // Find matching keystrokes
-    const matchingKeystrokes = Object.entries(keystrokes)
-      .filter(([k, config]) => {
-        return k === contextKey || k === globalKey;
-      })
-      .map(([k, config]) => config)
-      .sort((a, b) => b.priority - a.priority); // Sort by priority (highest first)
+    const contextHandler = keystrokes[contextKey];
+    const globalHandler = keystrokes[globalKey];
+    const matchingKeystrokes = contextHandler
+      ? [contextHandler]
+      : globalHandler
+        ? [globalHandler]
+        : [];
 
     // Execute the highest priority handler
     if (matchingKeystrokes.length > 0) {

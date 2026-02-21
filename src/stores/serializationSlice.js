@@ -98,6 +98,11 @@ const createSerializationSlice = (set, get) => ({
       const newShape = {
         ...shape,
         id: uuidv4(),
+        rotation: shape.rotation ?? 0,
+        scaleX: shape.scaleX ?? 1,
+        scaleY: shape.scaleY ?? 1,
+        opacity: shape.opacity ?? 1,
+        draggable: shape.draggable !== false,
       };
 
       // BACKWARD COMPATIBILITY: Add missing properties for stage markers
@@ -109,7 +114,7 @@ const createSerializationSlice = (set, get) => ({
           ...newShape,
           text: defaults.text,
           fontSize: defaults.fontSize,
-          fill: defaults.fill,
+          fill: newShape.fill ?? defaults.fill,
         };
       }
       if (shape.type === ShapeTypes.STAGE_NEXT && !shape.text) {
@@ -118,7 +123,7 @@ const createSerializationSlice = (set, get) => ({
           ...newShape,
           text: defaults.text,
           fontSize: defaults.fontSize,
-          fill: defaults.fill,
+          fill: newShape.fill ?? defaults.fill,
         };
       }
       if (shape.type === ShapeTypes.STAGE_CENTER && !shape.radius) {
@@ -176,14 +181,19 @@ const createSerializationSlice = (set, get) => ({
     const locks = Array.isArray(serializedPanel.locks)
       ? serializedPanel.locks
       : [];
-    const newLocks = locks.map((lock) => ({
-      ...lock,
-      id: uuidv4(),
-      members: (lock.members || []).map((member) => ({
-        ...member,
-        dancerId: oldToNew.get(member.dancerId) || member.dancerId,
-      })),
-    }));
+    const dancerIdSet = new Set(newDancers.map((dancer) => dancer.id));
+    const newLocks = locks
+      .map((lock) => ({
+        ...lock,
+        id: uuidv4(),
+        members: (lock.members || [])
+          .map((member) => ({
+            ...member,
+            dancerId: oldToNew.get(member.dancerId) || member.dancerId,
+          }))
+          .filter((member) => dancerIdSet.has(member.dancerId)),
+      }))
+      .filter((lock) => (lock.members || []).length >= 2);
 
     return {
       ...serializedPanel,

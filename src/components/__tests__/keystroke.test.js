@@ -112,6 +112,29 @@ describe('Keystroke Framework', () => {
   });
 
   describe('Context-Aware Keystroke Handling', () => {
+    test('should ignore keystrokes when focus is in an input', () => {
+      const handler = jest.fn();
+      const { registerKeystroke, handleKeystroke } = useAppStore.getState();
+
+      act(() => {
+        registerKeystroke('ArrowLeft', {
+          description: 'Test handler',
+          handler,
+          context: 'global',
+        });
+      });
+
+      const preventDefault = jest.fn();
+      handleKeystroke('ArrowLeft', {
+        key: 'ArrowLeft',
+        target: { tagName: 'INPUT' },
+        preventDefault,
+      });
+
+      expect(handler).not.toHaveBeenCalled();
+      expect(preventDefault).not.toHaveBeenCalled();
+    });
+
     test('should only execute keystrokes in correct context', () => {
       const dancerHandler = jest.fn();
       const symbolHandler = jest.fn();

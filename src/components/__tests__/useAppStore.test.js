@@ -127,6 +127,21 @@ describe('useAppStore', () => {
     expect(getState().panels[0].shapes.some((s) => s.id === 's1')).toBe(false);
   });
 
+  test('deleting a selected shape clears selection', () => {
+    const { getState, setState } = useAppStore;
+    const panelId = getState().panels[0].id;
+    act(() => setState({ selectedPanel: panelId }, false));
+    const shape = { id: 's2', type: 'signal', x: 10, y: 10, draggable: true };
+    act(() => getState().handleShapeDraw(shape));
+    act(() => getState().handleShapeSelection(panelId, 's2'));
+
+    expect(getState().selectedShapeId).toEqual({ panelId, shapeId: 's2' });
+
+    act(() => getState().handleDelete({ panelId, shapeId: 's2' }));
+
+    expect(getState().selectedShapeId).toBeNull();
+  });
+
   test('apply and remove group lock, propagate hand position', () => {
     const { getState } = useAppStore;
     const panel = getState().panels[0];
@@ -153,6 +168,28 @@ describe('useAppStore', () => {
 
     act(() => getState().removeLockById(panel.id, lock.id));
     expect(getState().panels[0].locks).toHaveLength(0);
+  });
+
+  test('applySelectedLock ignores hands already in existing locks', () => {
+    const { getState } = useAppStore;
+    const panel = getState().panels[0];
+    const d0 = panel.dancers[0];
+    const d1 = panel.dancers[1];
+
+    act(() => getState().setSelectedPanel(panel.id));
+    act(() => getState().setLockModeActive(true));
+    act(() => getState().handleHandClick(panel.id, d0.id, 'left'));
+    act(() => getState().handleHandClick(panel.id, d1.id, 'right'));
+    act(() => getState().applySelectedLock(panel.id));
+
+    expect(getState().panels[0].locks).toHaveLength(1);
+
+    act(() => getState().setLockModeActive(true));
+    act(() => getState().handleHandClick(panel.id, d0.id, 'left'));
+    act(() => getState().handleHandClick(panel.id, d1.id, 'left'));
+    act(() => getState().applySelectedLock(panel.id));
+
+    expect(getState().panels[0].locks).toHaveLength(1);
   });
 
   test('multi-member lock (3+ members) propagates to all', () => {
@@ -425,6 +462,38 @@ describe('useAppStore', () => {
     expect(clonedKnee).toBeDefined();
     expect(clonedKnee.x).toBeCloseTo(110 + expectedDeltaX, 5);
     expect(clonedKnee.y).toBeCloseTo(85 + expectedDeltaY, 5);
+  });
+
+  test('deleting the selected panel clears selection state', () => {
+    const { getState, setState } = useAppStore;
+    const panel = getState().panels[0];
+    const dancer = panel.dancers[0];
+
+    act(() => setState({ selectedPanel: panel.id }, false));
+    act(() => getState().handleDancerSelection(panel.id, dancer.id));
+    act(() => getState().handleHandClick(panel.id, dancer.id, 'left'));
+    act(() =>
+      getState().handleShapeDraw({
+        id: 'delete-panel-shape',
+        type: 'signal',
+        x: 5,
+        y: 5,
+        draggable: true,
+      }),
+    );
+    act(() => getState().handleShapeSelection(panel.id, 'delete-panel-shape'));
+
+    expect(getState().selectedPanel).toBe(panel.id);
+    expect(getState().selectedDancer).toBeDefined();
+    expect(getState().selectedHand).toBeDefined();
+    expect(getState().selectedShapeId).toBeDefined();
+
+    act(() => getState().deleteSelectedPanel(panel.id));
+
+    expect(getState().selectedPanel).toBeNull();
+    expect(getState().selectedDancer).toBeNull();
+    expect(getState().selectedHand).toBeNull();
+    expect(getState().selectedShapeId).toBeNull();
   });
 
   test('handleCanvasClick clears all selections', () => {

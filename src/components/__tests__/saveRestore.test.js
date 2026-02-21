@@ -331,6 +331,75 @@ describe('Save/Restore Functionality', () => {
       expect(stageNext.x).toBe(stageX.x);
       expect(stageNext.y).toBe(stageX.y);
     });
+
+    test('should default missing shape transform fields on deserialize', () => {
+      const oldPanelData = {
+        id: 'old-panel-defaults',
+        dancers: [
+          {
+            id: 'dancer-1',
+            x: 0,
+            y: 0,
+            colour: 'red',
+          },
+        ],
+        headShapes: [],
+        handShapes: [],
+        shapes: [
+          {
+            id: 'shape-legacy',
+            type: 'signal',
+            x: 10,
+            y: 20,
+          },
+        ],
+        locks: [],
+      };
+
+      const deserialized = useAppStore
+        .getState()
+        .deserializePanel(oldPanelData);
+
+      const shape = deserialized.shapes.find((s) => s.type === 'signal');
+      expect(shape).toBeDefined();
+      expect(shape.rotation).toBe(0);
+      expect(shape.scaleX).toBe(1);
+      expect(shape.scaleY).toBe(1);
+      expect(shape.opacity).toBe(1);
+      expect(shape.draggable).toBe(true);
+    });
+
+    test('should drop locks that reference missing dancers', () => {
+      const oldPanelData = {
+        id: 'old-panel-locks',
+        dancers: [
+          {
+            id: 'dancer-1',
+            x: 0,
+            y: 0,
+            colour: 'red',
+          },
+        ],
+        headShapes: [],
+        handShapes: [],
+        shapes: [],
+        locks: [
+          {
+            id: 'lock-1',
+            members: [
+              { dancerId: 'dancer-1', side: 'left' },
+              { dancerId: 'missing-dancer', side: 'right' },
+            ],
+          },
+        ],
+      };
+
+      const deserialized = useAppStore
+        .getState()
+        .deserializePanel(oldPanelData);
+
+      expect(deserialized.locks).toHaveLength(0);
+    });
   });
 
   describe('Complete Save/Import Round-trip', () => {

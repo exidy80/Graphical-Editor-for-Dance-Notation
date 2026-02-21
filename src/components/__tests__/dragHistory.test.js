@@ -158,6 +158,46 @@ describe('Drag History Prevention', () => {
       expect(dancer.x).toBe(50);
       expect(dancer.y).toBe(50);
     });
+
+    test('should restore pre-drag position with a single undo', async () => {
+      const { getState } = useAppStore;
+      const temporal = useAppStore.temporal.getState();
+
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      const panelId = getState().panels[0].id;
+      const dancerId = getState().panels[0].dancers[0].id;
+      temporal.clear();
+
+      const original = getState().panels[0].dancers[0];
+
+      act(() => {
+        getState().startDragMode();
+      });
+
+      for (let i = 1; i <= 5; i++) {
+        act(() => {
+          getState().updateDancerState(panelId, dancerId, {
+            x: original.x + i * 10,
+            y: original.y + i * 5,
+          });
+        });
+      }
+
+      act(() => {
+        getState().endDragMode();
+      });
+
+      expect(temporal.pastStates.length).toBe(1);
+
+      act(() => {
+        temporal.undo();
+      });
+
+      const restored = getState().panels[0].dancers[0];
+      expect(restored.x).toBe(original.x);
+      expect(restored.y).toBe(original.y);
+    });
   });
 
   describe('Hand Dragging', () => {

@@ -432,6 +432,48 @@ describe('Undo/Redo Functionality', () => {
     });
   });
 
+  describe('Redo History Integrity', () => {
+    test('should clear redo history after a new action following undo', async () => {
+      const { getState } = useAppStore;
+      const panelId = getState().panels[0].id;
+      const temporal = useAppStore.temporal.getState();
+
+      temporal.clear();
+
+      act(() => {
+        getState().setSelectedPanel(panelId);
+        getState().handleShapeDraw({
+          id: 'redo-clear-shape',
+          type: 'signal',
+          x: 10,
+          y: 10,
+          fill: 'red',
+        });
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 20));
+
+      expect(useAppStore.temporal.getState().pastStates.length).toBeGreaterThan(
+        0,
+      );
+
+      act(() => {
+        temporal.undo();
+      });
+
+      expect(
+        useAppStore.temporal.getState().futureStates.length,
+      ).toBeGreaterThan(0);
+
+      act(() => {
+        const dancerId = getState().panels[0].dancers[0].id;
+        getState().updateDancerState(panelId, dancerId, { x: 42 });
+      });
+
+      expect(useAppStore.temporal.getState().futureStates.length).toBe(0);
+    });
+  });
+
   describe('Edge Cases', () => {
     test('should handle undo when no history exists', async () => {
       const { getState } = useAppStore;

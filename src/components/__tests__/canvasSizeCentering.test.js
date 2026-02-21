@@ -270,4 +270,48 @@ describe('Canvas Size Centering and Positioning', () => {
       expect(stageX.y).toBe(275); // Visual center Y
     });
   });
+
+  describe('Clone after canvas resize', () => {
+    test('clone recenters to visual center after canvas size changes', () => {
+      const { getState } = useAppStore;
+
+      act(() => {
+        getState().increaseCanvasSize();
+        getState().increaseCanvasSize();
+        getState().addPanel();
+      });
+
+      const panel = getState().panels[0];
+      const stageNext = panel.shapes.find((s) => s.type === 'stageNext');
+
+      act(() => {
+        getState().updateShapeState(panel.id, stageNext.id, { x: 120, y: 80 });
+      });
+
+      act(() => {
+        getState().clonePanel(panel.id);
+      });
+
+      const cloned = getState().panels[1];
+      const clonedStageNext = cloned.shapes.find((s) => s.type === 'stageNext');
+      const clonedStageX = cloned.shapes.find((s) => s.type === 'stageX');
+
+      expect(clonedStageNext.x).toBeCloseTo(
+        UI_DIMENSIONS.PANEL_VISUAL_CENTER.x,
+        5,
+      );
+      expect(clonedStageNext.y).toBeCloseTo(
+        UI_DIMENSIONS.PANEL_VISUAL_CENTER.y,
+        5,
+      );
+      expect(clonedStageX.x).toBeCloseTo(
+        UI_DIMENSIONS.PANEL_VISUAL_CENTER.x,
+        5,
+      );
+      expect(clonedStageX.y).toBeCloseTo(
+        UI_DIMENSIONS.PANEL_VISUAL_CENTER.y,
+        5,
+      );
+    });
+  });
 });
