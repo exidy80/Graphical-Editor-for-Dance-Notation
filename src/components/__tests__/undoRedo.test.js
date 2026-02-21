@@ -499,7 +499,9 @@ describe('Undo/Redo Functionality', () => {
       // Change selection state (should not be tracked)
       act(() => {
         getState().setSelectedPanel(panelId);
-        getState().setSelectedDancer({ panelId, dancerId });
+        getState().setSelectedItems([
+          { type: 'dancer', panelId, id: dancerId },
+        ]);
         getState().setSelectedPanel(null);
       });
 

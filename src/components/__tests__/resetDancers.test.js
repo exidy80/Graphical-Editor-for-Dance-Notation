@@ -91,10 +91,13 @@ describe('Reset Dancers Functionality', () => {
 
     // Set various selections
     getState().handlePanelSelection(initialPanel.id);
-    getState().setSelectedDancer({
-      panelId: initialPanel.id,
-      dancerId: initialPanel.dancers[0].id,
-    });
+    getState().setSelectedItems([
+      {
+        type: 'dancer',
+        panelId: initialPanel.id,
+        id: initialPanel.dancers[0].id,
+      },
+    ]);
     getState().setSelectedHand({
       panelId: initialPanel.id,
       dancerId: initialPanel.dancers[0].id,
@@ -110,7 +113,7 @@ describe('Reset Dancers Functionality', () => {
 
     expect(panels).toHaveLength(3);
     expect(getState().selectedPanel).toBe(panels[2].id);
-    expect(getState().selectedDancer).toBeDefined();
+    expect(getState().selectedItems.length).toBeGreaterThan(0);
     expect(getState().selectedHand).toBeDefined();
     expect(getState().lockUi.active).toBe(true);
 
@@ -124,9 +127,8 @@ describe('Reset Dancers Functionality', () => {
 
     // All selections should be cleared
     expect(state.selectedPanel).toBeNull();
-    expect(state.selectedDancer).toBeNull();
+    expect(state.selectedItems).toEqual([]);
     expect(state.selectedHand).toBeNull();
-    expect(state.selectedShapeId).toBeNull();
 
     // Lock UI should be reset
     expect(state.lockUi.active).toBe(false);

@@ -72,12 +72,9 @@ const createKeystrokeSlice = (set, get, api) => ({
 
   // Context detection
   getCurrentKeystrokeContext: () => {
-    const { selectedDancer, selectedHand, selectedShapeId } = get();
-
+    const { selectedItems, selectedHand } = get();
     if (selectedHand) return 'hand';
-    if (selectedDancer) return 'dancer';
-    if (selectedShapeId) return 'symbol';
-    return 'none';
+    return selectedItems[0]?.type ?? 'none';
   },
 
   // Keystroke execution
@@ -167,7 +164,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const step = event.shiftKey ? fineRotationStep : rotationStep;
         get()._rotateSelection(-step);
       },
-      context: 'symbol',
+      context: 'shape',
       priority: 1,
     });
 
@@ -190,7 +187,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const step = event.shiftKey ? fineRotationStep : rotationStep;
         get()._rotateSelection(step);
       },
-      context: 'symbol',
+      context: 'shape',
       priority: 1,
     });
 
@@ -212,7 +209,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const { fineRotationStep } = get();
         get()._rotateSelection(-fineRotationStep);
       },
-      context: 'symbol',
+      context: 'shape',
       modifiers: { shift: true },
       priority: 2,
     });
@@ -235,7 +232,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const { fineRotationStep } = get();
         get()._rotateSelection(fineRotationStep);
       },
-      context: 'symbol',
+      context: 'shape',
       modifiers: { shift: true },
       priority: 2,
     });
@@ -244,13 +241,19 @@ const createKeystrokeSlice = (set, get, api) => ({
     const deleteKeyConfig = {
       description: 'Delete selected symbol',
       handler: (event, context) => {
-        const { selectedShapeId, handleDelete } = get();
-        if (selectedShapeId) {
-          handleDelete(selectedShapeId);
+        const { selectedItems, handleDelete } = get();
+        const selectedShape = selectedItems.find(
+          (item) => item.type === 'shape',
+        );
+        if (selectedShape) {
+          handleDelete({
+            panelId: selectedShape.panelId,
+            shapeId: selectedShape.id,
+          });
         }
         // Note: Does nothing if no symbol is selected - dancers cannot be deleted
       },
-      context: 'symbol',
+      context: 'shape',
       priority: 1,
     };
 
@@ -265,9 +268,8 @@ const createKeystrokeSlice = (set, get, api) => ({
       description: 'Deselect all objects',
       handler: (event, context) => {
         set({
-          selectedDancer: null,
+          selectedItems: [],
           selectedHand: null,
-          selectedShapeId: null,
         });
       },
       context: 'global',
@@ -278,31 +280,21 @@ const createKeystrokeSlice = (set, get, api) => ({
     registerKeystroke('r', {
       description: 'Reset rotation to starting position',
       handler: (event, context) => {
-        const {
-          selectedDancer,
-          selectedShapeId,
-          updateDancerState,
-          updateShapeState,
-          panels,
-        } = get();
-
-        if (selectedDancer) {
-          const { panelId, dancerId } = selectedDancer;
-          const panel = panels.find((p) => p.id === panelId);
-          if (panel) {
-            const dancer = panel.dancers.find((d) => d.id === dancerId);
-            if (dancer) {
-              // Reset to original starting rotation based on dancer color
-              const originalRotation = dancer.colour === 'red' ? 180 : 0;
-              updateDancerState(panelId, dancerId, {
-                rotation: originalRotation,
-              });
-            }
+        const { selectedItems, updateDancerState, updateShapeState, panels } =
+          get();
+        const firstSelected = selectedItems[0];
+        if (!firstSelected) return;
+        const { type, panelId, id } = firstSelected;
+        const panel = panels.find((p) => p.id === panelId);
+        if (!panel) return;
+        if (type === 'dancer') {
+          const dancer = panel.dancers.find((d) => d.id === id);
+          if (dancer) {
+            const originalRotation = dancer.colour === 'red' ? 180 : 0;
+            updateDancerState(panelId, id, { rotation: originalRotation });
           }
-        } else if (selectedShapeId) {
-          const { panelId, shapeId } = selectedShapeId;
-          // Shapes always reset to 0
-          updateShapeState(panelId, shapeId, { rotation: 0 });
+        } else if (type === 'shape') {
+          updateShapeState(panelId, id, { rotation: 0 });
         }
       },
       context: 'global',
@@ -482,37 +474,25 @@ const createKeystrokeSlice = (set, get, api) => ({
 
   // Internal rotation helper
   _rotateSelection: (degrees) => {
-    const {
-      selectedDancer,
-      selectedShapeId,
-      updateDancerState,
-      updateShapeState,
-    } = get();
-
-    if (selectedDancer) {
-      const { panelId, dancerId } = selectedDancer;
-      const panel = get().panels.find((p) => p.id === panelId);
-      if (panel) {
-        const dancer = panel.dancers.find((d) => d.id === dancerId);
-        if (dancer) {
-          const currentRotation = dancer.rotation || 0;
-          const newRotation = currentRotation + degrees;
-
-          updateDancerState(panelId, dancerId, { rotation: newRotation });
-        }
-      }
-    } else if (selectedShapeId) {
-      const { panelId, shapeId } = selectedShapeId;
-      const panel = get().panels.find((p) => p.id === panelId);
-      if (panel) {
-        const shape = panel.shapes.find((s) => s.id === shapeId);
-        if (shape) {
-          const currentRotation = shape.rotation || 0;
-          const newRotation = currentRotation + degrees;
-
-          updateShapeState(panelId, shapeId, { rotation: newRotation });
-        }
-      }
+    const { selectedItems, updateDancerState, updateShapeState, panels } =
+      get();
+    const firstSelected = selectedItems[0];
+    if (!firstSelected) return;
+    const { type, panelId, id } = firstSelected;
+    const panel = panels.find((p) => p.id === panelId);
+    if (!panel) return;
+    if (type === 'dancer') {
+      const dancer = panel.dancers.find((d) => d.id === id);
+      if (dancer)
+        updateDancerState(panelId, id, {
+          rotation: (dancer.rotation || 0) + degrees,
+        });
+    } else if (type === 'shape') {
+      const shape = panel.shapes.find((s) => s.id === id);
+      if (shape)
+        updateShapeState(panelId, id, {
+          rotation: (shape.rotation || 0) + degrees,
+        });
     }
   },
 

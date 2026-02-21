@@ -16,6 +16,7 @@ global.ResizeObserver = jest.fn().mockImplementation(() => ({
 // Mock window.matchMedia for tests
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
+  configurable: true,
   value: jest.fn().mockImplementation((query) => {
     const listeners = [];
     return {
