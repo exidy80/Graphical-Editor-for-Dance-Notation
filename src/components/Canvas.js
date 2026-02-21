@@ -1,10 +1,19 @@
-import React from 'react';
-import { Stage, Layer } from 'react-konva';
+import React, { useState, useRef, useEffect } from 'react';
+import { Stage, Layer, Rect as KonvaRect } from 'react-konva';
 import Dancer from './Dancer';
 import Symbol from './Symbols';
 import { useAppStore } from '../stores';
-import { UI_DIMENSIONS } from '../utils/dimensions';
+import {
+  UI_DIMENSIONS,
+  DANCER_DIMENSIONS,
+  HAND_DIMENSIONS,
+  SHAPE_DIMENSIONS,
+} from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
+import { STAGE_CENTER } from '../constants/shapeTypes';
+
+// Shape types that are never user-selectable
+const NON_SELECTABLE_TYPES = new Set([STAGE_CENTER]);
 
 const Canvas = ({ panelId, panelViewportSize }) => {
   const panels = useAppStore((state) => state.panels);
@@ -33,9 +42,18 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const movePrimaryAndSelection = useAppStore(
     (state) => state.movePrimaryAndSelection,
   );
+  const setSelectedItems = useAppStore((state) => state.setSelectedItems);
+  const setSelectedPanel = useAppStore((state) => state.setSelectedPanel);
   const layerOrder = useAppStore((state) => state.layerOrder);
   const openContextMenu = useAppStore((state) => state.openContextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
+
+  // Marquee (rubber-band) selection state
+  const [marquee, setMarquee] = useState(null); // { x1, y1, x2, y2 } in stage coords
+  const isMarqueeing = useRef(false);
+  const stageRef = useRef(null);
+  // Holds the finish logic, refreshed every render so window handler never captures stale values
+  const marqueeFinishRef = useRef(null);
 
   const effectivePanelSize = panelViewportSize || panelSize;
   const isMagnified = magnifyEnabled && selectedPanel === panelId;
@@ -44,6 +62,25 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
   const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
   const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
+
+  // Attach window-level listeners once so the marquee survives the cursor
+  // briefly leaving the stage boundary mid-drag
+  useEffect(() => {
+    const onWindowMouseMove = (e) => {
+      if (!isMarqueeing.current || !stageRef.current) return;
+      const rect = stageRef.current.container().getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      setMarquee((m) => m && { ...m, x2: x, y2: y });
+    };
+    const onWindowMouseUp = () => marqueeFinishRef.current?.();
+    window.addEventListener('mousemove', onWindowMouseMove);
+    window.addEventListener('mouseup', onWindowMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', onWindowMouseMove);
+      window.removeEventListener('mouseup', onWindowMouseUp);
+    };
+  }, []);
 
   const panel = panels.find((p) => p.id === panelId);
   if (!panel) return null;
@@ -66,11 +103,162 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     }
   });
 
-  //Triggers if the user clicks on the canvas itself
-  const handleCanvasClickInternal = (e) => {
-    if (e.target === e.target.getStage()) {
-      handleCanvasClick();
-    }
+  // Returns the axis-aligned bounding box (AABB) in layer space for a dancer,
+  // accounting for rotation and scale. Uses local points to better match
+  // the dancer's origin (shoulders) instead of assuming a centered rectangle.
+  const getDancerAABB = (dancer) => {
+    const scaleX = dancer.scaleX || 1;
+    const scaleY = dancer.scaleY || 1;
+    const r = ((dancer.rotation || 0) * Math.PI) / 180;
+    const cos = Math.cos(r);
+    const sin = Math.sin(r);
+
+    const bodyHalfWidth = DANCER_DIMENSIONS.BODY_WIDTH / 2;
+    const headBaseY = DANCER_DIMENSIONS.HEAD_SIZE / 4;
+    const headTop = headBaseY - DANCER_DIMENSIONS.HEAD_SIZE / 2;
+    const bodyBottom = headBaseY + DANCER_DIMENSIONS.BODY_HEIGHT;
+    const handPad = Math.max(HAND_DIMENSIONS.WIDTH, HAND_DIMENSIONS.HEIGHT) / 2;
+    const elbowPad = 3;
+
+    const points = [
+      { x: -bodyHalfWidth, y: headTop },
+      { x: bodyHalfWidth, y: headTop },
+      { x: -bodyHalfWidth, y: bodyBottom },
+      { x: bodyHalfWidth, y: bodyBottom },
+    ];
+
+    const leftHand = dancer.leftHandPos || { x: 0, y: 0 };
+    const rightHand = dancer.rightHandPos || { x: 0, y: 0 };
+    const leftElbow = dancer.leftElbowPos || { x: 0, y: 0 };
+    const rightElbow = dancer.rightElbowPos || { x: 0, y: 0 };
+
+    const addPointWithPad = (pt, pad) => {
+      points.push(
+        { x: pt.x - pad, y: pt.y - pad },
+        { x: pt.x + pad, y: pt.y + pad },
+      );
+    };
+
+    addPointWithPad(leftHand, handPad);
+    addPointWithPad(rightHand, handPad);
+    addPointWithPad(leftElbow, elbowPad);
+    addPointWithPad(rightElbow, elbowPad);
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    points.forEach((pt) => {
+      const sx = pt.x * scaleX;
+      const sy = pt.y * scaleY;
+      const rx = sx * cos - sy * sin;
+      const ry = sx * sin + sy * cos;
+      const worldX = dancer.x + rx;
+      const worldY = dancer.y + ry;
+      minX = Math.min(minX, worldX);
+      maxX = Math.max(maxX, worldX);
+      minY = Math.min(minY, worldY);
+      maxY = Math.max(maxY, worldY);
+    });
+
+    return { minX, maxX, minY, maxY };
+  };
+
+  // Returns the AABB in layer space for a shape, accounting for rotation and scale.
+  const getShapeAABB = (shape) => {
+    const cx = shape.x;
+    const cy = shape.y;
+    const dims = SHAPE_DIMENSIONS[shape.type] || SHAPE_DIMENSIONS.default;
+    const hw = (dims.width * (shape.scaleX || 1)) / 2;
+    const hh = (dims.height * (shape.scaleY || 1)) / 2;
+    const r = ((shape.rotation || 0) * Math.PI) / 180;
+    const cos = Math.abs(Math.cos(r));
+    const sin = Math.abs(Math.sin(r));
+    const aabbHW = hw * cos + hh * sin;
+    const aabbHH = hw * sin + hh * cos;
+    return {
+      minX: cx - aabbHW,
+      maxX: cx + aabbHW,
+      minY: cy - aabbHH,
+      maxY: cy + aabbHH,
+    };
+  };
+
+  const handleStageMouseDown = (e) => {
+    if (e.target !== e.target.getStage()) return;
+    const pos = e.target.getStage().getPointerPosition();
+    isMarqueeing.current = true;
+    setMarquee({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y });
+  };
+
+  // Always-fresh finish logic assigned each render, called by the window mouseup handler
+  marqueeFinishRef.current = () => {
+    if (!isMarqueeing.current) return;
+    isMarqueeing.current = false;
+
+    setMarquee((m) => {
+      if (!m) return null;
+      const { x1, y1, x2, y2 } = m;
+      const minSX = Math.min(x1, x2);
+      const maxSX = Math.max(x1, x2);
+      const minSY = Math.min(y1, y2);
+      const maxSY = Math.max(y1, y2);
+
+      // Tiny drag → treat as background click (deselect all)
+      if (maxSX - minSX < 5 && maxSY - minSY < 5) {
+        handleCanvasClick();
+        return null;
+      }
+
+      // Convert marquee from stage coords to layer coords
+      const toLayer = (sx, sy) => ({
+        x: (sx - baseOffsetX) / contentScale,
+        y: (sy - baseOffsetY) / contentScale,
+      });
+      const tl = toLayer(minSX, minSY);
+      const br = toLayer(maxSX, maxSY);
+
+      const isEnclosed = (bbox) =>
+        bbox.minX >= tl.x &&
+        bbox.maxX <= br.x &&
+        bbox.minY >= tl.y &&
+        bbox.maxY <= br.y;
+
+      const newSelected = [];
+
+      // Check visible, enabled dancers
+      dancers
+        .filter((d) => !hideList.includes('body') && !opacity.dancers.disabled)
+        .forEach((dancer) => {
+          if (isEnclosed(getDancerAABB(dancer)))
+            newSelected.push({ type: 'dancer', panelId, id: dancer.id });
+        });
+
+      // Check shapes: skip hidden, individually-disabled, globally-disabled,
+      // and non-interactive stage markers (STAGE_CENTER)
+      shapes
+        .filter(
+          (s) =>
+            !hideList.includes(s.id) &&
+            !opacity.disabled.includes(s.id) &&
+            !opacity.symbols.disabled &&
+            !NON_SELECTABLE_TYPES.has(s.type),
+        )
+        .forEach((shape) => {
+          if (isEnclosed(getShapeAABB(shape)))
+            newSelected.push({ type: 'shape', panelId, id: shape.id });
+        });
+
+      if (newSelected.length > 0) {
+        setSelectedPanel(panelId);
+        setSelectedItems(newSelected);
+      } else {
+        handleCanvasClick();
+      }
+
+      return null;
+    });
   };
 
   const findAncestor = (node, predicate) => {
@@ -183,10 +371,11 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   //Konva stage
   return (
     <Stage
+      ref={stageRef}
       width={effectivePanelSize.width - 4} //Slightly smaller than container
       height={effectivePanelSize.height - 4}
-      onMouseDown={handleCanvasClickInternal}
       onContextMenu={handleContextMenu}
+      onMouseDown={handleStageMouseDown}
     >
       <Layer
         x={baseOffsetX}
@@ -328,6 +517,22 @@ const Canvas = ({ panelId, panelViewportSize }) => {
             });
         })}
       </Layer>
+
+      {/* Marquee overlay — no transform, drawn in stage coordinates */}
+      {marquee && (
+        <Layer listening={false}>
+          <KonvaRect
+            x={Math.min(marquee.x1, marquee.x2)}
+            y={Math.min(marquee.y1, marquee.y2)}
+            width={Math.abs(marquee.x2 - marquee.x1)}
+            height={Math.abs(marquee.y2 - marquee.y1)}
+            fill="rgba(100, 160, 255, 0.12)"
+            stroke="rgba(80, 140, 255, 0.85)"
+            strokeWidth={1}
+            dash={[4, 3]}
+          />
+        </Layer>
+      )}
     </Stage>
   );
 };

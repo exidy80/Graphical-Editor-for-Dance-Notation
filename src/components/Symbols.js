@@ -38,7 +38,6 @@ const Symbol = ({
   const [image] = useImage(images[shape.imageKey]);
 
   //check if its the stage marker
-  const isStageOrigin = shape.type === ShapeTypes.STAGE_X;
   const isStageCenter = shape.type === ShapeTypes.STAGE_CENTER;
 
   const handleDragEnd = useCallback(
@@ -67,24 +66,30 @@ const Symbol = ({
     [onUpdateShapeState],
   );
 
+  const handleTransform = useCallback(() => {
+    const node = shapeRef.current;
+    if (!node) return;
+    onUpdateShapeState({
+      x: node.x(),
+      y: node.y(),
+      rotation: node.rotation(),
+      scaleX: node.scaleX(),
+      scaleY: node.scaleY(),
+    });
+  }, [onUpdateShapeState]);
+
   const handleClick = useCallback(
     (e) => {
-      if (disabled || isStageOrigin || isStageCenter) return;
+      if (disabled || isStageCenter) return;
       // Pass whether Shift was held so the caller can toggle multi-select
       const multiSelect = !!e?.evt?.shiftKey;
       onShapeSelect(multiSelect);
     },
-    [disabled, isStageOrigin, isStageCenter, onShapeSelect],
+    [disabled, isStageCenter, onShapeSelect],
   );
 
   useEffect(() => {
-    if (
-      isSelected &&
-      !isStageOrigin &&
-      !isStageCenter &&
-      trRef.current &&
-      shapeRef.current
-    ) {
+    if (isSelected && !isStageCenter && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     } else if (!isSelected && trRef.current) {
@@ -92,7 +97,7 @@ const Symbol = ({
       trRef.current.nodes([]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageOrigin, isStageCenter]);
+  }, [isSelected, isStageCenter]);
 
   //handles end of transform and updates the state
   const handleTransformEnd = useCallback(
@@ -127,11 +132,11 @@ const Symbol = ({
 
   //Attach or detach transformer when selection changes
   useEffect(() => {
-    if (isSelected && !isStageOrigin && trRef.current && shapeRef.current) {
+    if (isSelected && !isStageCenter && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageOrigin]);
+  }, [isSelected, isStageCenter]);
 
   const commonProps = {
     ref: shapeRef,
@@ -147,6 +152,7 @@ const Symbol = ({
     onDragStart: handleDragStart,
     onDragMove: handleDragMove,
     onDragEnd: handleDragEnd,
+    onTransform: handleTransform,
     strokeScaleEnabled: false,
     'data-testid': `symbol-${shape.id}`,
     shadowColor: isGlowing ? shape.stroke || shape.fill || 'yellow' : null,
@@ -164,7 +170,7 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -186,7 +192,7 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -214,7 +220,7 @@ const Symbol = ({
           hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
           dash={[10, 5]}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -241,7 +247,7 @@ const Symbol = ({
           strokeWidth={3}
           hitStrokeWidth={10}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -355,7 +361,7 @@ const Symbol = ({
           strokeWidth={1}
         />
       )}
-      {isSelected && !isStageOrigin && !isStageCenter && (
+      {isSelected && !isStageCenter && (
         <Transformer
           ref={trRef}
           centeredScaling={true}
