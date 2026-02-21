@@ -62,8 +62,32 @@ const createUISlice = (set, get) => ({
   // Actions
   setSelectedPanel: (selectedPanel) => set({ selectedPanel }),
   setSelectedHand: (selectedHand) => set({ selectedHand }),
-  setSelectedDancer: (selectedDancer) => set({ selectedDancer }),
-  setSelectedShapeId: (selectedShapeId) => set({ selectedShapeId }),
+
+  // Unified selection management
+  setSelectedItems: (selectedItems) => set({ selectedItems }),
+
+  // Helper to add/toggle item in selection
+  toggleItemSelection: (type, panelId, id) => {
+    set((state) => {
+      const existingIndex = state.selectedItems.findIndex(
+        (item) => item.id === id,
+      );
+      if (existingIndex >= 0) {
+        return {
+          selectedItems: state.selectedItems.filter(
+            (_, idx) => idx !== existingIndex,
+          ),
+        };
+      } else {
+        return {
+          selectedItems: [...state.selectedItems, { type, panelId, id }],
+        };
+      }
+    });
+  },
+
+  // Clear selection
+  clearSelection: () => set({ selectedItems: [] }),
 
   setOpacity: (updater) =>
     set((state) => ({
@@ -117,9 +141,8 @@ const createUISlice = (set, get) => ({
 
   handleCanvasClick: () => {
     set({
-      selectedDancer: null,
+      selectedItems: [],
       selectedHand: null,
-      selectedShapeId: null,
     });
   },
 

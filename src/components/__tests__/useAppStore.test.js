@@ -95,9 +95,13 @@ describe('useAppStore', () => {
     const panelId = getState().panels[0].id;
     const dancerId = getState().panels[0].dancers[0].id;
     act(() => getState().handleDancerSelection(panelId, dancerId));
-    expect(getState().selectedDancer).toEqual({ panelId, dancerId });
+    expect(getState().selectedItems.some((item) => item.id === dancerId)).toBe(
+      true,
+    );
     act(() => getState().handleDancerSelection(panelId, dancerId));
-    expect(getState().selectedDancer).toBeNull();
+    expect(getState().selectedItems.some((item) => item.id === dancerId)).toBe(
+      false,
+    );
   });
 
   test('head and hand selection update panel data', () => {
@@ -434,9 +438,7 @@ describe('useAppStore', () => {
     act(() => getState().handleDancerSelection(panel.id, dancerId));
     act(() => getState().handleShapeSelection(panel.id, 'shape-xyz'));
     act(() => getState().handleCanvasClick());
-    expect(getState().selectedPanel).toBeNull();
-    expect(getState().selectedDancer).toBeNull();
+    expect(getState().selectedItems).toEqual([]);
     expect(getState().selectedHand).toBeNull();
-    expect(getState().selectedShapeId).toBeNull();
   });
 });

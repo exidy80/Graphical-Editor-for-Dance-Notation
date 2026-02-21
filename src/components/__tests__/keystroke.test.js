@@ -8,9 +8,8 @@ describe('Keystroke Framework', () => {
       useAppStore.setState({
         panels: [useAppStore.getState().panels[0]], // Keep only first panel
         selectedPanel: null,
-        selectedDancer: null,
+        selectedItems: [],
         selectedHand: null,
-        selectedShapeId: null,
       });
     });
   });
@@ -127,7 +126,7 @@ describe('Keystroke Framework', () => {
         registerKeystroke('ArrowLeft', {
           description: 'Rotate symbol left',
           handler: symbolHandler,
-          context: 'symbol',
+          context: 'shape',
         });
       });
 
@@ -151,7 +150,7 @@ describe('Keystroke Framework', () => {
       // Select symbol and trigger keystroke
       if (shapeId) {
         act(() => {
-          useAppStore.getState().setSelectedDancer(null);
+          useAppStore.getState().setSelectedItems([]);
           useAppStore.getState().handleShapeSelection(panelId, shapeId);
           handleKeystroke('ArrowLeft', { key: 'ArrowLeft' });
         });
@@ -186,11 +185,11 @@ describe('Keystroke Framework', () => {
       const shapes = useAppStore.getState().panels[0].shapes;
       if (shapes.length > 0) {
         act(() => {
-          useAppStore.getState().setSelectedDancer(null);
+          useAppStore.getState().setSelectedItems([]);
           useAppStore.getState().setSelectedHand(null);
           useAppStore.getState().handleShapeSelection(panelId, shapes[0].id);
         });
-        expect(getCurrentKeystrokeContext()).toBe('symbol');
+        expect(getCurrentKeystrokeContext()).toBe('shape');
       }
     });
   });
@@ -526,8 +525,11 @@ describe('Keystroke Framework', () => {
       });
 
       // Verify shape is selected
-      const selectedShape = useAppStore.getState().selectedShapeId;
-      expect(selectedShape?.shapeId).toBe('delete-test-shape');
+      expect(
+        useAppStore
+          .getState()
+          .selectedItems.some((item) => item.id === 'delete-test-shape'),
+      ).toBe(true);
 
       // Delete with Delete key
       act(() => {
@@ -537,7 +539,7 @@ describe('Keystroke Framework', () => {
       // Verify shape was deleted
       shapes = useAppStore.getState().panels[0].shapes;
       expect(shapes.some((s) => s.id === 'delete-test-shape')).toBe(false);
-      expect(useAppStore.getState().selectedShapeId).toBeNull();
+      expect(useAppStore.getState().selectedItems.length).toBe(0);
     });
 
     test('should delete selected symbol with backspace key', () => {
@@ -567,9 +569,11 @@ describe('Keystroke Framework', () => {
       // Verify shape exists and is selected
       let shapes = useAppStore.getState().panels[0].shapes;
       expect(shapes.some((s) => s.id === 'backspace-test-shape')).toBe(true);
-      expect(useAppStore.getState().selectedShapeId?.shapeId).toBe(
-        'backspace-test-shape',
-      );
+      expect(
+        useAppStore
+          .getState()
+          .selectedItems.some((item) => item.id === 'backspace-test-shape'),
+      ).toBe(true);
 
       // Delete with Backspace key
       act(() => {
@@ -579,7 +583,7 @@ describe('Keystroke Framework', () => {
       // Verify shape was deleted
       shapes = useAppStore.getState().panels[0].shapes;
       expect(shapes.some((s) => s.id === 'backspace-test-shape')).toBe(false);
-      expect(useAppStore.getState().selectedShapeId).toBeNull();
+      expect(useAppStore.getState().selectedItems.length).toBe(0);
     });
 
     test('should do nothing when delete key pressed with no symbol selected', () => {
@@ -605,7 +609,7 @@ describe('Keystroke Framework', () => {
 
       // Ensure no shape is selected
       act(() => {
-        useAppStore.setState({ selectedShapeId: null });
+        useAppStore.setState({ selectedItems: [] });
       });
 
       // Try to delete with no selection
@@ -642,11 +646,17 @@ describe('Keystroke Framework', () => {
         useAppStore.getState().panels[0].dancers.length;
 
       // Verify dancer is selected (not shape)
-      expect(useAppStore.getState().selectedDancer).toEqual({
-        panelId,
-        dancerId,
-      });
-      expect(useAppStore.getState().selectedShapeId).toBeNull();
+      expect(
+        useAppStore
+          .getState()
+          .selectedItems.some((item) => item.id === dancerId),
+      ).toBe(true);
+      // Shapes are not in selected items
+      const shapes = useAppStore.getState().panels[0].shapes.map((s) => s.id);
+      const noShapeSelected = useAppStore
+        .getState()
+        .selectedItems.every((item) => !shapes.includes(item.id));
+      expect(noShapeSelected).toBe(true);
 
       // Try to delete - should do nothing since dancers can't be deleted
       act(() => {
@@ -789,9 +799,11 @@ describe('Keystroke Framework', () => {
       });
 
       // Verify shape is selected
-      expect(useAppStore.getState().selectedShapeId?.shapeId).toBe(
-        'escape-test-shape',
-      );
+      expect(
+        useAppStore
+          .getState()
+          .selectedItems.some((item) => item.id === 'escape-test-shape'),
+      ).toBe(true);
 
       // Press escape to deselect
       act(() => {
@@ -799,8 +811,7 @@ describe('Keystroke Framework', () => {
       });
 
       // Verify nothing is selected
-      expect(useAppStore.getState().selectedShapeId).toBeNull();
-      expect(useAppStore.getState().selectedDancer).toBeNull();
+      expect(useAppStore.getState().selectedItems).toEqual([]);
       expect(useAppStore.getState().selectedHand).toBeNull();
     });
   });
@@ -819,7 +830,7 @@ describe('Keystroke Framework', () => {
       const keystrokes = getRegisteredKeystrokes();
       expect(Object.keys(keystrokes).length).toBeGreaterThan(0);
       expect(keystrokes).toHaveProperty('ArrowLeft:dancer');
-      expect(keystrokes).toHaveProperty('ArrowLeft:symbol');
+      expect(keystrokes).toHaveProperty('ArrowLeft:shape');
     });
   });
 
@@ -981,10 +992,8 @@ describe('Keystroke Framework', () => {
         handleKeystroke('w', { key: 'w' });
       });
 
-      const { selectedDancer } = useAppStore.getState();
-      expect(selectedDancer).toBeTruthy();
-      expect(selectedDancer.panelId).toBe(panelId);
-      expect(selectedDancer.dancerId).toBe(redDancer.id);
+      const { selectedItems } = useAppStore.getState();
+      expect(selectedItems.some((item) => item.id === redDancer.id)).toBe(true);
     });
 
     test('should select red dancer with f key', () => {
@@ -1001,10 +1010,8 @@ describe('Keystroke Framework', () => {
         handleKeystroke('f', { key: 'f' });
       });
 
-      const { selectedDancer } = useAppStore.getState();
-      expect(selectedDancer).toBeTruthy();
-      expect(selectedDancer.panelId).toBe(panelId);
-      expect(selectedDancer.dancerId).toBe(redDancer.id);
+      const { selectedItems } = useAppStore.getState();
+      expect(selectedItems.some((item) => item.id === redDancer.id)).toBe(true);
     });
 
     test('should select blue dancer with m key', () => {
@@ -1021,10 +1028,10 @@ describe('Keystroke Framework', () => {
         handleKeystroke('m', { key: 'm' });
       });
 
-      const { selectedDancer } = useAppStore.getState();
-      expect(selectedDancer).toBeTruthy();
-      expect(selectedDancer.panelId).toBe(panelId);
-      expect(selectedDancer.dancerId).toBe(blueDancer.id);
+      const { selectedItems } = useAppStore.getState();
+      expect(selectedItems.some((item) => item.id === blueDancer.id)).toBe(
+        true,
+      );
     });
 
     test('should select blue dancer with l key', () => {
@@ -1041,10 +1048,10 @@ describe('Keystroke Framework', () => {
         handleKeystroke('l', { key: 'l' });
       });
 
-      const { selectedDancer } = useAppStore.getState();
-      expect(selectedDancer).toBeTruthy();
-      expect(selectedDancer.panelId).toBe(panelId);
-      expect(selectedDancer.dancerId).toBe(blueDancer.id);
+      const { selectedItems } = useAppStore.getState();
+      expect(selectedItems.some((item) => item.id === blueDancer.id)).toBe(
+        true,
+      );
     });
 
     test('should not select dancer if no panel is selected', () => {
@@ -1057,8 +1064,11 @@ describe('Keystroke Framework', () => {
         handleKeystroke('w', { key: 'w' });
       });
 
-      const { selectedDancer } = useAppStore.getState();
-      expect(selectedDancer).toBeNull();
+      const { selectedItems } = useAppStore.getState();
+      const selectedDancer = selectedItems.find(
+        (item) => item.type === 'dancer',
+      );
+      expect(selectedDancer).toBeUndefined();
     });
   });
 });

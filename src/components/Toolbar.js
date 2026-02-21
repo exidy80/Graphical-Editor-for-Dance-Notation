@@ -19,12 +19,11 @@ const Toolbar = () => {
   const handleHeadSelection = useAppStore((state) => state.handleHeadSelection);
   const handleHandSelection = useAppStore((state) => state.handleHandSelection);
   const selectedHand = useAppStore((state) => state.selectedHand);
-  const selectedDancer = useAppStore((state) => state.selectedDancer);
+  const selectedItems = useAppStore((state) => state.selectedItems);
   const handleDelete = useAppStore((state) => state.handleDelete);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
   const toggleMagnify = useAppStore((state) => state.toggleMagnify);
-  const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const panels = useAppStore((state) => state.panels);
   const setLockModeActive = useAppStore((state) => state.setLockModeActive);
   const lockUi = useAppStore((state) => state.lockUi);
@@ -40,18 +39,24 @@ const Toolbar = () => {
   const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
   const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);
 
+  // Get first selected dancer or shape item from selectedItems
+  const selectedDancer =
+    selectedItems.find((item) => item.type === 'dancer') ?? null;
+  const selectedShape =
+    selectedItems.find((item) => item.type === 'shape') ?? null;
+
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
     if (selectedDancer) {
       const panel = panels.find((p) => p.id === selectedDancer.panelId);
-      const dancer = panel?.dancers.find(
-        (d) => d.id === selectedDancer.dancerId,
+      return (
+        panel?.dancers.find((d) => d.id === selectedDancer.id)?.colour ?? null
       );
-      return dancer?.colour;
-    } else if (selectedShapeId) {
-      const panel = panels.find((p) => p.id === selectedShapeId.panelId);
-      const shape = panel?.shapes.find((s) => s.id === selectedShapeId.shapeId);
-      return shape?.fill || shape?.stroke;
+    }
+    if (selectedShape) {
+      const panel = panels.find((p) => p.id === selectedShape.panelId);
+      const shape = panel?.shapes.find((s) => s.id === selectedShape.id);
+      return shape?.fill ?? shape?.stroke ?? null;
     }
     return null;
   };
@@ -379,11 +384,17 @@ const Toolbar = () => {
         <div className="toolbar-section toolbar-section-elements">
           <div className="toolbar-stack">
             <Button
-              onClick={() => selectedShapeId && handleDelete(selectedShapeId)}
-              variant={selectedShapeId ? 'danger' : 'outline-dark'}
+              onClick={() =>
+                selectedShape &&
+                handleDelete({
+                  panelId: selectedShape.panelId,
+                  shapeId: selectedShape.id,
+                })
+              }
+              variant={selectedShape ? 'danger' : 'outline-dark'}
               className="icon-button"
-              disabled={!selectedShapeId}
-              style={selectedShapeId ? colouredButtonStyle : {}}
+              disabled={!selectedShape}
+              style={selectedShape ? colouredButtonStyle : {}}
             >
               <FontAwesomeIcon icon={faTrash} />
               <span className="button-text">Delete Symbol</span>

@@ -37,7 +37,9 @@ const LayerControl = () => {
   // Use media query to determine if we should use popup approach
   // On small screens (height < 1000px), use popup to save space
   useEffect(() => {
+    if (!window.matchMedia) return;
     const mediaQuery = window.matchMedia('(max-height: 900px)');
+    if (!mediaQuery) return;
 
     const handleChange = (e) => {
       setUsePopup(e.matches);

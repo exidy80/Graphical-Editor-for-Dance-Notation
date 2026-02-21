@@ -2,17 +2,17 @@
 const createShapeSlice = (set, get) => ({
   // Actions
   handleShapeSelection: (panelId, shapeId) => {
-    const { selectedShapeId: prevSelected } = get();
+    const { selectedItems } = get();
     set({ selectedPanel: panelId });
-    if (
-      prevSelected &&
-      prevSelected.panelId === panelId &&
-      prevSelected.shapeId === shapeId
-    ) {
-      set({ selectedShapeId: null });
-    } else {
-      set({ selectedShapeId: { panelId, shapeId } });
-    }
+    const existingIndex = selectedItems.findIndex(
+      (item) => item.id === shapeId,
+    );
+    set({
+      selectedItems:
+        existingIndex >= 0
+          ? selectedItems.filter((_, idx) => idx !== existingIndex)
+          : [{ type: 'shape', panelId, id: shapeId }],
+    });
   },
 
   handleShapeDraw: (shape) => {
@@ -36,7 +36,7 @@ const createShapeSlice = (set, get) => ({
           ? { ...panel, shapes: panel.shapes.filter((s) => s.id !== shapeId) }
           : panel,
       ),
-      selectedShapeId: null,
+      selectedItems: state.selectedItems.filter((item) => item.id !== shapeId),
     }));
   },
 

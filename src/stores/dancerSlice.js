@@ -149,35 +149,33 @@ const createDancerSlice = (set, get, api) => ({
   },
 
   handleDancerSelection: (panelId, dancerId) => {
-    const { selectedDancer: prevSelected } = get();
+    const { selectedItems } = get();
     set({ selectedPanel: panelId });
-    if (
-      prevSelected &&
-      prevSelected.panelId === panelId &&
-      prevSelected.dancerId === dancerId
-    ) {
-      set({ selectedDancer: null });
-    } else {
-      set({ selectedDancer: { panelId, dancerId } });
-    }
+    const existingIndex = selectedItems.findIndex(
+      (item) => item.id === dancerId,
+    );
+    set({
+      selectedItems:
+        existingIndex >= 0
+          ? selectedItems.filter((_, idx) => idx !== existingIndex)
+          : [{ type: 'dancer', panelId, id: dancerId }],
+    });
   },
 
   handleHeadSelection: (shape) => {
-    const { selectedDancer } = get();
+    const { selectedItems } = get();
+    const selectedDancer = selectedItems.find((item) => item.type === 'dancer');
     if (!selectedDancer) return;
     set((state) => ({
       panels: state.panels.map((panel) => {
-        if (panel.id === selectedDancer.panelId) {
-          const dancerIndex = panel.dancers.findIndex(
-            (d) => d.id === selectedDancer.dancerId,
-          );
-          if (dancerIndex !== -1) {
-            const newHeadShapes = [...panel.headShapes];
-            newHeadShapes[dancerIndex] = shape;
-            return { ...panel, headShapes: newHeadShapes };
-          }
-        }
-        return panel;
+        if (panel.id !== selectedDancer.panelId) return panel;
+        const dancerIndex = panel.dancers.findIndex(
+          (d) => d.id === selectedDancer.id,
+        );
+        if (dancerIndex === -1) return panel;
+        const newHeadShapes = [...panel.headShapes];
+        newHeadShapes[dancerIndex] = shape;
+        return { ...panel, headShapes: newHeadShapes };
       }),
     }));
   },

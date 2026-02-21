@@ -11,7 +11,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const panelSize = useAppStore((state) => state.panelSize);
   const opacity = useAppStore((state) => state.opacity);
   const hideList = useAppStore((state) => state.hideList);
-  const selectedDancer = useAppStore((state) => state.selectedDancer);
+  const selectedItems = useAppStore((state) => state.selectedItems);
   const selectedHand = useAppStore((state) => state.selectedHand);
   const handFlash = useAppStore((state) => state.handFlash);
   const symbolFlash = useAppStore((state) => state.symbolFlash);
@@ -28,7 +28,6 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const updateHandRotation = useAppStore((state) => state.updateHandRotation);
   const startDragMode = useAppStore((state) => state.startDragMode);
   const endDragMode = useAppStore((state) => state.endDragMode);
-  const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const handleShapeSelection = useAppStore(
     (state) => state.handleShapeSelection,
   );
@@ -203,10 +202,9 @@ const Canvas = ({ panelId, panelViewportSize }) => {
 
             // Helper to create dancer props
             const getDancerProps = (dancer, index) => {
-              const isSelected =
-                selectedDancer &&
-                selectedDancer.panelId === panelId &&
-                selectedDancer.dancerId === dancer.id;
+              const isSelected = selectedItems.some(
+                (item) => item.id === dancer.id,
+              );
 
               const selectedHandSide =
                 selectedHand &&
@@ -293,10 +291,9 @@ const Canvas = ({ panelId, panelViewportSize }) => {
                 handleShapeSelection(panelId, shape.id);
 
               // Check if this shape is selected
-              const isSelected =
-                selectedShapeId &&
-                selectedShapeId.panelId === panelId &&
-                selectedShapeId.shapeId === shape.id;
+              const isSelected = selectedItems.some(
+                (item) => item.id === shape.id,
+              );
 
               const isSymbolDisabled =
                 opacity.disabled.includes(shape.id) || opacity.symbols.disabled;

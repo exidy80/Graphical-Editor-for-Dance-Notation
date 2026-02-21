@@ -20,8 +20,7 @@ const createInitialState = () => ({
   globalCanvasSize: 1.0,
   selectedPanel: null,
   selectedHand: null,
-  selectedDancer: null,
-  selectedShapeId: null,
+  selectedItems: [], // Array of {type: 'dancer'|'shape', panelId, id}
   panels: [createInitialPanel()],
   hasUnsavedChanges: false,
   lastSaveTime: Date.now(),
