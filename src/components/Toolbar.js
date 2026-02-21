@@ -30,6 +30,7 @@ const Toolbar = () => {
   const lockUi = useAppStore((state) => state.lockUi);
   const getLockForHand = useAppStore((state) => state.getLockForHand);
   const removeLockById = useAppStore((state) => state.removeLockById);
+  const hasOverlappingHands = useAppStore((state) => state.hasOverlappingHands);
   const lockOverlappingHands = useAppStore(
     (state) => state.lockOverlappingHands,
   );
@@ -56,6 +57,10 @@ const Toolbar = () => {
   };
 
   const selectedColour = getSelectedColour();
+
+  const canHoldHands = selectedPanel
+    ? hasOverlappingHands(selectedPanel)
+    : false;
 
   const colouredButtonStyle = selectedColour
     ? {
@@ -273,9 +278,24 @@ const Toolbar = () => {
             color: '#212529',
             fontFamily:
               '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '12px',
           }}
         >
-          {documentTitle}
+          <span
+            style={{
+              maxWidth: '70vw',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              display: 'inline-block',
+            }}
+            title={documentTitle}
+          >
+            {documentTitle}
+          </span>
           {hasUnsavedChanges && (
             <span
               style={{
@@ -379,6 +399,7 @@ const Toolbar = () => {
                 }}
                 variant={lockUi.active ? 'primary' : 'outline-dark'}
                 className="icon-button"
+                disabled={!lockUi.active && !canHoldHands}
               >
                 <FontAwesomeIcon icon={faLink} />
                 <span className="button-text">Hold Hands</span>
@@ -400,7 +421,7 @@ const Toolbar = () => {
                     selectedHand?.dancerId,
                     selectedHand?.handSide,
                   )
-                    ? 'danger'
+                    ? 'dark'
                     : 'outline-dark'
                 }
                 className="icon-button"
@@ -425,7 +446,7 @@ const Toolbar = () => {
             <CanvasSizeControl />
             <Button
               onClick={toggleMagnify}
-              variant={magnifyEnabled ? 'primary' : 'outline-dark'}
+              variant={magnifyEnabled ? 'dark' : 'outline-dark'}
               className="icon-button"
               title="Magnify selected panel"
             >

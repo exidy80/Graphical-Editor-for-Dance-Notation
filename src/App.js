@@ -4,6 +4,7 @@ import PositionPanel from './components/PositionPanel';
 import Sidebar from './components/Sidebar';
 import AutoSaveManager from './components/AutoSaveManager';
 import KeystrokeHandler from './components/KeystrokeHandler';
+import ContextMenu from './components/ContextMenu';
 import './App.css';
 import { useAppStore } from './stores';
 const AppContent = () => {
@@ -28,6 +29,7 @@ const AppContent = () => {
     <div className="App">
       <KeystrokeHandler />
       <AutoSaveManager />
+      <ContextMenu />
       <Sidebar />
       <div className="main-content">
         <Toolbar />

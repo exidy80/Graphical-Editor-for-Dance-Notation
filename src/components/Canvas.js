@@ -34,6 +34,8 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   );
   const updateShapeState = useAppStore((state) => state.updateShapeState);
   const layerOrder = useAppStore((state) => state.layerOrder);
+  const openContextMenu = useAppStore((state) => state.openContextMenu);
+  const closeContextMenu = useAppStore((state) => state.closeContextMenu);
 
   const effectivePanelSize = panelViewportSize || panelSize;
   const isMagnified = magnifyEnabled && selectedPanel === panelId;
@@ -71,12 +73,120 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     }
   };
 
+  const findAncestor = (node, predicate) => {
+    let current = node;
+    while (current && current.getStage && current !== current.getStage()) {
+      if (predicate(current)) return current;
+      current = current.getParent();
+    }
+    return null;
+  };
+
+  const getHandSideFromNode = (node) => {
+    if (!node || !node.name) return null;
+    const name = node.name();
+    if (name === 'leftHand') return 'left';
+    if (name === 'rightHand') return 'right';
+    return null;
+  };
+
+  const handleContextMenu = (e) => {
+    e.evt.preventDefault();
+    e.evt.stopPropagation();
+
+    const stage = e.target.getStage();
+    if (!stage) {
+      closeContextMenu();
+      return;
+    }
+
+    if (e.target === stage) {
+      closeContextMenu();
+      return;
+    }
+
+    const pointer = stage.getPointerPosition();
+    const rect = stage.container().getBoundingClientRect();
+    const clientX =
+      e.evt && typeof e.evt.clientX === 'number' ? e.evt.clientX : null;
+    const clientY =
+      e.evt && typeof e.evt.clientY === 'number' ? e.evt.clientY : null;
+
+    if (clientX === null || clientY === null) {
+      if (!pointer || !rect) {
+        closeContextMenu();
+        return;
+      }
+    }
+
+    const x = clientX !== null ? clientX : rect.left + pointer.x;
+    const y = clientY !== null ? clientY : rect.top + pointer.y;
+
+    const handNode = findAncestor(e.target, (node) =>
+      Boolean(getHandSideFromNode(node)),
+    );
+
+    if (handNode) {
+      const handSide = getHandSideFromNode(handNode);
+      const dancerNode = findAncestor(
+        handNode,
+        (node) => node.getAttr && node.getAttr('dancerId'),
+      );
+      const dancerId = dancerNode ? dancerNode.getAttr('dancerId') : null;
+
+      if (dancerId && handSide) {
+        openContextMenu({
+          x,
+          y,
+          target: { kind: 'hand', panelId, dancerId, handSide },
+        });
+        return;
+      }
+    }
+
+    const shapeNode = findAncestor(
+      e.target,
+      (node) =>
+        node.getAttr &&
+        ((node.getAttr('shapeId') && node.getAttr('shapeType')) ||
+          (node.getAttr('id') && node.getAttr('type'))),
+    );
+
+    if (shapeNode) {
+      const shapeId = shapeNode.getAttr('shapeId') || shapeNode.getAttr('id');
+      const shapeType =
+        shapeNode.getAttr('shapeType') || shapeNode.getAttr('type');
+      const shapeStub = { type: shapeType };
+
+      if (isShapeInCategory(shapeStub, 'signals')) {
+        openContextMenu({
+          x,
+          y,
+          target: { kind: 'handSymbol', panelId, shapeId, shapeType },
+        });
+        return;
+      }
+
+      if (isShapeInCategory(shapeStub, 'feet')) {
+        openContextMenu({
+          x,
+          y,
+          target: { kind: 'footSymbol', panelId, shapeId, shapeType },
+        });
+        return;
+      }
+    }
+
+    closeContextMenu();
+  };
+
   //Konva stage
   return (
     <Stage
       width={effectivePanelSize.width - 4} //Slightly smaller than container
       height={effectivePanelSize.height - 4}
       onMouseDown={handleCanvasClickInternal}
+      onContextMenu={handleContextMenu}
     >
       <Layer
         x={baseOffsetX}

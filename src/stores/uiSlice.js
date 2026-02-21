@@ -12,6 +12,7 @@ const createUISlice = (set, get) => ({
   symbolFlash: [], // transient effects for visual feedback on symbols
   dancerFlash: [], // transient effects for visual feedback on dancers
   magnifyEnabled: false,
+  contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
   // Generalized flash for symbols
   queueSymbolFlash: (panelId, symbolId, duration = 500) => {
     const entry = { panelId, symbolId };
@@ -68,6 +69,14 @@ const createUISlice = (set, get) => ({
     set((state) => ({
       opacity: typeof updater === 'function' ? updater(state.opacity) : updater,
     })),
+
+  openContextMenu: ({ x, y, target }) =>
+    set({ contextMenu: { open: true, x, y, target, openedAt: Date.now() } }),
+
+  closeContextMenu: () =>
+    set({
+      contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
+    }),
 
   toggleMagnify: () => {
     const { magnifyEnabled } = get();

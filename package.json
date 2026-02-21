@@ -1,6 +1,6 @@
 {
   "name": "choreolis",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "homepage": "https://exidy80.github.io/Graphical-Editor-for-Dance-Notation",
   "dependencies": {

@@ -16,6 +16,51 @@ const createLockSlice = (set, get) => ({
     );
   },
 
+  hasOverlappingHands: (
+    panelId,
+    dancerId = null,
+    handSide = null,
+    tolerance = 12,
+  ) => {
+    const panel = get().panels.find((p) => p.id === panelId);
+    if (!panel) return false;
+
+    const hands = [];
+    panel.dancers.forEach((d) => {
+      const left = d.leftHandPos || { x: 0, y: 0 };
+      const right = d.rightHandPos || { x: 0, y: 0 };
+      const leftAbs = get()._localToAbsolute(d, left);
+      const rightAbs = get()._localToAbsolute(d, right);
+      hands.push({ dancerId: d.id, side: 'left', abs: leftAbs });
+      hands.push({ dancerId: d.id, side: 'right', abs: rightAbs });
+    });
+
+    const tol2 = tolerance * tolerance;
+
+    if (dancerId && handSide) {
+      const source = hands.find(
+        (h) => h.dancerId === dancerId && h.side === handSide,
+      );
+      if (!source) return false;
+      return hands.some((h) => {
+        if (h.dancerId === dancerId && h.side === handSide) return false;
+        const dx = source.abs.x - h.abs.x;
+        const dy = source.abs.y - h.abs.y;
+        return dx * dx + dy * dy <= tol2;
+      });
+    }
+
+    for (let i = 0; i < hands.length; i += 1) {
+      for (let j = i + 1; j < hands.length; j += 1) {
+        const dx = hands[i].abs.x - hands[j].abs.x;
+        const dy = hands[i].abs.y - hands[j].abs.y;
+        if (dx * dx + dy * dy <= tol2) return true;
+      }
+    }
+
+    return false;
+  },
+
   addLock: (panelId, lockData) => {
     set((state) => ({
       panels: state.panels.map((panel) =>

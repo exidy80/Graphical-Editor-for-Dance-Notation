@@ -565,6 +565,7 @@ const Dancer = ({
         rotation={dancer.rotation}
         scaleX={dancer.scaleX || 1}
         scaleY={dancer.scaleY || 1}
+        dancerId={dancer.id}
         opacity={
           renderOnly === 'all' && (isSelected || selectedHandSide) ? 0 : opacity
         }
