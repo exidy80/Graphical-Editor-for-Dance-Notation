@@ -446,7 +446,7 @@ const Toolbar = () => {
             <CanvasSizeControl />
             <Button
               onClick={toggleMagnify}
-              variant={magnifyEnabled ? 'primary' : 'outline-dark'}
+              variant={magnifyEnabled ? 'dark' : 'outline-dark'}
               className="icon-button"
               title="Magnify selected panel"
             >
