@@ -148,18 +148,26 @@ const createDancerSlice = (set, get, api) => ({
     get().updateDancerState(panelId, dancerId, { [thicknessKey]: thickness });
   },
 
-  handleDancerSelection: (panelId, dancerId) => {
+  handleDancerSelection: (panelId, dancerId, multiSelect = false) => {
     const { selectedItems } = get();
     set({ selectedPanel: panelId });
-    const existingIndex = selectedItems.findIndex(
-      (item) => item.id === dancerId,
-    );
-    set({
-      selectedItems:
-        existingIndex >= 0
-          ? selectedItems.filter((_, idx) => idx !== existingIndex)
-          : [{ type: 'dancer', panelId, id: dancerId }],
-    });
+    if (multiSelect) {
+      // Ctrl/Cmd-click: toggle this dancer in the selection
+      const existingIndex = selectedItems.findIndex(
+        (item) => item.id === dancerId,
+      );
+      set({
+        selectedItems:
+          existingIndex >= 0
+            ? selectedItems.filter((_, idx) => idx !== existingIndex)
+            : [...selectedItems, { type: 'dancer', panelId, id: dancerId }],
+      });
+    } else {
+      // Single click: select only this dancer, deselect all others
+      set({
+        selectedItems: [{ type: 'dancer', panelId, id: dancerId }],
+      });
+    }
   },
 
   handleHeadSelection: (shape) => {

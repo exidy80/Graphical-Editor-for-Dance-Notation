@@ -89,6 +89,66 @@ const createUISlice = (set, get) => ({
   // Clear selection
   clearSelection: () => set({ selectedItems: [] }),
 
+  // Move/transform the primary dragged item and propagate deltas to all other
+  // selected items. Owns the decision of whether a given state update is a
+  // transform (position/rotation/scale) that should propagate to co-selected
+  // items, vs. a property-only update (arm thickness, hand shape, etc.) that
+  // should only touch the primary item.
+  movePrimaryAndSelection: (panelId, primaryId, primaryType, newState) => {
+    const { multiDragState, selectedItems } = get();
+
+    // Update the primary item unconditionally
+    if (primaryType === 'dancer') {
+      get().updateDancerState(panelId, primaryId, newState);
+    } else if (primaryType === 'shape') {
+      get().updateShapeState(panelId, primaryId, newState);
+    }
+
+    // Only propagate transform properties; ignore non-spatial updates
+    const TRANSFORM_KEYS = ['x', 'y', 'rotation', 'scaleX', 'scaleY'];
+    const isTransformUpdate = TRANSFORM_KEYS.some((k) => k in newState);
+    if (!isTransformUpdate || !multiDragState || selectedItems.length <= 1)
+      return;
+
+    const primaryStart = multiDragState[primaryId];
+    if (!primaryStart) return;
+
+    const dx = (newState.x ?? primaryStart.x) - primaryStart.x;
+    const dy = (newState.y ?? primaryStart.y) - primaryStart.y;
+    const dRotation =
+      newState.rotation !== undefined
+        ? newState.rotation - primaryStart.rotation
+        : null;
+    const scaleXRatio =
+      newState.scaleX !== undefined
+        ? newState.scaleX / primaryStart.scaleX
+        : null;
+    const scaleYRatio =
+      newState.scaleY !== undefined
+        ? newState.scaleY / primaryStart.scaleY
+        : null;
+
+    selectedItems.forEach((item) => {
+      if (item.id === primaryId) return;
+      const startPos = multiDragState[item.id];
+      if (!startPos) return;
+
+      const otherUpdate = { x: startPos.x + dx, y: startPos.y + dy };
+      if (dRotation !== null)
+        otherUpdate.rotation = startPos.rotation + dRotation;
+      if (scaleXRatio !== null)
+        otherUpdate.scaleX = startPos.scaleX * scaleXRatio;
+      if (scaleYRatio !== null)
+        otherUpdate.scaleY = startPos.scaleY * scaleYRatio;
+
+      if (item.type === 'dancer') {
+        get().updateDancerState(item.panelId, item.id, otherUpdate);
+      } else if (item.type === 'shape') {
+        get().updateShapeState(item.panelId, item.id, otherUpdate);
+      }
+    });
+  },
+
   setOpacity: (updater) =>
     set((state) => ({
       opacity: typeof updater === 'function' ? updater(state.opacity) : updater,

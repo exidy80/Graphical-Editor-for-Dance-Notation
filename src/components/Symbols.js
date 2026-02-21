@@ -28,6 +28,7 @@ const Symbol = ({
   opacity,
   onShapeSelect,
   onUpdateShapeState,
+  onDragStart,
   isGlowing,
 }) => {
   const shapeRef = useRef();
@@ -51,11 +52,27 @@ const Symbol = ({
     [onUpdateShapeState],
   );
 
+  const handleDragStart = useCallback(() => {
+    if (onDragStart) onDragStart();
+  }, [onDragStart]);
+
+  const handleDragMove = useCallback(
+    (e) => {
+      const node = e.target;
+      onUpdateShapeState({
+        x: node.x(),
+        y: node.y(),
+      });
+    },
+    [onUpdateShapeState],
+  );
+
   const handleClick = useCallback(
     (e) => {
       if (disabled || isStageOrigin || isStageCenter) return;
-
-      onShapeSelect();
+      // Pass whether Shift was held so the caller can toggle multi-select
+      const multiSelect = !!e?.evt?.shiftKey;
+      onShapeSelect(multiSelect);
     },
     [disabled, isStageOrigin, isStageCenter, onShapeSelect],
   );
@@ -127,6 +144,8 @@ const Symbol = ({
     scaleY: shape.scaleY || 1,
     rotation: shape.rotation || 0,
     onClick: handleClick,
+    onDragStart: handleDragStart,
+    onDragMove: handleDragMove,
     onDragEnd: handleDragEnd,
     strokeScaleEnabled: false,
     'data-testid': `symbol-${shape.id}`,
@@ -149,6 +168,7 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -170,6 +190,7 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -197,6 +218,7 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -223,6 +245,7 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -336,6 +359,7 @@ const Symbol = ({
         <Transformer
           ref={trRef}
           centeredScaling={true}
+          onTransformStart={handleDragStart}
           onTransformEnd={handleTransformEnd}
         />
       )}

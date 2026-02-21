@@ -23,7 +23,6 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     (state) => state.handleDancerSelection,
   );
   const handleHandClick = useAppStore((state) => state.handleHandClick);
-  const updateDancerState = useAppStore((state) => state.updateDancerState);
   const updateHandPosition = useAppStore((state) => state.updateHandPosition);
   const updateHandRotation = useAppStore((state) => state.updateHandRotation);
   const startDragMode = useAppStore((state) => state.startDragMode);
@@ -31,7 +30,9 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const handleShapeSelection = useAppStore(
     (state) => state.handleShapeSelection,
   );
-  const updateShapeState = useAppStore((state) => state.updateShapeState);
+  const movePrimaryAndSelection = useAppStore(
+    (state) => state.movePrimaryAndSelection,
+  );
   const layerOrder = useAppStore((state) => state.layerOrder);
   const openContextMenu = useAppStore((state) => state.openContextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
@@ -230,11 +231,17 @@ const Canvas = ({ panelId, panelViewportSize }) => {
                 handFlash: dancerHandFlash,
                 disabled: opacity.dancers.disabled,
                 opacity: opacity.dancers.value,
-                onDancerSelect: () => handleDancerSelection(panelId, dancer.id),
+                onDancerSelect: (e) =>
+                  handleDancerSelection(panelId, dancer.id, !!e?.evt?.shiftKey),
                 onHandClick: (handSide) =>
                   handleHandClick(panelId, dancer.id, handSide),
                 onUpdateDancerState: (newState) =>
-                  updateDancerState(panelId, dancer.id, newState),
+                  movePrimaryAndSelection(
+                    panelId,
+                    dancer.id,
+                    'dancer',
+                    newState,
+                  ),
                 onUpdateHandPosition: (side, newPos) =>
                   updateHandPosition(panelId, dancer.id, side, newPos),
                 onUpdateHandRotation: (side, rotation) =>
@@ -286,9 +293,9 @@ const Canvas = ({ panelId, panelViewportSize }) => {
             .map((shape) => {
               // Create bound functions that inject panelId and shapeId
               const boundUpdateShapeState = (newState) =>
-                updateShapeState(panelId, shape.id, newState);
-              const boundHandleShapeSelection = () =>
-                handleShapeSelection(panelId, shape.id);
+                movePrimaryAndSelection(panelId, shape.id, 'shape', newState);
+              const boundHandleShapeSelection = (multiSelect) =>
+                handleShapeSelection(panelId, shape.id, multiSelect);
 
               // Check if this shape is selected
               const isSelected = selectedItems.some(
@@ -314,6 +321,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
                   opacity={symbolOpacity}
                   onShapeSelect={boundHandleShapeSelection}
                   onUpdateShapeState={boundUpdateShapeState}
+                  onDragStart={startDragMode}
                   isGlowing={isGlowing}
                 />
               );

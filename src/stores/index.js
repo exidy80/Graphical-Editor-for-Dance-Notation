@@ -38,6 +38,7 @@ const createInitialState = () => ({
   },
   hideList: [], // Elements to hide (dancers or shape IDs)
   _autoSaveTimer: null,
+  multiDragState: null, // { [itemId]: { x, y, rotation, scaleX, scaleY } } captured at drag start
 });
 
 // Create initial store with auto-save functionality
@@ -115,8 +116,37 @@ export const useAppStore = create(
 
 useAppStore.setState({
   startDragMode: () => {
-    // Force a state change by incrementing _historyCapture in the first panel
     const currentState = useAppStore.getState();
+
+    // Capture start positions of all selected items for multi-drag propagation
+    const multiDragState = {};
+    currentState.selectedItems.forEach((item) => {
+      const panel = currentState.panels.find((p) => p.id === item.panelId);
+      if (!panel) return;
+      if (item.type === 'dancer') {
+        const d = panel.dancers.find((d) => d.id === item.id);
+        if (d)
+          multiDragState[item.id] = {
+            x: d.x,
+            y: d.y,
+            rotation: d.rotation || 0,
+            scaleX: d.scaleX || 1,
+            scaleY: d.scaleY || 1,
+          };
+      } else if (item.type === 'shape') {
+        const s = panel.shapes.find((s) => s.id === item.id);
+        if (s)
+          multiDragState[item.id] = {
+            x: s.x,
+            y: s.y,
+            rotation: s.rotation || 0,
+            scaleX: s.scaleX || 1,
+            scaleY: s.scaleY || 1,
+          };
+      }
+    });
+
+    // Force a history-capture snapshot and store multi-drag start positions
     if (currentState.panels.length > 0) {
       const firstPanel = currentState.panels[0];
       const currentCapture = firstPanel._historyCapture || 0;
@@ -124,7 +154,9 @@ useAppStore.setState({
         { ...firstPanel, _historyCapture: currentCapture + 1 },
         ...currentState.panels.slice(1),
       ];
-      useAppStore.setState({ panels: newPanels }, false);
+      useAppStore.setState({ panels: newPanels, multiDragState }, false);
+    } else {
+      useAppStore.setState({ multiDragState }, false);
     }
 
     // Immediately pause tracking after the setState
@@ -134,6 +166,8 @@ useAppStore.setState({
     }
   },
   endDragMode: () => {
+    // Clear multi-drag state on drag end
+    useAppStore.setState({ multiDragState: null }, false);
     if (useAppStore.temporal) {
       useAppStore.temporal.getState().resume();
     }

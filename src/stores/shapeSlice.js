@@ -1,18 +1,26 @@
 // Shape interaction slice - handles shape drawing, selection, and manipulation
 const createShapeSlice = (set, get) => ({
   // Actions
-  handleShapeSelection: (panelId, shapeId) => {
+  handleShapeSelection: (panelId, shapeId, multiSelect = false) => {
     const { selectedItems } = get();
     set({ selectedPanel: panelId });
-    const existingIndex = selectedItems.findIndex(
-      (item) => item.id === shapeId,
-    );
-    set({
-      selectedItems:
-        existingIndex >= 0
-          ? selectedItems.filter((_, idx) => idx !== existingIndex)
-          : [{ type: 'shape', panelId, id: shapeId }],
-    });
+    if (multiSelect) {
+      // Ctrl/Cmd-click: toggle this shape in the selection
+      const existingIndex = selectedItems.findIndex(
+        (item) => item.id === shapeId,
+      );
+      set({
+        selectedItems:
+          existingIndex >= 0
+            ? selectedItems.filter((_, idx) => idx !== existingIndex)
+            : [...selectedItems, { type: 'shape', panelId, id: shapeId }],
+      });
+    } else {
+      // Single click: select only this shape, deselect all others
+      set({
+        selectedItems: [{ type: 'shape', panelId, id: shapeId }],
+      });
+    }
   },
 
   handleShapeDraw: (shape) => {
