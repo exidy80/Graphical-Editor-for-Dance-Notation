@@ -92,6 +92,7 @@ const Toolbar = () => {
 
       // Get filename first
       let pdfFilename = 'dance-notation.pdf';
+      let fileHandle = null;
 
       // Use document title for PDF filename
       const fileName = getDocumentFileName();
@@ -99,7 +100,7 @@ const Toolbar = () => {
       // Check if File System Access API is supported
       if ('showSaveFilePicker' in window) {
         try {
-          const fileHandle = await window.showSaveFilePicker({
+          fileHandle = await window.showSaveFilePicker({
             suggestedName: `${fileName}.pdf`,
             types: [
               {
@@ -240,12 +241,17 @@ const Toolbar = () => {
         pdf.addImage(panelImages[i], 'PNG', x, y, panelWidth, panelHeight);
       }
 
-      pdf.save(pdfFilename);
-      console.log(
-        `PDF saved successfully with ${
-          panelImages.length
-        } panels on ${Math.ceil(panelImages.length / panelsPerPage)} page(s)!`,
-      );
+      // Save the PDF
+      if (fileHandle) {
+        // Use File System Access API to write to the selected location
+        const pdfBlob = pdf.output('blob');
+        const writable = await fileHandle.createWritable();
+        await writable.write(pdfBlob);
+        await writable.close();
+      } else {
+        // Fallback to download
+        pdf.save(pdfFilename);
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
