@@ -313,7 +313,7 @@ const Symbol = ({
         />
       )}
       {shape.type === ShapeTypes.STAGE_CENTER && (
-        <Circle {...commonProps} radius={shape.radius} fill={shape.fill} />
+        <Circle {...commonProps} radius={shape.radius || 5} fill={shape.fill} />
       )}
       {shape.type === ShapeTypes.KNEE && (
         <Circle

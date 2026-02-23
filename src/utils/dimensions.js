@@ -41,7 +41,7 @@ export const SHAPE_DIMENSIONS = {
   waist: { width: 12, height: 2 },
   hip: { width: 6, height: 6 },
   knee: { width: 6, height: 6 },
-  image: { width: 60, height: 60 }, // Images scaled to 0.3 by default in Symbols.js
+  image: { width: 96, height: 137 }, // Actual max native dimensions of foot PNG images (scaled to 0.3 by default in Symbols.js)
   stageX: { width: 20, height: 20 },
   stageNext: { width: 20, height: 20 },
   stageCenter: { width: 10, height: 10 }, // Small green circle
