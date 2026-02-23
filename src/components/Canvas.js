@@ -18,7 +18,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const panels = useAppStore((state) => state.panels);
   const panelSize = useAppStore((state) => state.panelSize);
   const opacity = useAppStore((state) => state.opacity);
-  const hideList = useAppStore((state) => state.hideList);
+  const hiddenLayers = useAppStore((state) => state.hiddenLayers);
   const selectedItems = useAppStore((state) => state.selectedItems);
   const selectedHand = useAppStore((state) => state.selectedHand);
   const handFlash = useAppStore((state) => state.handFlash);
@@ -27,6 +27,28 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const handleCanvasClick = useAppStore((state) => state.handleCanvasClick);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
+
+  // Helper to check if an object should be hidden based on its layer
+  const isObjectHidden = useCallback(
+    (object, objectType) => {
+      if (objectType === 'dancer') {
+        return hiddenLayers.includes('body');
+      }
+      // Never hide STAGE_CENTER (green circle) - it's always visible as a reference point
+      if (object.type === STAGE_CENTER) {
+        return false;
+      }
+      // For shapes, determine which layer they belong to
+      for (const layerKey of hiddenLayers) {
+        if (layerKey !== 'body' && isShapeInCategory(object, layerKey)) {
+          return true;
+        }
+      }
+      return false;
+    },
+    [hiddenLayers],
+  );
+
   const handleDancerSelection = useAppStore(
     (state) => state.handleDancerSelection,
   );
@@ -244,7 +266,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
         // Check visible, enabled dancers
         dancers
           .filter(
-            (d) => !hideList.includes('body') && !opacity.dancers.disabled,
+            (d) => !isObjectHidden(d, 'dancer') && !opacity.dancers.disabled,
           )
           .forEach((dancer) => {
             if (isEnclosed(getDancerAABB(dancer)))
@@ -256,7 +278,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
         shapes
           .filter(
             (s) =>
-              !hideList.includes(s.id) &&
+              !isObjectHidden(s, 'shape') &&
               !opacity.disabled.includes(s.id) &&
               !opacity.symbols.disabled &&
               !NON_SELECTABLE_TYPES.has(s.type),
@@ -278,7 +300,8 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   }, [
     marquee,
     panel,
-    hideList,
+    hiddenLayers,
+    isObjectHidden,
     opacity,
     panelId,
     baseOffsetX,
@@ -441,7 +464,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
           if (layerKey === 'body') {
             // Filter out hidden dancers
             const visibleDancers = dancers.filter(
-              (d) => !hideList.includes('body'),
+              (d) => !isObjectHidden(d, 'dancer'),
             );
 
             // Helper to create dancer props
@@ -532,7 +555,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
 
           const list = shapesByCategory[layerKey];
           return list
-            .filter((shape) => !hideList.includes(shape.id))
+            .filter((shape) => !isObjectHidden(shape, 'shape'))
             .map((shape) => {
               // Create bound functions that inject panelId and shapeId
               const boundUpdateShapeState = (newState) =>

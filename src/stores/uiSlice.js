@@ -225,17 +225,32 @@ const createUISlice = (set, get) => ({
     }));
   },
 
-  addToHideList: (list) => {
+  hideLayer: (layerKey) => {
     set((state) => ({
-      hideList: [...new Set([...state.hideList, ...list])],
+      hiddenLayers: [...new Set([...state.hiddenLayers, layerKey])],
     }));
   },
 
-  removeFromHideList: (list) => {
-    const removeSet = new Set(list);
+  showLayer: (layerKey) => {
     set((state) => ({
-      hideList: state.hideList.filter((item) => !removeSet.has(item)),
+      hiddenLayers: state.hiddenLayers.filter((key) => key !== layerKey),
     }));
+  },
+
+  // Helper to check if an object should be hidden based on its layer
+  isObjectHidden: (object, objectType) => {
+    const { hiddenLayers } = get();
+    if (objectType === 'dancer') {
+      return hiddenLayers.includes('body');
+    }
+    // For shapes, determine which layer they belong to
+    const { isShapeInCategory } = require('../utils/layersConfig');
+    for (const layerKey of hiddenLayers) {
+      if (layerKey !== 'body' && isShapeInCategory(object, layerKey)) {
+        return true;
+      }
+    }
+    return false;
   },
 
   handleOpacityChange: (type) => {

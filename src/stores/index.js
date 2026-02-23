@@ -36,7 +36,7 @@ const createInitialState = () => ({
     symbols: { value: 1, disabled: false },
     disabled: [],
   },
-  hideList: [], // Elements to hide (dancers or shape IDs)
+  hiddenLayers: [], // Layer keys to hide (e.g., ['body', 'feet'])
   _autoSaveTimer: null,
   multiDragState: null, // { [itemId]: { x, y, rotation, scaleX, scaleY } } captured at drag start
 });
