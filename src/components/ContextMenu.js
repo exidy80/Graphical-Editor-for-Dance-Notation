@@ -309,7 +309,7 @@ const ContextMenu = () => {
         style={itemStyle}
         onClick={closeAfter(() => updateFootSymbol('Whole'))}
       >
-        Both
+        Whole
       </button>
     </>
   );

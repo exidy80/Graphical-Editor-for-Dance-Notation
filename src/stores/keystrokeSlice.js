@@ -363,20 +363,23 @@ const createKeystrokeSlice = (set, get, api) => ({
       handler: (event, context) => {
         const { selectedItems, updateDancerState, updateShapeState, panels } =
           get();
-        const firstSelected = selectedItems[0];
-        if (!firstSelected) return;
-        const { type, panelId, id } = firstSelected;
-        const panel = panels.find((p) => p.id === panelId);
-        if (!panel) return;
-        if (type === 'dancer') {
-          const dancer = panel.dancers.find((d) => d.id === id);
-          if (dancer) {
+        if (!selectedItems.length) return;
+
+        selectedItems.forEach((item) => {
+          const panel = panels.find((p) => p.id === item.panelId);
+          if (!panel) return;
+
+          if (item.type === 'dancer') {
+            const dancer = panel.dancers.find((d) => d.id === item.id);
+            if (!dancer) return;
             const originalRotation = dancer.colour === 'red' ? 180 : 0;
-            updateDancerState(panelId, id, { rotation: originalRotation });
+            updateDancerState(item.panelId, item.id, {
+              rotation: originalRotation,
+            });
+          } else if (item.type === 'shape') {
+            updateShapeState(item.panelId, item.id, { rotation: 0 });
           }
-        } else if (type === 'shape') {
-          updateShapeState(panelId, id, { rotation: 0 });
-        }
+        });
       },
       context: 'global',
       priority: 1,
@@ -557,24 +560,26 @@ const createKeystrokeSlice = (set, get, api) => ({
   _rotateSelection: (degrees) => {
     const { selectedItems, updateDancerState, updateShapeState, panels } =
       get();
-    const firstSelected = selectedItems[0];
-    if (!firstSelected) return;
-    const { type, panelId, id } = firstSelected;
-    const panel = panels.find((p) => p.id === panelId);
-    if (!panel) return;
-    if (type === 'dancer') {
-      const dancer = panel.dancers.find((d) => d.id === id);
-      if (dancer)
-        updateDancerState(panelId, id, {
+    if (!selectedItems.length) return;
+
+    selectedItems.forEach((item) => {
+      const panel = panels.find((p) => p.id === item.panelId);
+      if (!panel) return;
+
+      if (item.type === 'dancer') {
+        const dancer = panel.dancers.find((d) => d.id === item.id);
+        if (!dancer) return;
+        updateDancerState(item.panelId, item.id, {
           rotation: (dancer.rotation || 0) + degrees,
         });
-    } else if (type === 'shape') {
-      const shape = panel.shapes.find((s) => s.id === id);
-      if (shape)
-        updateShapeState(panelId, id, {
+      } else if (item.type === 'shape') {
+        const shape = panel.shapes.find((s) => s.id === item.id);
+        if (!shape) return;
+        updateShapeState(item.panelId, item.id, {
           rotation: (shape.rotation || 0) + degrees,
         });
-    }
+      }
+    });
   },
 
   _nudgeSelection: (dx, dy) => {
