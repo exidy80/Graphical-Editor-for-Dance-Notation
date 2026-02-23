@@ -271,6 +271,12 @@ const PositionPanel = () => {
                     onChange={(e) => updatePanelNotes(panel.id, e.target.value)}
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        setExpandedNotesPanel(null);
+                      }
+                    }}
                     style={{
                       flex: '1 1 auto',
                       padding: '8px',
