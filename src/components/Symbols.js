@@ -69,14 +69,26 @@ const Symbol = ({
   const handleTransform = useCallback(() => {
     const node = shapeRef.current;
     if (!node) return;
+    const imageScaleFactor =
+      shape.type === ShapeTypes.IMAGE
+        ? SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)
+        : 1;
+    const scaleX =
+      shape.type === ShapeTypes.IMAGE
+        ? node.scaleX() / imageScaleFactor
+        : node.scaleX();
+    const scaleY =
+      shape.type === ShapeTypes.IMAGE
+        ? node.scaleY() / imageScaleFactor
+        : node.scaleY();
     onUpdateShapeState({
       x: node.x(),
       y: node.y(),
       rotation: node.rotation(),
-      scaleX: node.scaleX(),
-      scaleY: node.scaleY(),
+      scaleX: scaleX,
+      scaleY: scaleY,
     });
-  }, [onUpdateShapeState]);
+  }, [isGlowing, onUpdateShapeState, shape.type]);
 
   const handleClick = useCallback(
     (e) => {
@@ -103,31 +115,28 @@ const Symbol = ({
   const handleTransformEnd = useCallback(
     (e) => {
       const node = shapeRef.current;
-      let newScaleX = node.scaleX();
-
-      const spinConfig = SPIN_CONFIGS[shape.type];
-
-      if (spinConfig) {
-        // Direction (CW / CCW) is encoded in the config, not in the shape
-        const baseSignX = Math.sign(spinConfig.scaleX ?? 1) || 1;
-
-        // Take the magnitude from the transform, but force the config’s sign
-        newScaleX = Math.abs(newScaleX) * baseSignX;
-
-        // Normalize the node so what you see matches what you store
-        node.scaleX(newScaleX);
-      }
-
+      const imageScaleFactor =
+        shape.type === ShapeTypes.IMAGE
+          ? SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)
+          : 1;
+      const scaleX =
+        shape.type === ShapeTypes.IMAGE
+          ? node.scaleX() / imageScaleFactor
+          : node.scaleX();
+      const scaleY =
+        shape.type === ShapeTypes.IMAGE
+          ? node.scaleY() / imageScaleFactor
+          : node.scaleY();
       const newState = {
         x: node.x(),
         y: node.y(),
         rotation: node.rotation(),
-        scaleX: node.scaleX(),
-        scaleY: node.scaleY(),
+        scaleX: scaleX,
+        scaleY: scaleY,
       };
       onUpdateShapeState(newState);
     },
-    [onUpdateShapeState, shape.type],
+    [isGlowing, onUpdateShapeState, shape.type],
   );
 
   //Attach or detach transformer when selection changes
@@ -288,8 +297,16 @@ const Symbol = ({
         <KonvaImage
           {...commonProps}
           image={image}
-          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
-          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
+          scaleX={
+            SHAPE_STYLE.IMAGE_SCALE_FACTOR *
+            (isGlowing ? 1.5 : 1) *
+            (shape.scaleX || 1)
+          }
+          scaleY={
+            SHAPE_STYLE.IMAGE_SCALE_FACTOR *
+            (isGlowing ? 1.5 : 1) *
+            (shape.scaleY || 1)
+          }
         />
       )}
       {shape.type === ShapeTypes.STAGE_X && (

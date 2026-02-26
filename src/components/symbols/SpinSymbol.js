@@ -9,10 +9,12 @@ const generateSpiralPoints = (
   angleIncrement,
   pattern,
   startAngle = 0,
+  direction = 'cw',
 ) => {
   const points = [];
+  const directionSign = direction === 'ccw' ? -1 : 1;
   for (let i = 0; i < numPoints; i++) {
-    const angle = startAngle + i * angleIncrement;
+    const angle = startAngle + i * angleIncrement * directionSign;
     let radius;
     if (pattern === 'circle') {
       radius = radiusIncrement; // Fixed radius for a circle
@@ -32,6 +34,8 @@ const SpinSymbol = ({ config, shape, commonProps }) => {
     config.radiusIncrement,
     config.angleIncrement,
     config.pattern,
+    config.startAngle,
+    config.direction,
   );
 
   return (
@@ -43,10 +47,13 @@ const SpinSymbol = ({ config, shape, commonProps }) => {
       pointerWidth={config.pattern === 'circle' ? 5 : SHAPE_STYLE.POINTER_WIDTH}
       stroke={shape.stroke}
       fill={shape.fill}
-      strokeWidth={config.pattern === 'circle' ? 2 : SHAPE_STYLE.STROKE_WIDTH_THIN}
-      hitStrokeWidth={config.pattern === 'circle' ? 10 : SHAPE_STYLE.HIT_STROKE_WIDTH}
+      strokeWidth={
+        config.pattern === 'circle' ? 2 : SHAPE_STYLE.STROKE_WIDTH_THIN
+      }
+      hitStrokeWidth={
+        config.pattern === 'circle' ? 10 : SHAPE_STYLE.HIT_STROKE_WIDTH
+      }
       dash={[10, 5]}
-      scaleX={(commonProps.scaleX || 1) * config.scaleX}
     />
   );
 };
