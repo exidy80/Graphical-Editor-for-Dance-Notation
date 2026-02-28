@@ -10,7 +10,7 @@ import {
 } from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
-import { SHAPE_STYLE } from '../utils/dimensions';
+import { SHAPE_STYLE, UI_DIMENSIONS } from '../utils/dimensions';
 import * as ShapeTypes from '../constants/shapeTypes';
 import SpinSymbol from './symbols/SpinSymbol';
 import CurvedLineSymbol from './symbols/CurvedLineSymbol';
@@ -183,6 +183,12 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
             onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
@@ -205,6 +211,12 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
             onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
@@ -233,6 +245,12 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
             onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
@@ -260,6 +278,12 @@ const Symbol = ({
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
             onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
@@ -382,6 +406,12 @@ const Symbol = ({
         <Transformer
           ref={trRef}
           centeredScaling={true}
+          boundBoxFunc={(oldBox, newBox) =>
+            newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+            newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+              ? oldBox
+              : newBox
+          }
           onTransformStart={handleDragStart}
           onTransformEnd={handleTransformEnd}
         />
