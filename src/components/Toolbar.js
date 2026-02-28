@@ -20,7 +20,9 @@ const Toolbar = () => {
   const handleHandSelection = useAppStore((state) => state.handleHandSelection);
   const selectedHand = useAppStore((state) => state.selectedHand);
   const selectedItems = useAppStore((state) => state.selectedItems);
-  const handleDelete = useAppStore((state) => state.handleDelete);
+  const handleDeleteSelectedShapes = useAppStore(
+    (state) => state.handleDeleteSelectedShapes,
+  );
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
   const toggleMagnify = useAppStore((state) => state.toggleMagnify);
@@ -390,15 +392,7 @@ const Toolbar = () => {
         <div className="toolbar-section toolbar-section-elements">
           <div className="toolbar-stack">
             <Button
-              onClick={() =>
-                selectedShapes.length > 0 &&
-                selectedShapes.forEach((selectedShape) => {
-                  handleDelete({
-                    panelId: selectedShape.panelId,
-                    shapeId: selectedShape.id,
-                  });
-                })
-              }
+              onClick={handleDeleteSelectedShapes}
               variant={selectedShapes.length > 0 ? 'danger' : 'outline-dark'}
               className="icon-button"
               disabled={selectedShapes.length === 0}

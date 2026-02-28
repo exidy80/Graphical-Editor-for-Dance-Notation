@@ -320,20 +320,12 @@ const createKeystrokeSlice = (set, get, api) => ({
 
     // Delete key configurations - shared between Delete and Backspace
     const deleteKeyConfig = {
-      description: 'Delete selected symbol',
+      description: 'Delete selected symbol(s)',
       handler: () => {
-        const { selectedItems, handleDelete } = get();
-        selectedItems.forEach((item) => {
-          if (item.type === 'shape') {
-            handleDelete({
-              panelId: item.panelId,
-              shapeId: item.id,
-            });
-          }
-        });
+        console.log('Delete key pressed - deleting selected shapes');
+        get().handleDeleteSelectedShapes();
       },
-      // Note: Does nothing if no symbol is selected - dancers cannot be deleted
-      context: 'shape',
+      context: 'global',
       priority: 1,
     };
 

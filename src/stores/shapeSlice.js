@@ -35,6 +35,36 @@ const createShapeSlice = (set, get) => ({
     }));
   },
 
+  handleDeleteSelectedShapes: () =>
+    set((state) => {
+      console.log('Deleting selected shapes:', state.selectedItems);
+      // 1. Build a Set of shape IDs to delete
+      const shapeIdsToDelete = new Set(
+        state.selectedItems
+          .filter((item) => item.type === 'shape')
+          .map((item) => item.id),
+      );
+
+      if (shapeIdsToDelete.size === 0) return state;
+
+      // 2. Remove those shapes from every panel
+      const panels = state.panels.map((panel) => ({
+        ...panel,
+        shapes: panel.shapes.filter((shape) => !shapeIdsToDelete.has(shape.id)),
+      }));
+
+      // 3. Drop shape selections
+      const selectedItems = state.selectedItems.filter(
+        (item) => item.type !== 'shape',
+      );
+
+      return {
+        ...state,
+        panels,
+        selectedItems,
+      };
+    }),
+
   handleDelete: (selectedShape) => {
     if (!selectedShape) return;
     const { panelId, shapeId } = selectedShape;
