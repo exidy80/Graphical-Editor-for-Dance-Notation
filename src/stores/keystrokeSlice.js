@@ -321,19 +321,18 @@ const createKeystrokeSlice = (set, get, api) => ({
     // Delete key configurations - shared between Delete and Backspace
     const deleteKeyConfig = {
       description: 'Delete selected symbol',
-      handler: (event, context) => {
+      handler: () => {
         const { selectedItems, handleDelete } = get();
-        const selectedShape = selectedItems.find(
-          (item) => item.type === 'shape',
-        );
-        if (selectedShape) {
-          handleDelete({
-            panelId: selectedShape.panelId,
-            shapeId: selectedShape.id,
-          });
-        }
-        // Note: Does nothing if no symbol is selected - dancers cannot be deleted
+        selectedItems.forEach((item) => {
+          if (item.type === 'shape') {
+            handleDelete({
+              panelId: item.panelId,
+              shapeId: item.id,
+            });
+          }
+        });
       },
+      // Note: Does nothing if no symbol is selected - dancers cannot be deleted
       context: 'shape',
       priority: 1,
     };

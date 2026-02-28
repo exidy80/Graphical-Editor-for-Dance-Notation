@@ -42,8 +42,8 @@ const Toolbar = () => {
   // Get first selected dancer or shape item from selectedItems
   const selectedDancer =
     selectedItems.find((item) => item.type === 'dancer') ?? null;
-  const selectedShape =
-    selectedItems.find((item) => item.type === 'shape') ?? null;
+  const selectedShapes =
+    selectedItems.filter((item) => item.type === 'shape') ?? [];
 
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
@@ -53,9 +53,9 @@ const Toolbar = () => {
         panel?.dancers.find((d) => d.id === selectedDancer.id)?.colour ?? null
       );
     }
-    if (selectedShape) {
-      const panel = panels.find((p) => p.id === selectedShape.panelId);
-      const shape = panel?.shapes.find((s) => s.id === selectedShape.id);
+    if (selectedShapes.length > 0) {
+      const panel = panels.find((p) => p.id === selectedShapes[0].panelId);
+      const shape = panel?.shapes.find((s) => s.id === selectedShapes[0].id);
       return shape?.fill ?? shape?.stroke ?? null;
     }
     return null;
@@ -391,16 +391,18 @@ const Toolbar = () => {
           <div className="toolbar-stack">
             <Button
               onClick={() =>
-                selectedShape &&
-                handleDelete({
-                  panelId: selectedShape.panelId,
-                  shapeId: selectedShape.id,
+                selectedShapes.length > 0 &&
+                selectedShapes.forEach((selectedShape) => {
+                  handleDelete({
+                    panelId: selectedShape.panelId,
+                    shapeId: selectedShape.id,
+                  });
                 })
               }
-              variant={selectedShape ? 'danger' : 'outline-dark'}
+              variant={selectedShapes.length > 0 ? 'danger' : 'outline-dark'}
               className="icon-button"
-              disabled={!selectedShape}
-              style={selectedShape ? colouredButtonStyle : {}}
+              disabled={selectedShapes.length === 0}
+              style={selectedShapes.length > 0 ? colouredButtonStyle : {}}
             >
               <FontAwesomeIcon icon={faTrash} />
               <span className="button-text">Delete Symbol</span>
