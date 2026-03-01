@@ -588,6 +588,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
                   onShapeSelect={boundHandleShapeSelection}
                   onUpdateShapeState={boundUpdateShapeState}
                   onDragStart={startDragMode}
+                  onDragEnd={endDragMode}
                   isGlowing={isGlowing}
                 />
               );

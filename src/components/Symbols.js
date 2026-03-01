@@ -29,6 +29,7 @@ const Symbol = ({
   onShapeSelect,
   onUpdateShapeState,
   onDragStart,
+  onDragEnd,
   isGlowing,
 }) => {
   const shapeRef = useRef();
@@ -47,8 +48,9 @@ const Symbol = ({
         x: node.x(),
         y: node.y(),
       });
+      if (onDragEnd) onDragEnd();
     },
-    [onUpdateShapeState],
+    [onUpdateShapeState, onDragEnd],
   );
 
   const handleDragStart = useCallback(() => {
@@ -131,12 +133,13 @@ const Symbol = ({
         x: node.x(),
         y: node.y(),
         rotation: node.rotation(),
-        scaleX: scaleX,
-        scaleY: scaleY,
+        scaleX,
+        scaleY,
       };
       onUpdateShapeState(newState);
+      if (onDragEnd) onDragEnd();
     },
-    [isGlowing, onUpdateShapeState, shape.type],
+    [isGlowing, onUpdateShapeState, onDragEnd, shape.type],
   );
 
   //Attach or detach transformer when selection changes
