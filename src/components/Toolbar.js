@@ -19,12 +19,13 @@ const Toolbar = () => {
   const handleHeadSelection = useAppStore((state) => state.handleHeadSelection);
   const handleHandSelection = useAppStore((state) => state.handleHandSelection);
   const selectedHand = useAppStore((state) => state.selectedHand);
-  const selectedDancer = useAppStore((state) => state.selectedDancer);
-  const handleDelete = useAppStore((state) => state.handleDelete);
+  const selectedItems = useAppStore((state) => state.selectedItems);
+  const handleDeleteSelectedShapes = useAppStore(
+    (state) => state.handleDeleteSelectedShapes,
+  );
   const selectedPanel = useAppStore((state) => state.selectedPanel);
   const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
   const toggleMagnify = useAppStore((state) => state.toggleMagnify);
-  const selectedShapeId = useAppStore((state) => state.selectedShapeId);
   const panels = useAppStore((state) => state.panels);
   const setLockModeActive = useAppStore((state) => state.setLockModeActive);
   const lockUi = useAppStore((state) => state.lockUi);
@@ -40,18 +41,24 @@ const Toolbar = () => {
   const getDocumentFileName = useAppStore((state) => state.getDocumentFileName);
   const hasUnsavedChanges = useAppStore((state) => state.hasUnsavedChanges);
 
+  // Get first selected dancer or shape item from selectedItems
+  const selectedDancer =
+    selectedItems.find((item) => item.type === 'dancer') ?? null;
+  const selectedShapes =
+    selectedItems.filter((item) => item.type === 'shape') ?? [];
+
   //Gets the colour of the selected object in order to theme the toolbar buttons
   const getSelectedColour = () => {
     if (selectedDancer) {
       const panel = panels.find((p) => p.id === selectedDancer.panelId);
-      const dancer = panel?.dancers.find(
-        (d) => d.id === selectedDancer.dancerId,
+      return (
+        panel?.dancers.find((d) => d.id === selectedDancer.id)?.colour ?? null
       );
-      return dancer?.colour;
-    } else if (selectedShapeId) {
-      const panel = panels.find((p) => p.id === selectedShapeId.panelId);
-      const shape = panel?.shapes.find((s) => s.id === selectedShapeId.shapeId);
-      return shape?.fill || shape?.stroke;
+    }
+    if (selectedShapes.length > 0) {
+      const panel = panels.find((p) => p.id === selectedShapes[0].panelId);
+      const shape = panel?.shapes.find((s) => s.id === selectedShapes[0].id);
+      return shape?.fill ?? shape?.stroke ?? null;
     }
     return null;
   };
@@ -87,6 +94,7 @@ const Toolbar = () => {
 
       // Get filename first
       let pdfFilename = 'dance-notation.pdf';
+      let fileHandle = null;
 
       // Use document title for PDF filename
       const fileName = getDocumentFileName();
@@ -94,7 +102,7 @@ const Toolbar = () => {
       // Check if File System Access API is supported
       if ('showSaveFilePicker' in window) {
         try {
-          const fileHandle = await window.showSaveFilePicker({
+          fileHandle = await window.showSaveFilePicker({
             suggestedName: `${fileName}.pdf`,
             types: [
               {
@@ -235,12 +243,17 @@ const Toolbar = () => {
         pdf.addImage(panelImages[i], 'PNG', x, y, panelWidth, panelHeight);
       }
 
-      pdf.save(pdfFilename);
-      console.log(
-        `PDF saved successfully with ${
-          panelImages.length
-        } panels on ${Math.ceil(panelImages.length / panelsPerPage)} page(s)!`,
-      );
+      // Save the PDF
+      if (fileHandle) {
+        // Use File System Access API to write to the selected location
+        const pdfBlob = pdf.output('blob');
+        const writable = await fileHandle.createWritable();
+        await writable.write(pdfBlob);
+        await writable.close();
+      } else {
+        // Fallback to download
+        pdf.save(pdfFilename);
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
@@ -379,11 +392,11 @@ const Toolbar = () => {
         <div className="toolbar-section toolbar-section-elements">
           <div className="toolbar-stack">
             <Button
-              onClick={() => selectedShapeId && handleDelete(selectedShapeId)}
-              variant={selectedShapeId ? 'danger' : 'outline-dark'}
+              onClick={handleDeleteSelectedShapes}
+              variant={selectedShapes.length > 0 ? 'danger' : 'outline-dark'}
               className="icon-button"
-              disabled={!selectedShapeId}
-              style={selectedShapeId ? colouredButtonStyle : {}}
+              disabled={selectedShapes.length === 0}
+              style={selectedShapes.length > 0 ? colouredButtonStyle : {}}
             >
               <FontAwesomeIcon icon={faTrash} />
               <span className="button-text">Delete Symbol</span>

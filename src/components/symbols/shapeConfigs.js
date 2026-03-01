@@ -6,38 +6,38 @@ export const SPIN_CONFIGS = {
     numPoints: 30,
     radiusIncrement: 1,
     angleIncrement: Math.PI / 6,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_TWO_CW]: {
     numPoints: 30,
     radiusIncrement: 1,
     angleIncrement: Math.PI / 6,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_TWO_CCW]: {
     numPoints: 30,
     radiusIncrement: 1,
     angleIncrement: Math.PI / 6,
-    scaleX: -1,
+    direction: 'ccw',
   },
 
   [ShapeTypes.SPIN_ONE_AND_HALF]: {
     numPoints: 20,
     radiusIncrement: 1,
     angleIncrement: Math.PI / 6,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_ONE_AND_HALF_CW]: {
     numPoints: 20,
     radiusIncrement: 1,
     angleIncrement: Math.PI / 6,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_ONE_AND_HALF_CCW]: {
     numPoints: 20,
     radiusIncrement: 1,
     angleIncrement: Math.PI / 6,
-    scaleX: -1,
+    direction: 'ccw',
   },
 
   [ShapeTypes.SPIN_ONE]: {
@@ -45,59 +45,59 @@ export const SPIN_CONFIGS = {
     radiusIncrement: 25,
     angleIncrement: Math.PI / 18,
     pattern: 'circle',
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_ONE_CW]: {
     numPoints: 36,
     radiusIncrement: 25,
     angleIncrement: Math.PI / 18,
     pattern: 'circle',
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_ONE_CCW]: {
     numPoints: 36,
     radiusIncrement: 25,
     angleIncrement: Math.PI / 18,
     pattern: 'circle',
-    scaleX: -1,
+    direction: 'ccw',
   },
 
   [ShapeTypes.SPIN_HALF]: {
     numPoints: 12,
     radiusIncrement: 2,
     angleIncrement: Math.PI / 17,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_HALF_CW]: {
     numPoints: 12,
     radiusIncrement: 2,
     angleIncrement: Math.PI / 17,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_HALF_CCW]: {
     numPoints: 12,
     radiusIncrement: 2,
     angleIncrement: Math.PI / 17,
-    scaleX: -1,
+    direction: 'ccw',
   },
 
   [ShapeTypes.SPIN_QUARTER]: {
     numPoints: 8,
     radiusIncrement: 2,
     angleIncrement: Math.PI / 20,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_QUARTER_CW]: {
     numPoints: 8,
     radiusIncrement: 2,
     angleIncrement: Math.PI / 20,
-    scaleX: 1,
+    direction: 'cw',
   },
   [ShapeTypes.SPIN_QUARTER_CCW]: {
     numPoints: 8,
     radiusIncrement: 2,
     angleIncrement: Math.PI / 20,
-    scaleX: -1,
+    direction: 'ccw',
   },
 };
 

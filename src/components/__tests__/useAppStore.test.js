@@ -90,14 +90,41 @@ describe('useAppStore', () => {
     expect(stageCenter.y).toBe(stageX.y);
   });
 
-  test('select dancer toggles selection', () => {
+  test('select dancer single-click keeps selection, ctrl-click deselects, multi-select adds', () => {
     const { getState } = useAppStore;
     const panelId = getState().panels[0].id;
-    const dancerId = getState().panels[0].dancers[0].id;
-    act(() => getState().handleDancerSelection(panelId, dancerId));
-    expect(getState().selectedDancer).toEqual({ panelId, dancerId });
-    act(() => getState().handleDancerSelection(panelId, dancerId));
-    expect(getState().selectedDancer).toBeNull();
+    const dancer0Id = getState().panels[0].dancers[0].id;
+    const dancer1Id = getState().panels[0].dancers[1].id;
+
+    // Single click selects
+    act(() => getState().handleDancerSelection(panelId, dancer0Id));
+    expect(getState().selectedItems.some((item) => item.id === dancer0Id)).toBe(
+      true,
+    );
+
+    // Single click again: keeps selected (does NOT toggle off)
+    act(() => getState().handleDancerSelection(panelId, dancer0Id));
+    expect(getState().selectedItems.some((item) => item.id === dancer0Id)).toBe(
+      true,
+    );
+
+    // Ctrl-click: deselects
+    act(() => getState().handleDancerSelection(panelId, dancer0Id, true));
+    expect(getState().selectedItems.some((item) => item.id === dancer0Id)).toBe(
+      false,
+    );
+
+    // Ctrl-click a second dancer while first is selected → both selected
+    act(() => getState().handleDancerSelection(panelId, dancer0Id));
+    act(() => getState().handleDancerSelection(panelId, dancer1Id, true));
+    expect(getState().selectedItems).toHaveLength(2);
+
+    // Single click on dancer0 → only dancer0 selected
+    act(() => getState().handleDancerSelection(panelId, dancer0Id));
+    expect(getState().selectedItems).toHaveLength(1);
+    expect(getState().selectedItems.some((item) => item.id === dancer0Id)).toBe(
+      true,
+    );
   });
 
   test('head and hand selection update panel data', () => {
@@ -434,9 +461,7 @@ describe('useAppStore', () => {
     act(() => getState().handleDancerSelection(panel.id, dancerId));
     act(() => getState().handleShapeSelection(panel.id, 'shape-xyz'));
     act(() => getState().handleCanvasClick());
-    expect(getState().selectedPanel).toBeNull();
-    expect(getState().selectedDancer).toBeNull();
+    expect(getState().selectedItems).toEqual([]);
     expect(getState().selectedHand).toBeNull();
-    expect(getState().selectedShapeId).toBeNull();
   });
 });

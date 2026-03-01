@@ -72,12 +72,9 @@ const createKeystrokeSlice = (set, get, api) => ({
 
   // Context detection
   getCurrentKeystrokeContext: () => {
-    const { selectedDancer, selectedHand, selectedShapeId } = get();
-
+    const { selectedItems, selectedHand } = get();
     if (selectedHand) return 'hand';
-    if (selectedDancer) return 'dancer';
-    if (selectedShapeId) return 'symbol';
-    return 'none';
+    return selectedItems[0]?.type ?? 'none';
   },
 
   // Keystroke execution
@@ -167,7 +164,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const step = event.shiftKey ? fineRotationStep : rotationStep;
         get()._rotateSelection(-step);
       },
-      context: 'symbol',
+      context: 'shape',
       priority: 1,
     });
 
@@ -190,7 +187,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const step = event.shiftKey ? fineRotationStep : rotationStep;
         get()._rotateSelection(step);
       },
-      context: 'symbol',
+      context: 'shape',
       priority: 1,
     });
 
@@ -212,7 +209,7 @@ const createKeystrokeSlice = (set, get, api) => ({
         const { fineRotationStep } = get();
         get()._rotateSelection(-fineRotationStep);
       },
-      context: 'symbol',
+      context: 'shape',
       modifiers: { shift: true },
       priority: 2,
     });
@@ -235,22 +232,100 @@ const createKeystrokeSlice = (set, get, api) => ({
         const { fineRotationStep } = get();
         get()._rotateSelection(fineRotationStep);
       },
-      context: 'symbol',
+      context: 'shape',
       modifiers: { shift: true },
       priority: 2,
     });
 
+    // Ctrl/Cmd + arrow keys - nudge selection by 1px
+    registerKeystroke('ArrowLeft', {
+      description: 'Nudge selection left by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(-1, 0);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowLeft', {
+      description: 'Nudge selection left by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(-1, 0);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Nudge selection right by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(1, 0);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Nudge selection right by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(1, 0);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowUp', {
+      description: 'Nudge selection up by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, -1);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowUp', {
+      description: 'Nudge selection up by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, -1);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowDown', {
+      description: 'Nudge selection down by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, 1);
+      },
+      context: 'dancer',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
+    registerKeystroke('ArrowDown', {
+      description: 'Nudge selection down by 1px',
+      handler: (event, context) => {
+        get()._nudgeSelection(0, 1);
+      },
+      context: 'shape',
+      modifiers: { ctrl: true },
+      priority: 3,
+    });
+
     // Delete key configurations - shared between Delete and Backspace
     const deleteKeyConfig = {
-      description: 'Delete selected symbol',
-      handler: (event, context) => {
-        const { selectedShapeId, handleDelete } = get();
-        if (selectedShapeId) {
-          handleDelete(selectedShapeId);
-        }
-        // Note: Does nothing if no symbol is selected - dancers cannot be deleted
+      description: 'Delete selected symbol(s)',
+      handler: () => {
+        console.log('Delete key pressed - deleting selected shapes');
+        get().handleDeleteSelectedShapes();
       },
-      context: 'symbol',
+      context: 'global',
       priority: 1,
     };
 
@@ -265,9 +340,8 @@ const createKeystrokeSlice = (set, get, api) => ({
       description: 'Deselect all objects',
       handler: (event, context) => {
         set({
-          selectedDancer: null,
+          selectedItems: [],
           selectedHand: null,
-          selectedShapeId: null,
         });
       },
       context: 'global',
@@ -278,32 +352,25 @@ const createKeystrokeSlice = (set, get, api) => ({
     registerKeystroke('r', {
       description: 'Reset rotation to starting position',
       handler: (event, context) => {
-        const {
-          selectedDancer,
-          selectedShapeId,
-          updateDancerState,
-          updateShapeState,
-          panels,
-        } = get();
+        const { selectedItems, updateDancerState, updateShapeState, panels } =
+          get();
+        if (!selectedItems.length) return;
 
-        if (selectedDancer) {
-          const { panelId, dancerId } = selectedDancer;
-          const panel = panels.find((p) => p.id === panelId);
-          if (panel) {
-            const dancer = panel.dancers.find((d) => d.id === dancerId);
-            if (dancer) {
-              // Reset to original starting rotation based on dancer color
-              const originalRotation = dancer.colour === 'red' ? 180 : 0;
-              updateDancerState(panelId, dancerId, {
-                rotation: originalRotation,
-              });
-            }
+        selectedItems.forEach((item) => {
+          const panel = panels.find((p) => p.id === item.panelId);
+          if (!panel) return;
+
+          if (item.type === 'dancer') {
+            const dancer = panel.dancers.find((d) => d.id === item.id);
+            if (!dancer) return;
+            const originalRotation = dancer.colour === 'red' ? 180 : 0;
+            updateDancerState(item.panelId, item.id, {
+              rotation: originalRotation,
+            });
+          } else if (item.type === 'shape') {
+            updateShapeState(item.panelId, item.id, { rotation: 0 });
           }
-        } else if (selectedShapeId) {
-          const { panelId, shapeId } = selectedShapeId;
-          // Shapes always reset to 0
-          updateShapeState(panelId, shapeId, { rotation: 0 });
-        }
+        });
       },
       context: 'global',
       priority: 1,
@@ -482,38 +549,55 @@ const createKeystrokeSlice = (set, get, api) => ({
 
   // Internal rotation helper
   _rotateSelection: (degrees) => {
-    const {
-      selectedDancer,
-      selectedShapeId,
-      updateDancerState,
-      updateShapeState,
-    } = get();
+    const { selectedItems, updateDancerState, updateShapeState, panels } =
+      get();
+    if (!selectedItems.length) return;
 
-    if (selectedDancer) {
-      const { panelId, dancerId } = selectedDancer;
-      const panel = get().panels.find((p) => p.id === panelId);
-      if (panel) {
-        const dancer = panel.dancers.find((d) => d.id === dancerId);
-        if (dancer) {
-          const currentRotation = dancer.rotation || 0;
-          const newRotation = currentRotation + degrees;
+    selectedItems.forEach((item) => {
+      const panel = panels.find((p) => p.id === item.panelId);
+      if (!panel) return;
 
-          updateDancerState(panelId, dancerId, { rotation: newRotation });
-        }
+      if (item.type === 'dancer') {
+        const dancer = panel.dancers.find((d) => d.id === item.id);
+        if (!dancer) return;
+        updateDancerState(item.panelId, item.id, {
+          rotation: (dancer.rotation || 0) + degrees,
+        });
+      } else if (item.type === 'shape') {
+        const shape = panel.shapes.find((s) => s.id === item.id);
+        if (!shape) return;
+        updateShapeState(item.panelId, item.id, {
+          rotation: (shape.rotation || 0) + degrees,
+        });
       }
-    } else if (selectedShapeId) {
-      const { panelId, shapeId } = selectedShapeId;
-      const panel = get().panels.find((p) => p.id === panelId);
-      if (panel) {
-        const shape = panel.shapes.find((s) => s.id === shapeId);
-        if (shape) {
-          const currentRotation = shape.rotation || 0;
-          const newRotation = currentRotation + degrees;
+    });
+  },
 
-          updateShapeState(panelId, shapeId, { rotation: newRotation });
-        }
+  _nudgeSelection: (dx, dy) => {
+    const { selectedItems, updateDancerState, updateShapeState, panels } =
+      get();
+    if (!selectedItems.length) return;
+
+    selectedItems.forEach((item) => {
+      const panel = panels.find((p) => p.id === item.panelId);
+      if (!panel) return;
+
+      if (item.type === 'dancer') {
+        const dancer = panel.dancers.find((d) => d.id === item.id);
+        if (!dancer) return;
+        updateDancerState(item.panelId, item.id, {
+          x: (dancer.x || 0) + dx,
+          y: (dancer.y || 0) + dy,
+        });
+      } else if (item.type === 'shape') {
+        const shape = panel.shapes.find((s) => s.id === item.id);
+        if (!shape) return;
+        updateShapeState(item.panelId, item.id, {
+          x: (shape.x || 0) + dx,
+          y: (shape.y || 0) + dy,
+        });
       }
-    }
+    });
   },
 
   // Help and documentation

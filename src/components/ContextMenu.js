@@ -45,7 +45,7 @@ const ContextMenu = () => {
       window.removeEventListener('mousedown', handleGlobalClose);
       window.removeEventListener('contextmenu', handleGlobalClose);
     };
-  }, [contextMenu.open, closeContextMenu]);
+  }, [contextMenu.open, contextMenu.openedAt, closeContextMenu]);
 
   if (!contextMenu.open || !contextMenu.target) return null;
 
@@ -309,7 +309,7 @@ const ContextMenu = () => {
         style={itemStyle}
         onClick={closeAfter(() => updateFootSymbol('Whole'))}
       >
-        Both
+        Whole
       </button>
     </>
   );

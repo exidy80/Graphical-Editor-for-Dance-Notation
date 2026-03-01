@@ -10,7 +10,7 @@ import {
 } from 'react-konva';
 import images from './ImageMapping';
 import { useImage } from 'react-konva-utils';
-import { SHAPE_STYLE } from '../utils/dimensions';
+import { SHAPE_STYLE, UI_DIMENSIONS } from '../utils/dimensions';
 import * as ShapeTypes from '../constants/shapeTypes';
 import SpinSymbol from './symbols/SpinSymbol';
 import CurvedLineSymbol from './symbols/CurvedLineSymbol';
@@ -28,6 +28,8 @@ const Symbol = ({
   opacity,
   onShapeSelect,
   onUpdateShapeState,
+  onDragStart,
+  onDragEnd,
   isGlowing,
 }) => {
   const shapeRef = useRef();
@@ -37,10 +39,25 @@ const Symbol = ({
   const [image] = useImage(images[shape.imageKey]);
 
   //check if its the stage marker
-  const isStageOrigin = shape.type === ShapeTypes.STAGE_X;
   const isStageCenter = shape.type === ShapeTypes.STAGE_CENTER;
 
   const handleDragEnd = useCallback(
+    (e) => {
+      const node = e.target;
+      onUpdateShapeState({
+        x: node.x(),
+        y: node.y(),
+      });
+      if (onDragEnd) onDragEnd();
+    },
+    [onUpdateShapeState, onDragEnd],
+  );
+
+  const handleDragStart = useCallback(() => {
+    if (onDragStart) onDragStart();
+  }, [onDragStart]);
+
+  const handleDragMove = useCallback(
     (e) => {
       const node = e.target;
       onUpdateShapeState({
@@ -51,23 +68,42 @@ const Symbol = ({
     [onUpdateShapeState],
   );
 
+  const handleTransform = useCallback(() => {
+    const node = shapeRef.current;
+    if (!node) return;
+    const imageScaleFactor =
+      shape.type === ShapeTypes.IMAGE
+        ? SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)
+        : 1;
+    const scaleX =
+      shape.type === ShapeTypes.IMAGE
+        ? node.scaleX() / imageScaleFactor
+        : node.scaleX();
+    const scaleY =
+      shape.type === ShapeTypes.IMAGE
+        ? node.scaleY() / imageScaleFactor
+        : node.scaleY();
+    onUpdateShapeState({
+      x: node.x(),
+      y: node.y(),
+      rotation: node.rotation(),
+      scaleX: scaleX,
+      scaleY: scaleY,
+    });
+  }, [isGlowing, onUpdateShapeState, shape.type]);
+
   const handleClick = useCallback(
     (e) => {
-      if (disabled || isStageOrigin || isStageCenter) return;
-
-      onShapeSelect();
+      if (disabled || isStageCenter) return;
+      // Pass whether Shift was held so the caller can toggle multi-select
+      const multiSelect = !!e?.evt?.shiftKey;
+      onShapeSelect(multiSelect);
     },
-    [disabled, isStageOrigin, isStageCenter, onShapeSelect],
+    [disabled, isStageCenter, onShapeSelect],
   );
 
   useEffect(() => {
-    if (
-      isSelected &&
-      !isStageOrigin &&
-      !isStageCenter &&
-      trRef.current &&
-      shapeRef.current
-    ) {
+    if (isSelected && !isStageCenter && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     } else if (!isSelected && trRef.current) {
@@ -75,46 +111,44 @@ const Symbol = ({
       trRef.current.nodes([]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageOrigin, isStageCenter]);
+  }, [isSelected, isStageCenter]);
 
   //handles end of transform and updates the state
   const handleTransformEnd = useCallback(
     (e) => {
       const node = shapeRef.current;
-      let newScaleX = node.scaleX();
-
-      const spinConfig = SPIN_CONFIGS[shape.type];
-
-      if (spinConfig) {
-        // Direction (CW / CCW) is encoded in the config, not in the shape
-        const baseSignX = Math.sign(spinConfig.scaleX ?? 1) || 1;
-
-        // Take the magnitude from the transform, but force the config’s sign
-        newScaleX = Math.abs(newScaleX) * baseSignX;
-
-        // Normalize the node so what you see matches what you store
-        node.scaleX(newScaleX);
-      }
-
+      const imageScaleFactor =
+        shape.type === ShapeTypes.IMAGE
+          ? SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)
+          : 1;
+      const scaleX =
+        shape.type === ShapeTypes.IMAGE
+          ? node.scaleX() / imageScaleFactor
+          : node.scaleX();
+      const scaleY =
+        shape.type === ShapeTypes.IMAGE
+          ? node.scaleY() / imageScaleFactor
+          : node.scaleY();
       const newState = {
         x: node.x(),
         y: node.y(),
         rotation: node.rotation(),
-        scaleX: node.scaleX(),
-        scaleY: node.scaleY(),
+        scaleX,
+        scaleY,
       };
       onUpdateShapeState(newState);
+      if (onDragEnd) onDragEnd();
     },
-    [onUpdateShapeState, shape.type],
+    [isGlowing, onUpdateShapeState, onDragEnd, shape.type],
   );
 
   //Attach or detach transformer when selection changes
   useEffect(() => {
-    if (isSelected && !isStageOrigin && trRef.current && shapeRef.current) {
+    if (isSelected && !isStageCenter && trRef.current && shapeRef.current) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageOrigin]);
+  }, [isSelected, isStageCenter]);
 
   const commonProps = {
     ref: shapeRef,
@@ -127,7 +161,10 @@ const Symbol = ({
     scaleY: shape.scaleY || 1,
     rotation: shape.rotation || 0,
     onClick: handleClick,
+    onDragStart: handleDragStart,
+    onDragMove: handleDragMove,
     onDragEnd: handleDragEnd,
+    onTransform: handleTransform,
     strokeScaleEnabled: false,
     'data-testid': `symbol-${shape.id}`,
     shadowColor: isGlowing ? shape.stroke || shape.fill || 'yellow' : null,
@@ -145,10 +182,17 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -166,10 +210,17 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -193,10 +244,17 @@ const Symbol = ({
           hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
           dash={[10, 5]}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -219,10 +277,17 @@ const Symbol = ({
           strokeWidth={3}
           hitStrokeWidth={10}
         />
-        {isSelected && !isStageOrigin && !isStageCenter && (
+        {isSelected && !isStageCenter && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
+            boundBoxFunc={(oldBox, newBox) =>
+              newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+              newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+                ? oldBox
+                : newBox
+            }
+            onTransformStart={handleDragStart}
             onTransformEnd={handleTransformEnd}
           />
         )}
@@ -259,8 +324,16 @@ const Symbol = ({
         <KonvaImage
           {...commonProps}
           image={image}
-          scaleX={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
-          scaleY={SHAPE_STYLE.IMAGE_SCALE_FACTOR * (isGlowing ? 1.5 : 1)}
+          scaleX={
+            SHAPE_STYLE.IMAGE_SCALE_FACTOR *
+            (isGlowing ? 1.5 : 1) *
+            (shape.scaleX || 1)
+          }
+          scaleY={
+            SHAPE_STYLE.IMAGE_SCALE_FACTOR *
+            (isGlowing ? 1.5 : 1) *
+            (shape.scaleY || 1)
+          }
         />
       )}
       {shape.type === ShapeTypes.STAGE_X && (
@@ -284,7 +357,7 @@ const Symbol = ({
         />
       )}
       {shape.type === ShapeTypes.STAGE_CENTER && (
-        <Circle {...commonProps} radius={shape.radius} fill={shape.fill} />
+        <Circle {...commonProps} radius={shape.radius || 5} fill={shape.fill} />
       )}
       {shape.type === ShapeTypes.KNEE && (
         <Circle
@@ -332,10 +405,17 @@ const Symbol = ({
           strokeWidth={1}
         />
       )}
-      {isSelected && !isStageOrigin && !isStageCenter && (
+      {isSelected && !isStageCenter && (
         <Transformer
           ref={trRef}
           centeredScaling={true}
+          boundBoxFunc={(oldBox, newBox) =>
+            newBox.width < UI_DIMENSIONS.MIN_TRANSFORM_SIZE ||
+            newBox.height < UI_DIMENSIONS.MIN_TRANSFORM_SIZE
+              ? oldBox
+              : newBox
+          }
+          onTransformStart={handleDragStart}
           onTransformEnd={handleTransformEnd}
         />
       )}

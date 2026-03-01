@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../stores';
 import { LAYER_CATEGORIES, isShapeInCategory } from '../utils/layersConfig.js';
-import * as ShapeTypes from '../constants/shapeTypes';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faLock,
@@ -30,14 +29,16 @@ const LayerControl = () => {
   const removeFromDisableList = useAppStore(
     (state) => state.removeFromDisableList,
   );
-  const addToHideList = useAppStore((state) => state.addToHideList);
-  const removeFromHideList = useAppStore((state) => state.removeFromHideList);
+  const hideLayer = useAppStore((state) => state.hideLayer);
+  const showLayer = useAppStore((state) => state.showLayer);
   const setLayerOrder = useAppStore((state) => state.setLayerOrder);
 
   // Use media query to determine if we should use popup approach
   // On small screens (height < 1000px), use popup to save space
   useEffect(() => {
+    if (!window.matchMedia) return;
     const mediaQuery = window.matchMedia('(max-height: 900px)');
+    if (!mediaQuery) return;
 
     const handleChange = (e) => {
       setUsePopup(e.matches);
@@ -136,32 +137,10 @@ const LayerControl = () => {
       return newHidden;
     });
     const catKey = LAYER_CATEGORIES[catIdx].key;
-    if (catKey === 'body') {
-      if (shouldHide) {
-        addToHideList(new Set(['body']));
-      } else {
-        removeFromHideList(new Set(['body']));
-      }
-      return;
-    }
-    if (panels) {
-      const shapesInCategory = panels.reduce((acc, panel) => {
-        const shapes = panel.shapes.filter((s) => isShapeInCategory(s, catKey));
-        return acc.concat(shapes);
-      }, []);
-      // Stage center should remain visible even when the Location layer is hidden.
-      const filteredShapes =
-        catKey === 'location'
-          ? shapesInCategory.filter(
-              (shape) => shape.type !== ShapeTypes.STAGE_CENTER,
-            )
-          : shapesInCategory;
-      const shapeIdsInCategory = new Set(filteredShapes.map((s) => s.id));
-      if (shouldHide) {
-        addToHideList(shapeIdsInCategory);
-      } else {
-        removeFromHideList(shapeIdsInCategory);
-      }
+    if (shouldHide) {
+      hideLayer(catKey);
+    } else {
+      showLayer(catKey);
     }
   };
 
