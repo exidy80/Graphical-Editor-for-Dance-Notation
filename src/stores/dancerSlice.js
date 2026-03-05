@@ -39,103 +39,112 @@ const createDancerSlice = (set, get, api) => ({
 
   // Hand-specific updates (position and rotation) with lock propagation
   updateHandPosition: (panelId, dancerId, side, newPos) => {
-    set((curr) => {
-      const panel = curr.panels.find((p) => p.id === panelId);
-      if (!panel) return curr;
-      const sourceDancer = panel.dancers.find((d) => d.id === dancerId);
-      if (!sourceDancer) return curr;
+    const { syncLockedHandsFromSource, _localToAbsolute, _absoluteToLocal } =
+      get();
 
-      // Store original dancer states before hand position changes for elbow adjustment
+    syncLockedHandsFromSource(panelId, dancerId, side, (panel, memberSet) => {
+      const dancers = panel.dancers;
+
+      // Snapshot original states for elbow adjustment
       const originalDancerStates = {};
-      panel.dancers.forEach((d) => {
+      dancers.forEach((d) => {
         originalDancerStates[d.id] = { ...d };
       });
 
-      // Update source hand local
-      let dancersAfter = panel.dancers.map((d) =>
-        d.id === dancerId ? { ...d, [`${side}HandPos`]: newPos } : d,
-      );
+      const sourceDancer = dancers.find((d) => d.id === dancerId);
+      if (!sourceDancer) return panel;
 
-      // Compute source absolute position (using updated local)
-      const srcHandAbs = get()._localToAbsolute(
+      // Compute the absolute position of the source hand using the new local pos
+      const srcHandAbs = _localToAbsolute(
         { ...sourceDancer, [`${side}HandPos`]: newPos },
         newPos,
       );
 
-      // Find all locks that include this hand
-      const groups = (panel.locks || []).filter((lock) =>
-        (lock.members || []).some(
-          (m) => m.dancerId === dancerId && m.side === side,
-        ),
+      // 1) Apply the new local position to the source hand
+      let dancersAfter = dancers.map((d) =>
+        d.id === dancerId ? { ...d, [`${side}HandPos`]: newPos } : d,
       );
 
-      const affectedDancers = new Set([dancerId]);
+      const affectedDancers = new Set();
+      affectedDancers.add(dancerId);
 
-      groups.forEach((group) => {
-        (group.members || []).forEach((member) => {
-          if (member.dancerId === dancerId && member.side === side) return;
-          const other =
-            dancersAfter.find((d) => d.id === member.dancerId) ||
-            panel.dancers.find((d) => d.id === member.dancerId);
-          if (!other) return;
-          const newLocal = get()._absoluteToLocal(other, srcHandAbs);
-          dancersAfter = dancersAfter.map((d) =>
-            d.id === other.id
-              ? { ...d, [`${member.side}HandPos`]: newLocal }
-              : d,
-          );
-          affectedDancers.add(member.dancerId);
-        });
+      // 2) Propagate to all other members in the lock group (if any)
+      memberSet.forEach((key) => {
+        const [idStr, memberSide] = key.split(':');
+        const memberId = idStr;
+
+        // We already updated this exact hand above
+        if (memberId === dancerId && memberSide === side) return;
+
+        const d =
+          dancersAfter.find((dd) => dd.id === memberId) ||
+          dancers.find((dd) => dd.id === memberId);
+        if (!d) return;
+
+        const newLocal = _absoluteToLocal(d, srcHandAbs);
+        dancersAfter = dancersAfter.map((dd) =>
+          dd.id === memberId
+            ? { ...dd, [`${memberSide}HandPos`]: newLocal }
+            : dd,
+        );
+        affectedDancers.add(memberId);
       });
 
-      // After updating hand positions, adjust elbows to maintain arm proportions
+      // 3) Adjust elbows for proportional arms on affected dancers
       dancersAfter = dancersAfter.map((dancer) => {
         if (!affectedDancers.has(dancer.id)) return dancer;
 
         const originalDancer = originalDancerStates[dancer.id];
         if (!originalDancer) return dancer;
 
-        // Find which sides were affected for this dancer
+        // Determine which sides for this dancer were affected
         const affectedSides = [];
-
-        // Check if this dancer's hand was directly moved
-        if (dancer.id === dancerId) {
-          affectedSides.push(side);
-        }
-
-        // Check if this dancer's hands were affected by locks
-        groups.forEach((group) => {
-          group.members.forEach((member) => {
-            if (
-              member.dancerId === dancer.id &&
-              !affectedSides.includes(member.side)
-            ) {
-              affectedSides.push(member.side);
-            }
-          });
+        memberSet.forEach((key) => {
+          const [idStr, memberSide] = key.split(':');
+          if (idStr === dancer.id && !affectedSides.includes(memberSide)) {
+            affectedSides.push(memberSide);
+          }
         });
 
-        if (affectedSides.length > 0) {
-          return adjustElbowsForProportionalArms(
-            dancer,
-            originalDancer,
-            affectedSides,
-          );
-        }
+        if (!affectedSides.length) return dancer;
 
-        return dancer;
+        return adjustElbowsForProportionalArms(
+          dancer,
+          originalDancer,
+          affectedSides,
+        );
       });
 
-      const newPanels = curr.panels.map((p) =>
-        p.id === panelId ? { ...p, dancers: dancersAfter } : p,
-      );
-      return { panels: newPanels };
+      return { ...panel, dancers: dancersAfter };
     });
   },
 
   updateHandRotation: (panelId, dancerId, handSide, rotation) => {
-    const rotationKey = `${handSide}HandRotation`;
-    get().updateDancerState(panelId, dancerId, { [rotationKey]: rotation });
+    const { syncLockedHandsFromSource } = get();
+
+    syncLockedHandsFromSource(
+      panelId,
+      dancerId,
+      handSide,
+      (panel, memberSet) => {
+        const newDancers = panel.dancers.map((d) => {
+          let updated = d;
+
+          // For this dancer, check both left/right hands against the member set
+          ['left', 'right'].forEach((side) => {
+            const key = `${d.id}:${side}`;
+            if (memberSet.has(key)) {
+              const rotationKey = `${side}HandRotation`;
+              updated = { ...updated, [rotationKey]: rotation };
+            }
+          });
+
+          return updated;
+        });
+
+        return { ...panel, dancers: newDancers };
+      },
+    );
   },
 
   updateElbowPosition: (panelId, dancerId, elbowSide, position) => {
@@ -189,24 +198,34 @@ const createDancerSlice = (set, get, api) => ({
   },
 
   handleHandSelection: (shape) => {
-    const { selectedHand } = get();
+    const { selectedHand, syncLockedHandsFromSource } = get();
     if (!selectedHand) return;
-    set((state) => ({
-      panels: state.panels.map((panel) => {
-        if (panel.id === selectedHand.panelId) {
-          const dancerIndex = panel.dancers.findIndex(
-            (d) => d.id === selectedHand.dancerId,
-          );
-          const newHandShapes = [...panel.handShapes];
-          newHandShapes[dancerIndex] = {
-            ...newHandShapes[dancerIndex],
-            [selectedHand.handSide]: shape,
-          };
-          return { ...panel, handShapes: newHandShapes };
-        }
-        return panel;
-      }),
-    }));
+
+    const { panelId, dancerId, handSide } = selectedHand;
+
+    syncLockedHandsFromSource(
+      panelId,
+      dancerId,
+      handSide,
+      (panel, memberSet) => {
+        // Copy handShapes shallowly so we can mutate per-dancer entries
+        const newHandShapes = panel.handShapes.map((hs) => ({ ...hs }));
+
+        panel.dancers.forEach((dancer, index) => {
+          ['left', 'right'].forEach((side) => {
+            const key = `${dancer.id}:${side}`;
+            if (memberSet.has(key)) {
+              newHandShapes[index] = {
+                ...newHandShapes[index],
+                [side]: shape,
+              };
+            }
+          });
+        });
+
+        return { ...panel, handShapes: newHandShapes };
+      },
+    );
   },
 });
 

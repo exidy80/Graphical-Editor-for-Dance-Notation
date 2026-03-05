@@ -343,6 +343,47 @@ const createLockSlice = (set, get) => ({
       return { panels: newPanels };
     });
   },
+
+  // Generic helper: given a "source" hand (panelId, dancerId, side),
+  // compute the full lock group that contains it and let a mutator
+  // update the panel for all those hands at once.
+  //
+  // mutator: (panel, memberSet) => newPanel
+  // where memberSet is a Set of "dancerId:side" strings.
+  syncLockedHandsFromSource: (panelId, sourceDancerId, sourceSide, mutator) => {
+    set((curr) => {
+      const panelIndex = curr.panels.findIndex((p) => p.id === panelId);
+      if (panelIndex === -1) return curr;
+
+      const panel = curr.panels[panelIndex];
+      const locks = panel.locks || [];
+
+      // Build set of all hands that should be synchronized with the source
+      const members = new Set();
+      members.add(`${sourceDancerId}:${sourceSide}`);
+
+      locks.forEach((lock) => {
+        const hasSource = (lock.members || []).some(
+          (m) => m.dancerId === sourceDancerId && m.side === sourceSide,
+        );
+        if (!hasSource) return;
+
+        (lock.members || []).forEach((m) => {
+          members.add(`${m.dancerId}:${m.side}`);
+        });
+      });
+
+      // If no locks, mutator will still get the source hand only (good for
+      // keeping behavior identical when not locked)
+      const newPanel = mutator(panel, members);
+      if (!newPanel || newPanel === panel) return curr;
+
+      const panels = curr.panels.map((p, idx) =>
+        idx === panelIndex ? newPanel : p,
+      );
+      return { ...curr, panels };
+    });
+  },
 });
 
 export default createLockSlice;
