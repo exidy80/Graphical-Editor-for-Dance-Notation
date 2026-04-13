@@ -1,5 +1,12 @@
 // Centralized dimension definitions for consistent object sizing across the application
 
+// Shape base dimensions — derived from the central shape registry so that
+// adding a new shape type never requires editing this file.
+import {
+  SHAPE_REGISTRY,
+  DEFAULT_SHAPE_DIMENSIONS,
+} from '../constants/shapeRegistry';
+
 // Dancer dimensions (should match Dancer.js)
 export const DANCER_DIMENSIONS = {
   HEAD_SIZE: 30,
@@ -25,29 +32,17 @@ export const ARM_THICKNESS = {
   HIT_STROKE_WIDTH: 10,
 };
 
-// Shape base dimensions (should match Symbols.js)
 export const SHAPE_DIMENSIONS = {
-  straightLine: { width: 75, height: 20 },
-  twoThirdsStraightLine: { width: 50, height: 20 },
-  oneThirdStraightLine: { width: 25, height: 20 },
-  quarterCurvedLine: { width: 75, height: 20 },
-  halfCurvedLine: { width: 75, height: 20 },
-  signal: { width: 75, height: 20 },
-  spinTwo: { width: 60, height: 60 },
-  spinOneAndHalf: { width: 60, height: 60 },
-  spinOne: { width: 60, height: 60 },
-  spinHalf: { width: 40, height: 40 },
-  spinQuarter: { width: 40, height: 40 },
-  overhead: { width: 10, height: 10 },
-  shoulder: { width: 10, height: 10 },
-  waist: { width: 12, height: 2 },
-  hip: { width: 6, height: 6 },
-  knee: { width: 6, height: 6 },
-  image: { width: 96, height: 137 }, // Actual max native dimensions of foot PNG images (scaled to 0.3 by default in Symbols.js)
-  stageX: { width: 20, height: 20 },
-  stageNext: { width: 20, height: 20 },
-  stageCenter: { width: 10, height: 10 }, // Small green circle
-  default: { width: 50, height: 50 },
+  // Keyed by the full shape type string (e.g. 'straightLineUp') so that
+  // direct lookups like SHAPE_DIMENSIONS[shape.type] still work correctly.
+  ...Object.fromEntries(
+    Object.entries(SHAPE_REGISTRY).map(([type, meta]) => [
+      type,
+      meta.defaultDimensions,
+    ]),
+  ),
+  // Preserve the 'default' fallback for any direct SHAPE_DIMENSIONS.default accesses.
+  default: DEFAULT_SHAPE_DIMENSIONS,
 };
 
 // Style constants for shapes
@@ -95,8 +90,8 @@ export const getActualDimensions = (object, objectType) => {
     };
   } else {
     // For shapes, get base dimensions and apply scale
-    const baseDimensions =
-      SHAPE_DIMENSIONS[object.type] || SHAPE_DIMENSIONS.default;
+    const entry = SHAPE_REGISTRY[object.type];
+    const baseDimensions = entry?.defaultDimensions ?? DEFAULT_SHAPE_DIMENSIONS;
     return {
       width: baseDimensions.width * scaleX,
       height: baseDimensions.height * scaleY,
