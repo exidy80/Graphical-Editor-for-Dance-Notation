@@ -1,8 +1,34 @@
 // Keystroke management slice - handles keyboard shortcuts and key bindings
 
+const canvasNodeRegistry = new Map();
+
+const makeRegistryKey = (panelId, itemType, itemId) =>
+  `${panelId}:${itemType}:${itemId}`;
+
+const getNodeVisualCenter = (node) => {
+  const rect = node.getClientRect();
+  return {
+    x: rect.x + rect.width / 2,
+    y: rect.y + rect.height / 2,
+  };
+};
+
 const createKeystrokeSlice = (set, get, api) => ({
   // State
   keystrokes: {},
+
+  // Runtime Konva node registry for keyboard transforms
+  registerCanvasNode: (panelId, itemId, itemType, node) => {
+    const key = makeRegistryKey(panelId, itemType, itemId);
+    if (node) {
+      canvasNodeRegistry.set(key, node);
+    } else {
+      canvasNodeRegistry.delete(key);
+    }
+  },
+
+  getCanvasNode: (panelId, itemId, itemType) =>
+    canvasNodeRegistry.get(makeRegistryKey(panelId, itemType, itemId)),
 
   // Core keystroke management
   registerKeystroke: (key, config) => {
@@ -549,13 +575,41 @@ const createKeystrokeSlice = (set, get, api) => ({
 
   // Internal rotation helper
   _rotateSelection: (degrees) => {
-    const { selectedItems, updateDancerState, updateShapeState, panels } =
-      get();
+    const {
+      selectedItems,
+      updateDancerState,
+      updateShapeState,
+      panels,
+      getCanvasNode,
+    } = get();
     if (!selectedItems.length) return;
 
     selectedItems.forEach((item) => {
       const panel = panels.find((p) => p.id === item.panelId);
       if (!panel) return;
+
+      const node = getCanvasNode(item.panelId, item.id, item.type);
+      if (node) {
+        // Match Transformer behavior by preserving the visual center as Konva rotates.
+        const beforeCenter = getNodeVisualCenter(node);
+        node.rotation((node.rotation() || 0) + degrees);
+        const afterCenter = getNodeVisualCenter(node);
+        node.x(node.x() + (beforeCenter.x - afterCenter.x));
+        node.y(node.y() + (beforeCenter.y - afterCenter.y));
+
+        const nextState = {
+          x: node.x(),
+          y: node.y(),
+          rotation: node.rotation(),
+        };
+
+        if (item.type === 'dancer') {
+          updateDancerState(item.panelId, item.id, nextState);
+        } else if (item.type === 'shape') {
+          updateShapeState(item.panelId, item.id, nextState);
+        }
+        return;
+      }
 
       if (item.type === 'dancer') {
         const dancer = panel.dancers.find((d) => d.id === item.id);
