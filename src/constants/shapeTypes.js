@@ -34,6 +34,12 @@ export const SPIN_QUARTER_CCW = 'spinQuarterCCW';
 export const STRAIGHT_LINE = 'straightLine';
 export const STRAIGHT_LINE_UP = 'straightLineUp';
 export const STRAIGHT_LINE_DOWN = 'straightLineDown';
+export const TWO_THIRDS_STRAIGHT_LINE = 'twoThirdsStraightLine';
+export const TWO_THIRDS_STRAIGHT_LINE_UP = 'twoThirdsStraightLineUp';
+export const TWO_THIRDS_STRAIGHT_LINE_DOWN = 'twoThirdsStraightLineDown';
+export const ONE_THIRD_STRAIGHT_LINE = 'oneThirdStraightLine';
+export const ONE_THIRD_STRAIGHT_LINE_UP = 'oneThirdStraightLineUp';
+export const ONE_THIRD_STRAIGHT_LINE_DOWN = 'oneThirdStraightLineDown';
 
 // Curved lines (quarter)
 export const QUARTER_CURVED_LINE = 'quarterCurvedLine';
@@ -57,6 +63,8 @@ export const IMAGE = 'image';
 // Hand signals
 export const SPLIT_HANDS = 'splitHands';
 export const LINK_HANDS = 'linkHands';
+export const HASH_SIGN = 'hashSign';
+export const ASTERISK_SIGN = 'asteriskSign';
 
 // Elevation markers
 export const KNEE = 'knee';

@@ -5,6 +5,7 @@ import {
   createStageX,
   createStageCenter,
 } from '../constants/shapeTypes';
+import { SHAPE_REGISTRY } from '../constants/shapeRegistry';
 
 // Serialization slice - handles converting panels to/from JSON for save/load operations
 const createSerializationSlice = (set, get) => ({
@@ -41,25 +42,32 @@ const createSerializationSlice = (set, get) => ({
         rightLowerArmThickness: dancer.rightLowerArmThickness || 'thick',
         rightUpperArmThickness: dancer.rightUpperArmThickness || 'thick',
       })),
-      shapes: shapes.map((shape) => ({
-        id: shape.id,
-        type: shape.type,
-        x: shape.x || 0,
-        y: shape.y || 0,
-        width: shape.width,
-        height: shape.height,
-        radius: shape.radius,
-        text: shape.text,
-        fontSize: shape.fontSize,
-        draggable: shape.draggable !== false, // Default to true unless explicitly false
-        rotation: shape.rotation || 0,
-        scaleX: shape.scaleX || 1,
-        scaleY: shape.scaleY || 1,
-        opacity: shape.opacity !== undefined ? shape.opacity : 1,
-        stroke: shape.stroke,
-        fill: shape.fill,
-        imageKey: shape.imageKey,
-      })),
+      shapes: shapes.map((shape) => {
+        const serialized = {
+          id: shape.id,
+          type: shape.type,
+          x: shape.x || 0,
+          y: shape.y || 0,
+          draggable: shape.draggable !== false, // Default to true unless explicitly false
+          rotation: shape.rotation || 0,
+          scaleX: shape.scaleX || 1,
+          scaleY: shape.scaleY || 1,
+          opacity: shape.opacity !== undefined ? shape.opacity : 1,
+          stroke: shape.stroke,
+          fill: shape.fill,
+        };
+        // Only include optional geometry/text fields when defined so that
+        // shapes like stageCenter (which uses radius, not width/height) don't
+        // end up with explicit `undefined` values that cause Konva's Circle
+        // setWidth/setHeight to compute NaN for the radius.
+        if (shape.width !== undefined) serialized.width = shape.width;
+        if (shape.height !== undefined) serialized.height = shape.height;
+        if (shape.radius !== undefined) serialized.radius = shape.radius;
+        if (shape.text !== undefined) serialized.text = shape.text;
+        if (shape.fontSize !== undefined) serialized.fontSize = shape.fontSize;
+        if (shape.imageKey !== undefined) serialized.imageKey = shape.imageKey;
+        return serialized;
+      }),
       locks: (panel.locks || []).map((lock) => ({
         id: lock.id,
         members: (lock.members || []).map((m) => ({
@@ -94,44 +102,59 @@ const createSerializationSlice = (set, get) => ({
     const shapes = Array.isArray(serializedPanel.shapes)
       ? serializedPanel.shapes
       : [];
-    const newShapes = shapes.map((shape) => {
-      const newShape = {
-        ...shape,
-        id: uuidv4(),
-      };
+    const newShapes = shapes
+      .filter((shape) => {
+        // BACKWARD COMPATIBILITY: unknown types are skipped rather than
+        // crashing or silently rendering nothing unexpected.  All types that
+        // existed when a file was saved are permanently in the registry, so a
+        // missing entry means the file was created with a future/unknown build.
+        if (!SHAPE_REGISTRY[shape.type]) {
+          console.warn(
+            `[deserializePanel] Skipping unknown shape type "${shape.type}". ` +
+              'The file may have been saved by a newer version of the app.',
+          );
+          return false;
+        }
+        return true;
+      })
+      .map((shape) => {
+        const newShape = {
+          ...shape,
+          id: uuidv4(),
+        };
 
-      // BACKWARD COMPATIBILITY: Add missing properties for stage markers
-      // Older saved files may not have text, fontSize, or fill properties on stage markers
-      // because these were previously hardcoded in the renderer
-      if (shape.type === ShapeTypes.STAGE_X && !shape.text) {
-        const defaults = createStageX();
-        return {
-          ...newShape,
-          text: defaults.text,
-          fontSize: defaults.fontSize,
-          fill: defaults.fill,
-        };
-      }
-      if (shape.type === ShapeTypes.STAGE_NEXT && !shape.text) {
-        const defaults = createStageNext();
-        return {
-          ...newShape,
-          text: defaults.text,
-          fontSize: defaults.fontSize,
-          fill: defaults.fill,
-        };
-      }
-      if (shape.type === ShapeTypes.STAGE_CENTER && !shape.radius) {
-        const defaults = createStageCenter();
-        return {
-          ...newShape,
-          radius: defaults.radius,
-          fill: defaults.fill,
-        };
-      }
+        // BACKWARD COMPATIBILITY: Add missing properties for stage markers
+        // Older saved files may not have text, fontSize, or fill properties on stage markers
+        // because these were previously hardcoded in the renderer
+        if (shape.type === ShapeTypes.STAGE_X && !shape.text) {
+          const defaults = createStageX();
+          return {
+            ...newShape,
+            text: defaults.text,
+            fontSize: defaults.fontSize,
+            fill: defaults.fill,
+          };
+        }
+        if (shape.type === ShapeTypes.STAGE_NEXT && !shape.text) {
+          const defaults = createStageNext();
+          return {
+            ...newShape,
+            text: defaults.text,
+            fontSize: defaults.fontSize,
+            fill: defaults.fill,
+          };
+        }
+        if (shape.type === ShapeTypes.STAGE_CENTER && !shape.radius) {
+          const defaults = createStageCenter();
+          return {
+            ...newShape,
+            radius: defaults.radius,
+            fill: defaults.fill,
+          };
+        }
 
-      return newShape;
-    });
+        return newShape;
+      });
 
     // BACKWARD COMPATIBILITY: Add stageNext if it doesn't exist
     // Older saved files created before stageNext was introduced only had stageX

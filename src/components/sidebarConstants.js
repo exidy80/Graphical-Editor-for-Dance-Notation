@@ -17,6 +17,18 @@ export const shapeMapping = {
   'Straight Line': { type: ShapeTypes.STRAIGHT_LINE },
   'Straight Line Up': { type: ShapeTypes.STRAIGHT_LINE_UP },
   'Straight Line Down': { type: ShapeTypes.STRAIGHT_LINE_DOWN },
+  'Two-Thirds Straight Line': { type: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE },
+  'Two-Thirds Straight Line Up': {
+    type: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_UP,
+  },
+  'Two-Thirds Straight Line Down': {
+    type: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_DOWN,
+  },
+  'One-Third Straight Line': { type: ShapeTypes.ONE_THIRD_STRAIGHT_LINE },
+  'One-Third Straight Line Up': { type: ShapeTypes.ONE_THIRD_STRAIGHT_LINE_UP },
+  'One-Third Straight Line Down': {
+    type: ShapeTypes.ONE_THIRD_STRAIGHT_LINE_DOWN,
+  },
   'Quarter Curved Line': { type: ShapeTypes.QUARTER_CURVED_LINE },
   'Quarter Curved Line Up': { type: ShapeTypes.QUARTER_CURVED_LINE_UP },
   'Quarter Curved Line Down': { type: ShapeTypes.QUARTER_CURVED_LINE_DOWN },
@@ -104,6 +116,8 @@ export const shapeMapping = {
   Block: { type: ShapeTypes.BLOCK },
   'Split Hands': { type: ShapeTypes.SPLIT_HANDS },
   'Link Hands': { type: ShapeTypes.LINK_HANDS },
+  Hash: { type: ShapeTypes.HASH_SIGN },
+  Asterisk: { type: ShapeTypes.ASTERISK_SIGN },
 };
 
 // Map the feet types to left or right

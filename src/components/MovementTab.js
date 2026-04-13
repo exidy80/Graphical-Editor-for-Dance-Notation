@@ -12,6 +12,8 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
   const isDisabled = selectedPanel === null;
   const motionItems = [
     'Straight Line',
+    'Two-Thirds Straight Line',
+    'One-Third Straight Line',
     'Half Curved Line',
     'Quarter Curved Line',
   ];
@@ -85,7 +87,7 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
   };
 
   // Helper to render arrow icon (straight line with arrowhead)
-  const renderArrowIcon = (color, direction = 'up') => {
+  const renderArrowIcon = (color, direction = 'up', sizeLabel = null) => {
     const isUp = direction === 'up';
     const arrowColor = color === COLORS.RED ? 'red' : 'blue';
 
@@ -106,8 +108,30 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
           points={isUp ? '16,4 12,10 20,10' : '16,28 12,22 20,22'}
           fill={arrowColor}
         />
+        {sizeLabel && (
+          <text
+            x="26"
+            y="28"
+            textAnchor="middle"
+            fontSize="9"
+            fontWeight="700"
+            fill={arrowColor}
+          >
+            {sizeLabel}
+          </text>
+        )}
       </svg>
     );
+  };
+
+  const getStraightLineSizeLabel = (item) => {
+    const sizeMap = {
+      'Straight Line': 'L',
+      'Two-Thirds Straight Line': 'M',
+      'One-Third Straight Line': 'S',
+    };
+
+    return sizeMap[item] || null;
   };
 
   // Helper to render quarter curved line icon
@@ -185,8 +209,8 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
 
   // Get icon for item based on direction
   const getIcon = (item, color, direction) => {
-    if (item === 'Straight Line') {
-      return renderArrowIcon(color, direction);
+    if (item.includes('Straight Line')) {
+      return renderArrowIcon(color, direction, getStraightLineSizeLabel(item));
     } else if (item === 'Quarter Curved Line') {
       return renderQuarterCurvedLineIcon(color, direction);
     } else if (item === 'Half Curved Line') {
