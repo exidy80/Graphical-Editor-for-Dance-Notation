@@ -35,4 +35,6 @@ test('renders Link Hands option in Signals Other section', () => {
   expect(screen.getByText('Link Hands')).toBeInTheDocument();
   expect(screen.getByText('Block')).toBeInTheDocument();
   expect(screen.getByText('Split Hands')).toBeInTheDocument();
+  expect(screen.getByText('Hash')).toBeInTheDocument();
+  expect(screen.getByText('Asterisk')).toBeInTheDocument();
 });

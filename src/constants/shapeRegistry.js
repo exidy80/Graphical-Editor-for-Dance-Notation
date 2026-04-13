@@ -399,6 +399,18 @@ export const SHAPE_REGISTRY = {
     defaultDimensions: DEFAULT_SHAPE_DIMENSIONS,
     renderConfig: null,
   },
+  [ShapeTypes.HASH_SIGN]: {
+    category: 'signals',
+    renderKind: 'hashSign',
+    defaultDimensions: DEFAULT_SHAPE_DIMENSIONS,
+    renderConfig: null,
+  },
+  [ShapeTypes.ASTERISK_SIGN]: {
+    category: 'signals',
+    renderKind: 'asteriskSign',
+    defaultDimensions: DEFAULT_SHAPE_DIMENSIONS,
+    renderConfig: null,
+  },
 
   // ── Elevation markers ─────────────────────────────────────────────────────
   [ShapeTypes.OVERHEAD]: {

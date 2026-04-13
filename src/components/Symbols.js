@@ -330,6 +330,24 @@ const Symbol = ({
       {shape.type === ShapeTypes.LINK_HANDS && (
         <Text {...commonProps} text="∞" fontSize={20} fill={shape.fill} />
       )}
+      {shape.type === ShapeTypes.HASH_SIGN && (
+        <Text
+          {...commonProps}
+          text="#"
+          fontSize={20}
+          fontWeight="bold"
+          fill={shape.fill}
+        />
+      )}
+      {shape.type === ShapeTypes.ASTERISK_SIGN && (
+        <Text
+          {...commonProps}
+          text="*"
+          fontSize={26}
+          fontWeight="bold"
+          fill={shape.fill}
+        />
+      )}
       {shape.type === ShapeTypes.IMAGE && (
         <KonvaImage
           {...commonProps}

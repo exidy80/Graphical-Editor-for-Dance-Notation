@@ -297,6 +297,48 @@ const SignalsTab = ({ selectedPanel, handleShapeDraw }) => {
             <FontAwesomeIcon icon={faLink} />
           </SignalButton>
         </div>
+
+        {/* Hash */}
+        <div style={threeColRowStyle}>
+          <SignalButton
+            shapeName="Hash"
+            color={COLORS.RED}
+            extraStyle={{ fontSize: '22px', fontWeight: 'bold' }}
+          >
+            #
+          </SignalButton>
+          <div style={labelStyle}>Hash</div>
+          <SignalButton
+            shapeName="Hash"
+            color={COLORS.BLUE}
+            extraStyle={{ fontSize: '22px', fontWeight: 'bold' }}
+          >
+            #
+          </SignalButton>
+        </div>
+
+        {/* Asterisk */}
+        <div style={threeColRowStyle}>
+          <SignalButton
+            shapeName="Asterisk"
+            color={COLORS.RED}
+            extraStyle={{ fontSize: '24px', fontWeight: 'bold' }}
+          >
+            <span style={{ lineHeight: 1, transform: 'translateY(4px)' }}>
+              *
+            </span>
+          </SignalButton>
+          <div style={labelStyle}>Asterisk</div>
+          <SignalButton
+            shapeName="Asterisk"
+            color={COLORS.BLUE}
+            extraStyle={{ fontSize: '24px', fontWeight: 'bold' }}
+          >
+            <span style={{ lineHeight: 1, transform: 'translateY(4px)' }}>
+              *
+            </span>
+          </SignalButton>
+        </div>
       </div>
     </div>
   );

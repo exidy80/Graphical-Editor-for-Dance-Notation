@@ -63,6 +63,8 @@ export const IMAGE = 'image';
 // Hand signals
 export const SPLIT_HANDS = 'splitHands';
 export const LINK_HANDS = 'linkHands';
+export const HASH_SIGN = 'hashSign';
+export const ASTERISK_SIGN = 'asteriskSign';
 
 // Elevation markers
 export const KNEE = 'knee';

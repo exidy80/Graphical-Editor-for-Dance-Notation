@@ -116,6 +116,8 @@ export const shapeMapping = {
   Block: { type: ShapeTypes.BLOCK },
   'Split Hands': { type: ShapeTypes.SPLIT_HANDS },
   'Link Hands': { type: ShapeTypes.LINK_HANDS },
+  Hash: { type: ShapeTypes.HASH_SIGN },
+  Asterisk: { type: ShapeTypes.ASTERISK_SIGN },
 };
 
 // Map the feet types to left or right
