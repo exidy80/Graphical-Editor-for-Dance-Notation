@@ -33,6 +33,7 @@ const Dancer = ({
   onDragStart,
   onDragEnd,
   isGlowing,
+  onRegisterNode,
   renderOnly = 'all', // 'all', 'body', or 'arms'
 }) => {
   const dancerRef = useRef();
@@ -310,6 +311,16 @@ const Dancer = ({
     attachHandTransformer,
     renderOnly,
   ]);
+
+  useEffect(() => {
+    if (!onRegisterNode || renderOnly !== 'all') return;
+    if (dancerRef.current) {
+      onRegisterNode(dancerRef.current);
+    }
+    return () => {
+      onRegisterNode(null);
+    };
+  }, [onRegisterNode, renderOnly, dancer.id]);
 
   const renderHead = () => {
     const baseProps = {

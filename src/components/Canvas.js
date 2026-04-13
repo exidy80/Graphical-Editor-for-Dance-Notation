@@ -63,6 +63,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const movePrimaryAndSelection = useAppStore(
     (state) => state.movePrimaryAndSelection,
   );
+  const registerCanvasNode = useAppStore((state) => state.registerCanvasNode);
   const setSelectedItems = useAppStore((state) => state.setSelectedItems);
   const setSelectedPanel = useAppStore((state) => state.setSelectedPanel);
   const layerOrder = useAppStore((state) => state.layerOrder);
@@ -515,6 +516,8 @@ const Canvas = ({ panelId, panelViewportSize }) => {
                 onDragStart: startDragMode,
                 onDragEnd: endDragMode,
                 isGlowing,
+                onRegisterNode: (node) =>
+                  registerCanvasNode(panelId, dancer.id, 'dancer', node),
               };
             };
 
@@ -590,6 +593,9 @@ const Canvas = ({ panelId, panelViewportSize }) => {
                   onDragStart={startDragMode}
                   onDragEnd={endDragMode}
                   isGlowing={isGlowing}
+                  onRegisterNode={(node) =>
+                    registerCanvasNode(panelId, shape.id, 'shape', node)
+                  }
                 />
               );
             });

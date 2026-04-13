@@ -31,6 +31,7 @@ const Symbol = ({
   onDragStart,
   onDragEnd,
   isGlowing,
+  onRegisterNode,
 }) => {
   const shapeRef = useRef();
   const trRef = useRef();
@@ -112,6 +113,15 @@ const Symbol = ({
       trRef.current.getLayer().batchDraw();
     }
   }, [isSelected, isStageCenter]);
+
+  useEffect(() => {
+    if (onRegisterNode && shapeRef.current) {
+      onRegisterNode(shapeRef.current);
+    }
+    return () => {
+      if (onRegisterNode) onRegisterNode(null);
+    };
+  }, [onRegisterNode, shape.id]);
 
   //handles end of transform and updates the state
   const handleTransformEnd = useCallback(
