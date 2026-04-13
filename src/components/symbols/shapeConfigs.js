@@ -150,6 +150,12 @@ export const STRAIGHT_LINE_CONFIGS = {
   [ShapeTypes.STRAIGHT_LINE]: { points: [-37.5, 0, 37.5, 0] },
   [ShapeTypes.STRAIGHT_LINE_UP]: { points: [0, 37.5, 0, -37.5] },
   [ShapeTypes.STRAIGHT_LINE_DOWN]: { points: [0, -37.5, 0, 37.5] },
+  [ShapeTypes.TWO_THIRDS_STRAIGHT_LINE]: { points: [-25, 0, 25, 0] },
+  [ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_UP]: { points: [0, 25, 0, -25] },
+  [ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_DOWN]: { points: [0, -25, 0, 25] },
+  [ShapeTypes.ONE_THIRD_STRAIGHT_LINE]: { points: [-12.5, 0, 12.5, 0] },
+  [ShapeTypes.ONE_THIRD_STRAIGHT_LINE_UP]: { points: [0, 12.5, 0, -12.5] },
+  [ShapeTypes.ONE_THIRD_STRAIGHT_LINE_DOWN]: { points: [0, -12.5, 0, 12.5] },
 };
 
 // Configuration for direction arrows

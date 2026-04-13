@@ -28,6 +28,8 @@ export const ARM_THICKNESS = {
 // Shape base dimensions (should match Symbols.js)
 export const SHAPE_DIMENSIONS = {
   straightLine: { width: 75, height: 20 },
+  twoThirdsStraightLine: { width: 50, height: 20 },
+  oneThirdStraightLine: { width: 25, height: 20 },
   quarterCurvedLine: { width: 75, height: 20 },
   halfCurvedLine: { width: 75, height: 20 },
   signal: { width: 75, height: 20 },
