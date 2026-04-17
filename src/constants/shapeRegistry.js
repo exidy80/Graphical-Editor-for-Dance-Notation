@@ -49,13 +49,6 @@ export const SHAPE_REGISTRY = {
     renderConfig: null,
   },
 
-  // ── Straight lines — full size (L) ───────────────────────────────────────
-  [ShapeTypes.STRAIGHT_LINE]: {
-    category: 'movement',
-    renderKind: 'straightLine',
-    defaultDimensions: { width: 75, height: 20 },
-    renderConfig: { points: [-37.5, 0, 37.5, 0] },
-  },
   [ShapeTypes.STRAIGHT_LINE_UP]: {
     category: 'movement',
     renderKind: 'straightLine',
@@ -70,12 +63,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Straight lines — two-thirds size (M) ─────────────────────────────────
-  [ShapeTypes.TWO_THIRDS_STRAIGHT_LINE]: {
-    category: 'movement',
-    renderKind: 'straightLine',
-    defaultDimensions: { width: 50, height: 20 },
-    renderConfig: { points: [-25, 0, 25, 0] },
-  },
   [ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_UP]: {
     category: 'movement',
     renderKind: 'straightLine',
@@ -90,12 +77,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Straight lines — one-third size (S) ──────────────────────────────────
-  [ShapeTypes.ONE_THIRD_STRAIGHT_LINE]: {
-    category: 'movement',
-    renderKind: 'straightLine',
-    defaultDimensions: { width: 25, height: 20 },
-    renderConfig: { points: [-12.5, 0, 12.5, 0] },
-  },
   [ShapeTypes.ONE_THIRD_STRAIGHT_LINE_UP]: {
     category: 'movement',
     renderKind: 'straightLine',
@@ -110,17 +91,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Curved lines — quarter turn ───────────────────────────────────────────
-  [ShapeTypes.QUARTER_CURVED_LINE]: {
-    category: 'movement',
-    renderKind: 'curvedLine',
-    defaultDimensions: { width: 75, height: 20 },
-    renderConfig: {
-      numPoints: 3,
-      radiusIncrement: 30,
-      angleIncrement: Math.PI / 14,
-      startAngle: 0,
-    },
-  },
   [ShapeTypes.QUARTER_CURVED_LINE_UP]: {
     category: 'movement',
     renderKind: 'curvedLine',
@@ -145,18 +115,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Curved lines — half turn ──────────────────────────────────────────────
-  [ShapeTypes.HALF_CURVED_LINE]: {
-    category: 'movement',
-    renderKind: 'curvedLine',
-    defaultDimensions: { width: 75, height: 20 },
-    renderConfig: {
-      numPoints: 6,
-      radiusIncrement: 30,
-      angleIncrement: Math.PI / 5,
-      startAngle: 0,
-      pattern: 'arc',
-    },
-  },
   [ShapeTypes.HALF_CURVED_LINE_UP]: {
     category: 'movement',
     renderKind: 'curvedLine',
@@ -183,17 +141,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Spins — two full rotations ────────────────────────────────────────────
-  [ShapeTypes.SPIN_TWO]: {
-    category: 'movement',
-    renderKind: 'spin',
-    defaultDimensions: { width: 60, height: 60 },
-    renderConfig: {
-      numPoints: 30,
-      radiusIncrement: 1,
-      angleIncrement: Math.PI / 6,
-      direction: 'cw',
-    },
-  },
   [ShapeTypes.SPIN_TWO_CW]: {
     category: 'movement',
     renderKind: 'spin',
@@ -218,17 +165,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Spins — one and a half rotations ─────────────────────────────────────
-  [ShapeTypes.SPIN_ONE_AND_HALF]: {
-    category: 'movement',
-    renderKind: 'spin',
-    defaultDimensions: { width: 60, height: 60 },
-    renderConfig: {
-      numPoints: 20,
-      radiusIncrement: 1,
-      angleIncrement: Math.PI / 6,
-      direction: 'cw',
-    },
-  },
   [ShapeTypes.SPIN_ONE_AND_HALF_CW]: {
     category: 'movement',
     renderKind: 'spin',
@@ -253,18 +189,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Spins — one full rotation ─────────────────────────────────────────────
-  [ShapeTypes.SPIN_ONE]: {
-    category: 'movement',
-    renderKind: 'spin',
-    defaultDimensions: { width: 60, height: 60 },
-    renderConfig: {
-      numPoints: 36,
-      radiusIncrement: 25,
-      angleIncrement: Math.PI / 18,
-      pattern: 'circle',
-      direction: 'cw',
-    },
-  },
   [ShapeTypes.SPIN_ONE_CW]: {
     category: 'movement',
     renderKind: 'spin',
@@ -291,17 +215,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Spins — half rotation ─────────────────────────────────────────────────
-  [ShapeTypes.SPIN_HALF]: {
-    category: 'movement',
-    renderKind: 'spin',
-    defaultDimensions: { width: 40, height: 40 },
-    renderConfig: {
-      numPoints: 12,
-      radiusIncrement: 2,
-      angleIncrement: Math.PI / 17,
-      direction: 'cw',
-    },
-  },
   [ShapeTypes.SPIN_HALF_CW]: {
     category: 'movement',
     renderKind: 'spin',
@@ -326,17 +239,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Spins — quarter rotation ──────────────────────────────────────────────
-  [ShapeTypes.SPIN_QUARTER]: {
-    category: 'movement',
-    renderKind: 'spin',
-    defaultDimensions: { width: 40, height: 40 },
-    renderConfig: {
-      numPoints: 8,
-      radiusIncrement: 2,
-      angleIncrement: Math.PI / 20,
-      direction: 'cw',
-    },
-  },
   [ShapeTypes.SPIN_QUARTER_CW]: {
     category: 'movement',
     renderKind: 'spin',
@@ -361,12 +263,6 @@ export const SHAPE_REGISTRY = {
   },
 
   // ── Direction signals ─────────────────────────────────────────────────────
-  [ShapeTypes.SIGNAL]: {
-    category: 'signals',
-    renderKind: 'direction',
-    defaultDimensions: { width: 75, height: 20 },
-    renderConfig: { points: [10, 10, 30, 10] },
-  },
   [ShapeTypes.DIRECTION_UP]: {
     category: 'signals',
     renderKind: 'direction',

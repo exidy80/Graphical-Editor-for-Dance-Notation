@@ -6,23 +6,77 @@ import {
   faRedo,
   faUndo,
 } from '@fortawesome/free-solid-svg-icons';
-import { COLORS, shapeMapping } from './sidebarConstants';
+import * as ShapeTypes from '../constants/shapeTypes';
+import { COLORS } from './sidebarConstants';
 
 const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
   const isDisabled = selectedPanel === null;
   const motionItems = [
-    'Straight Line',
-    'Two-Thirds Straight Line',
-    'One-Third Straight Line',
-    'Half Curved Line',
-    'Quarter Curved Line',
+    {
+      label: 'Straight Line',
+      iconKind: 'straight',
+      sizeLabel: 'L',
+      upType: ShapeTypes.STRAIGHT_LINE_UP,
+      downType: ShapeTypes.STRAIGHT_LINE_DOWN,
+    },
+    {
+      label: 'Two-Thirds Straight Line',
+      iconKind: 'straight',
+      sizeLabel: 'M',
+      upType: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_UP,
+      downType: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_DOWN,
+    },
+    {
+      label: 'One-Third Straight Line',
+      iconKind: 'straight',
+      sizeLabel: 'S',
+      upType: ShapeTypes.ONE_THIRD_STRAIGHT_LINE_UP,
+      downType: ShapeTypes.ONE_THIRD_STRAIGHT_LINE_DOWN,
+    },
+    {
+      label: 'Half Curved Line',
+      iconKind: 'halfCurve',
+      upType: ShapeTypes.HALF_CURVED_LINE_UP,
+      downType: ShapeTypes.HALF_CURVED_LINE_DOWN,
+    },
+    {
+      label: 'Quarter Curved Line',
+      iconKind: 'quarterCurve',
+      upType: ShapeTypes.QUARTER_CURVED_LINE_UP,
+      downType: ShapeTypes.QUARTER_CURVED_LINE_DOWN,
+    },
   ];
   const spinItems = [
-    'Quarter Spin',
-    'Half Spin',
-    '1 Spin',
-    '1.5 Spin',
-    '2 Spin',
+    {
+      label: 'Quarter Spin',
+      displayLabel: '1/4',
+      cwType: ShapeTypes.SPIN_QUARTER_CW,
+      ccwType: ShapeTypes.SPIN_QUARTER_CCW,
+    },
+    {
+      label: 'Half Spin',
+      displayLabel: '1/2',
+      cwType: ShapeTypes.SPIN_HALF_CW,
+      ccwType: ShapeTypes.SPIN_HALF_CCW,
+    },
+    {
+      label: '1 Spin',
+      displayLabel: '1',
+      cwType: ShapeTypes.SPIN_ONE_CW,
+      ccwType: ShapeTypes.SPIN_ONE_CCW,
+    },
+    {
+      label: '1.5 Spin',
+      displayLabel: '1.5',
+      cwType: ShapeTypes.SPIN_ONE_AND_HALF_CW,
+      ccwType: ShapeTypes.SPIN_ONE_AND_HALF_CCW,
+    },
+    {
+      label: '2 Spin',
+      displayLabel: '2',
+      cwType: ShapeTypes.SPIN_TWO_CW,
+      ccwType: ShapeTypes.SPIN_TWO_CCW,
+    },
   ];
 
   // Shared styles
@@ -63,25 +117,18 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
   };
 
   // Handle movement button click - creates shape with proper properties
-  const handleMovementClick = (shapeKey, color) => {
+  const handleMovementClick = (type, color) => {
     if (selectedPanel === null) return;
-
-    const shapeProps = shapeMapping[shapeKey];
-    if (!shapeProps) return;
 
     const shapeData = {
       id: uuidv4(),
-      ...shapeProps,
+      type,
       stroke: color,
+      fill: color,
       x: 200,
       y: 200,
       draggable: true,
     };
-
-    // Only add fill for shapes that should have it
-    if (shapeProps.type !== 'hip' && shapeProps.type !== 'shoulder') {
-      shapeData.fill = color;
-    }
 
     handleShapeDraw(shapeData);
   };
@@ -122,16 +169,6 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
         )}
       </svg>
     );
-  };
-
-  const getStraightLineSizeLabel = (item) => {
-    const sizeMap = {
-      'Straight Line': 'L',
-      'Two-Thirds Straight Line': 'M',
-      'One-Third Straight Line': 'S',
-    };
-
-    return sizeMap[item] || null;
   };
 
   // Helper to render quarter curved line icon
@@ -209,11 +246,11 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
 
   // Get icon for item based on direction
   const getIcon = (item, color, direction) => {
-    if (item.includes('Straight Line')) {
-      return renderArrowIcon(color, direction, getStraightLineSizeLabel(item));
-    } else if (item === 'Quarter Curved Line') {
+    if (item.iconKind === 'straight') {
+      return renderArrowIcon(color, direction, item.sizeLabel);
+    } else if (item.iconKind === 'quarterCurve') {
       return renderQuarterCurvedLineIcon(color, direction);
-    } else if (item === 'Half Curved Line') {
+    } else if (item.iconKind === 'halfCurve') {
       return renderHalfCurvedLineIcon(color, direction);
     }
     return null;
@@ -222,10 +259,12 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
   // Reusable button component
   const MovementButton = ({ item, direction, color, children, style = {} }) => (
     <button
-      onClick={() => handleMovementClick(`${item} ${direction}`, color)}
+      onClick={() =>
+        handleMovementClick(direction === 'Up' ? item.upType : item.downType, color)
+      }
       disabled={isDisabled}
       style={{ ...buttonStyle, color, ...style }}
-      title={`${item} ${direction} - ${color === COLORS.RED ? 'Red' : 'Blue'}`}
+      title={`${item.label} ${direction} - ${color === COLORS.RED ? 'Red' : 'Blue'}`}
     >
       {children}
     </button>
@@ -233,10 +272,12 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
 
   const SpinButton = ({ item, rotation, color, label }) => (
     <button
-      onClick={() => handleMovementClick(`${item} ${rotation}`, color)}
+      onClick={() =>
+        handleMovementClick(rotation === 'CW' ? item.cwType : item.ccwType, color)
+      }
       disabled={isDisabled}
       style={{ ...spinButtonStyle, color }}
-      title={`${item} ${rotation} - ${color === COLORS.RED ? 'Red' : 'Blue'}`}
+      title={`${item.label} ${rotation} - ${color === COLORS.RED ? 'Red' : 'Blue'}`}
     >
       {label}
     </button>
@@ -250,7 +291,7 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
       </h3>
       <div style={{ marginBottom: '20px' }}>
         {motionItems.map((item) => (
-          <div key={item} style={rowStyle}>
+          <div key={item.label} style={rowStyle}>
             <MovementButton item={item} direction="Up" color={COLORS.RED}>
               {getIcon(item, COLORS.RED, 'up')}
             </MovementButton>
@@ -293,41 +334,32 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
       {/* Spin Buttons */}
       <div style={{ marginBottom: '20px' }}>
         {spinItems.map((item) => {
-          const spinMap = {
-            'Quarter Spin': '1/4',
-            'Half Spin': '1/2',
-            '1 Spin': '1',
-            '1.5 Spin': '1.5',
-            '2 Spin': '2',
-          };
-          const label = spinMap[item] || item;
-
           return (
-            <div key={item} style={rowStyle}>
+            <div key={item.label} style={rowStyle}>
               <SpinButton
                 item={item}
                 rotation="CW"
                 color={COLORS.RED}
-                label={label}
+                label={item.displayLabel}
               />
               <SpinButton
                 item={item}
                 rotation="CCW"
                 color={COLORS.RED}
-                label={label}
+                label={item.displayLabel}
               />
               <div style={{ flex: 1 }} />
               <SpinButton
                 item={item}
                 rotation="CW"
                 color={COLORS.BLUE}
-                label={label}
+                label={item.displayLabel}
               />
               <SpinButton
                 item={item}
                 rotation="CCW"
                 color={COLORS.BLUE}
-                label={label}
+                label={item.displayLabel}
               />
             </div>
           );

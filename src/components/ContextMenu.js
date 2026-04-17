@@ -3,7 +3,7 @@ import { useAppStore } from '../stores';
 import {
   COLORS,
   feetButtonMapping,
-  shapeMapping,
+  footShapeMapping,
   SIDES,
 } from './sidebarConstants';
 import * as ShapeTypes from '../constants/shapeTypes';
@@ -150,7 +150,7 @@ const ContextMenu = () => {
     if (!side || !color) return;
 
     const shapeKey = feetButtonMapping[itemKey][side];
-    const shapeProps = shapeMapping[shapeKey];
+    const shapeProps = footShapeMapping[shapeKey];
     if (!shapeProps) return;
 
     const imageKey =

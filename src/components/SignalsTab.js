@@ -7,10 +7,25 @@ import {
   faArrowDown,
   faLink,
 } from '@fortawesome/free-solid-svg-icons';
-import { COLORS, shapeMapping } from './sidebarConstants';
+import * as ShapeTypes from '../constants/shapeTypes';
+import { COLORS } from './sidebarConstants';
 
 const SignalsTab = ({ selectedPanel, handleShapeDraw }) => {
   const isDisabled = selectedPanel === null;
+  const signalTypeByName = {
+    Overhead: ShapeTypes.OVERHEAD,
+    Shoulder: ShapeTypes.SHOULDER,
+    Waist: ShapeTypes.WAIST,
+    Hip: ShapeTypes.HIP,
+    Knee: ShapeTypes.KNEE,
+    'Direction Up': ShapeTypes.DIRECTION_UP,
+    'Direction Down': ShapeTypes.DIRECTION_DOWN,
+    Block: ShapeTypes.BLOCK,
+    'Split Hands': ShapeTypes.SPLIT_HANDS,
+    'Link Hands': ShapeTypes.LINK_HANDS,
+    Hash: ShapeTypes.HASH_SIGN,
+    Asterisk: ShapeTypes.ASTERISK_SIGN,
+  };
 
   const elevationItems = [
     { name: 'Overhead', shape: 'filledDiamond' },
@@ -49,15 +64,15 @@ const SignalsTab = ({ selectedPanel, handleShapeDraw }) => {
   };
 
   // Handle signal button click - creates shape with proper properties
-  const handleSignalClick = (shapeKey, color) => {
+  const handleSignalClick = (shapeName, color) => {
     if (selectedPanel === null) return;
 
-    const shapeProps = shapeMapping[shapeKey];
-    if (!shapeProps) return;
+    const type = signalTypeByName[shapeName];
+    if (!type) return;
 
     const shapeData = {
       id: uuidv4(),
-      ...shapeProps,
+      type,
       stroke: color,
       x: 200,
       y: 200,
@@ -65,7 +80,7 @@ const SignalsTab = ({ selectedPanel, handleShapeDraw }) => {
     };
 
     // Only add fill for shapes that should have it
-    if (shapeProps.type !== 'hip' && shapeProps.type !== 'shoulder') {
+    if (type !== ShapeTypes.HIP && type !== ShapeTypes.SHOULDER) {
       shapeData.fill = color;
     }
 

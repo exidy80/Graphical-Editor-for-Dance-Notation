@@ -12,45 +12,8 @@ export const SIDES = {
   RIGHT: 'right',
 };
 
-// Map the shapes to their types
-export const shapeMapping = {
-  'Straight Line': { type: ShapeTypes.STRAIGHT_LINE },
-  'Straight Line Up': { type: ShapeTypes.STRAIGHT_LINE_UP },
-  'Straight Line Down': { type: ShapeTypes.STRAIGHT_LINE_DOWN },
-  'Two-Thirds Straight Line': { type: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE },
-  'Two-Thirds Straight Line Up': {
-    type: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_UP,
-  },
-  'Two-Thirds Straight Line Down': {
-    type: ShapeTypes.TWO_THIRDS_STRAIGHT_LINE_DOWN,
-  },
-  'One-Third Straight Line': { type: ShapeTypes.ONE_THIRD_STRAIGHT_LINE },
-  'One-Third Straight Line Up': { type: ShapeTypes.ONE_THIRD_STRAIGHT_LINE_UP },
-  'One-Third Straight Line Down': {
-    type: ShapeTypes.ONE_THIRD_STRAIGHT_LINE_DOWN,
-  },
-  'Quarter Curved Line': { type: ShapeTypes.QUARTER_CURVED_LINE },
-  'Quarter Curved Line Up': { type: ShapeTypes.QUARTER_CURVED_LINE_UP },
-  'Quarter Curved Line Down': { type: ShapeTypes.QUARTER_CURVED_LINE_DOWN },
-  'Half Curved Line': { type: ShapeTypes.HALF_CURVED_LINE },
-  'Half Curved Line Up': { type: ShapeTypes.HALF_CURVED_LINE_UP },
-  'Half Curved Line Down': { type: ShapeTypes.HALF_CURVED_LINE_DOWN },
-  '2 Spin': { type: ShapeTypes.SPIN_TWO },
-  '2 Spin CW': { type: ShapeTypes.SPIN_TWO_CW },
-  '2 Spin CCW': { type: ShapeTypes.SPIN_TWO_CCW },
-  '1.5 Spin': { type: ShapeTypes.SPIN_ONE_AND_HALF },
-  '1.5 Spin CW': { type: ShapeTypes.SPIN_ONE_AND_HALF_CW },
-  '1.5 Spin CCW': { type: ShapeTypes.SPIN_ONE_AND_HALF_CCW },
-  '1 Spin': { type: ShapeTypes.SPIN_ONE },
-  '1 Spin CW': { type: ShapeTypes.SPIN_ONE_CW },
-  '1 Spin CCW': { type: ShapeTypes.SPIN_ONE_CCW },
-  'Half Spin': { type: ShapeTypes.SPIN_HALF },
-  'Half Spin CW': { type: ShapeTypes.SPIN_HALF_CW },
-  'Half Spin CCW': { type: ShapeTypes.SPIN_HALF_CCW },
-  'Quarter Spin': { type: ShapeTypes.SPIN_QUARTER },
-  'Quarter Spin CW': { type: ShapeTypes.SPIN_QUARTER_CW },
-  'Quarter Spin CCW': { type: ShapeTypes.SPIN_QUARTER_CCW },
-  Direction: { type: ShapeTypes.SIGNAL },
+// Foot symbol metadata (image keys) used by FootworkTab and ContextMenu.
+export const footShapeMapping = {
   'Left Foot Basic': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'leftFootBasicRed',
@@ -101,23 +64,6 @@ export const shapeMapping = {
     imageKeyRed: 'hovRedRight',
     imageKeyBlue: 'hovBlueRight',
   },
-  'Centre Point': {
-    type: ShapeTypes.IMAGE,
-    imageKeyRed: 'centrePoint',
-    imageKeyBlue: 'centrePoint',
-  },
-  Overhead: { type: ShapeTypes.OVERHEAD },
-  Shoulder: { type: ShapeTypes.SHOULDER },
-  Waist: { type: ShapeTypes.WAIST },
-  Hip: { type: ShapeTypes.HIP },
-  Knee: { type: ShapeTypes.KNEE },
-  'Direction Up': { type: ShapeTypes.DIRECTION_UP },
-  'Direction Down': { type: ShapeTypes.DIRECTION_DOWN },
-  Block: { type: ShapeTypes.BLOCK },
-  'Split Hands': { type: ShapeTypes.SPLIT_HANDS },
-  'Link Hands': { type: ShapeTypes.LINK_HANDS },
-  Hash: { type: ShapeTypes.HASH_SIGN },
-  Asterisk: { type: ShapeTypes.ASTERISK_SIGN },
 };
 
 // Map the feet types to left or right

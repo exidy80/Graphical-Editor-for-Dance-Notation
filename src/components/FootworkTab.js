@@ -7,7 +7,7 @@ import {
   COLORS,
   SIDES,
   feetButtonMapping,
-  shapeMapping,
+  footShapeMapping,
 } from './sidebarConstants';
 
 const FootworkTab = ({ selectedPanel, handleShapeDraw }) => {
@@ -37,7 +37,7 @@ const FootworkTab = ({ selectedPanel, handleShapeDraw }) => {
   // Helper to get image key for footwork items
   const getFootImageKey = (item, side, color) => {
     const shapeKey = feetButtonMapping[item][side];
-    const shapeProps = shapeMapping[shapeKey];
+    const shapeProps = footShapeMapping[shapeKey];
     return color === COLORS.RED
       ? shapeProps.imageKeyRed
       : shapeProps.imageKeyBlue;
@@ -48,7 +48,7 @@ const FootworkTab = ({ selectedPanel, handleShapeDraw }) => {
     if (selectedPanel === null) return;
 
     const shapeKey = feetButtonMapping[item][side];
-    const shapeProps = shapeMapping[shapeKey];
+    const shapeProps = footShapeMapping[shapeKey];
     const imageKey =
       color === COLORS.RED ? shapeProps.imageKeyRed : shapeProps.imageKeyBlue;
 

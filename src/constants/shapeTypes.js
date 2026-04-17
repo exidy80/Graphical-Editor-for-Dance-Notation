@@ -6,53 +6,42 @@ export const STAGE_NEXT = 'stageNext';
 export const STAGE_CENTER = 'stageCenter';
 
 // Spin types (two full rotations)
-export const SPIN_TWO = 'spinTwo';
 export const SPIN_TWO_CW = 'spinTwoCW';
 export const SPIN_TWO_CCW = 'spinTwoCCW';
 
 // Spin types (one and a half rotations)
-export const SPIN_ONE_AND_HALF = 'spinOneAndHalf';
 export const SPIN_ONE_AND_HALF_CW = 'spinOneAndHalfCW';
 export const SPIN_ONE_AND_HALF_CCW = 'spinOneAndHalfCCW';
 
 // Spin types (one rotation)
-export const SPIN_ONE = 'spinOne';
 export const SPIN_ONE_CW = 'spinOneCW';
 export const SPIN_ONE_CCW = 'spinOneCCW';
 
 // Spin types (half rotation)
-export const SPIN_HALF = 'spinHalf';
 export const SPIN_HALF_CW = 'spinHalfCW';
 export const SPIN_HALF_CCW = 'spinHalfCCW';
 
 // Spin types (quarter rotation)
-export const SPIN_QUARTER = 'spinQuarter';
 export const SPIN_QUARTER_CW = 'spinQuarterCW';
 export const SPIN_QUARTER_CCW = 'spinQuarterCCW';
 
 // Lines
-export const STRAIGHT_LINE = 'straightLine';
 export const STRAIGHT_LINE_UP = 'straightLineUp';
 export const STRAIGHT_LINE_DOWN = 'straightLineDown';
-export const TWO_THIRDS_STRAIGHT_LINE = 'twoThirdsStraightLine';
 export const TWO_THIRDS_STRAIGHT_LINE_UP = 'twoThirdsStraightLineUp';
 export const TWO_THIRDS_STRAIGHT_LINE_DOWN = 'twoThirdsStraightLineDown';
-export const ONE_THIRD_STRAIGHT_LINE = 'oneThirdStraightLine';
 export const ONE_THIRD_STRAIGHT_LINE_UP = 'oneThirdStraightLineUp';
 export const ONE_THIRD_STRAIGHT_LINE_DOWN = 'oneThirdStraightLineDown';
 
 // Curved lines (quarter)
-export const QUARTER_CURVED_LINE = 'quarterCurvedLine';
 export const QUARTER_CURVED_LINE_UP = 'quarterCurvedLineUp';
 export const QUARTER_CURVED_LINE_DOWN = 'quarterCurvedLineDown';
 
 // Curved lines (half)
-export const HALF_CURVED_LINE = 'halfCurvedLine';
 export const HALF_CURVED_LINE_UP = 'halfCurvedLineUp';
 export const HALF_CURVED_LINE_DOWN = 'halfCurvedLineDown';
 
 // Directions and signals
-export const SIGNAL = 'signal';
 export const DIRECTION_UP = 'directionUp';
 export const DIRECTION_DOWN = 'directionDown';
 
