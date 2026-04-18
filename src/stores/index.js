@@ -37,7 +37,7 @@ const createInitialState = () => ({
     disabled: [],
   },
   hiddenLayers: [], // Layer keys to hide (e.g., ['body', 'feet'])
-  feetPlacement: {
+  symbolPlacement: {
     active: false,
     panelId: null,
     symbolDraft: null,

@@ -465,13 +465,13 @@ describe('useAppStore', () => {
     expect(getState().selectedHand).toBeNull();
   });
 
-  test('commitFeetPlacement rejects NaN x coordinates', () => {
+  test('commitSymbolPlacement rejects NaN x coordinates', () => {
     const { getState } = useAppStore;
     const panelId = getState().panels[0].id;
     const initialShapeCount = getState().panels[0].shapes.length;
 
     act(() => {
-      getState().armFeetPlacement({
+      getState().armSymbolPlacement({
         panelId,
         symbolDraft: {
           id: 'nan-coords-shape',
@@ -484,7 +484,7 @@ describe('useAppStore', () => {
 
     let commitResult;
     act(() => {
-      commitResult = getState().commitFeetPlacement(panelId, {
+      commitResult = getState().commitSymbolPlacement(panelId, {
         x: Number.NaN,
         y: 100,
         insidePanel: true,
@@ -497,12 +497,12 @@ describe('useAppStore', () => {
     expect(nextShapeCount).toBe(initialShapeCount);
   });
 
-  test('commitFeetPlacement rejects NaN y coordinates', () => {
+  test('commitSymbolPlacement rejects NaN y coordinates', () => {
     const { getState } = useAppStore;
     const panelId = getState().panels[0].id;
 
     act(() => {
-      getState().armFeetPlacement({
+      getState().armSymbolPlacement({
         panelId,
         symbolDraft: {
           id: 'nan-y-shape',
@@ -515,7 +515,7 @@ describe('useAppStore', () => {
 
     let commitResult;
     act(() => {
-      commitResult = getState().commitFeetPlacement(panelId, {
+      commitResult = getState().commitSymbolPlacement(panelId, {
         x: 120,
         y: Number.NaN,
         insidePanel: true,

@@ -14,7 +14,7 @@ test('Canvas renders without crashing for first panel', () => {
   render(<Canvas panelId={panelId} />);
 });
 
-test('foot placement flow does not emit Konva NaN warnings during render', () => {
+test('symbol placement flow does not emit Konva NaN warnings during render', () => {
   const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
   const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
 
@@ -22,7 +22,7 @@ test('foot placement flow does not emit Konva NaN warnings during render', () =>
   const panelId = store.panels[0].id;
 
   act(() => {
-    store.armFeetPlacement({
+    store.armSymbolPlacement({
       panelId,
       symbolDraft: {
         id: 'nan-warning-shape',
@@ -34,7 +34,7 @@ test('foot placement flow does not emit Konva NaN warnings during render', () =>
   });
 
   act(() => {
-    store.commitFeetPlacement(panelId, {
+    store.commitSymbolPlacement(panelId, {
       x: 120,
       y: 150,
       insidePanel: true,

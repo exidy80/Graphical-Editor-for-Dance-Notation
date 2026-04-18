@@ -193,14 +193,17 @@ describe('Keystroke Framework', () => {
       }
     });
 
-    test('Escape cancels feet placement when armed', () => {
-      const { initializeDefaultKeystrokes, handleKeystroke, armFeetPlacement } =
-        useAppStore.getState();
+    test('Escape cancels symbol placement when armed', () => {
+      const {
+        initializeDefaultKeystrokes,
+        handleKeystroke,
+        armSymbolPlacement,
+      } = useAppStore.getState();
       const panelId = useAppStore.getState().panels[0].id;
 
       act(() => {
         initializeDefaultKeystrokes();
-        armFeetPlacement({
+        armSymbolPlacement({
           panelId,
           symbolDraft: {
             id: 'armed-foot',
@@ -211,7 +214,7 @@ describe('Keystroke Framework', () => {
         });
       });
 
-      expect(useAppStore.getState().feetPlacement.active).toBe(true);
+      expect(useAppStore.getState().symbolPlacement.active).toBe(true);
 
       act(() => {
         handleKeystroke('Escape', {
@@ -224,8 +227,8 @@ describe('Keystroke Framework', () => {
         });
       });
 
-      expect(useAppStore.getState().feetPlacement.active).toBe(false);
-      expect(useAppStore.getState().feetPlacement.symbolDraft).toBeNull();
+      expect(useAppStore.getState().symbolPlacement.active).toBe(false);
+      expect(useAppStore.getState().symbolPlacement.symbolDraft).toBeNull();
     });
   });
 

@@ -148,20 +148,38 @@
   margin-left: 5px;
 }
 
-.feet-ghost-overlay {
+.symbol-ghost-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 1400;
 }
 
-.feet-ghost-image {
+.symbol-ghost-image {
   position: fixed;
   transform-origin: top left;
   will-change: transform, left, top;
 }
 
-.feet-ghost-no-drop {
+.symbol-ghost-konva {
+  position: fixed;
+  width: 96px;
+  height: 96px;
+}
+
+.symbol-ghost-generic {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 50%;
+  border: 2px solid rgba(40, 90, 180, 0.9);
+  background: rgba(255, 255, 255, 0.5);
+  box-sizing: border-box;
+}
+
+.symbol-ghost-no-drop {
   position: fixed;
   width: 10px;
   height: 10px;
@@ -173,7 +191,7 @@
   box-sizing: border-box;
 }
 
-.feet-ghost-no-drop-slash {
+.symbol-ghost-no-drop-slash {
   position: absolute;
   left: 1px;
   right: 1px;

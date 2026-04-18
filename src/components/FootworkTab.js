@@ -12,7 +12,7 @@ import {
 } from './sidebarConstants';
 
 const FootworkTab = ({ selectedPanel }) => {
-  const armFeetPlacement = useAppStore((state) => state.armFeetPlacement);
+  const armSymbolPlacement = useAppStore((state) => state.armSymbolPlacement);
   const items = ['Basic', 'Hover', 'Heel', 'Ball', 'Whole'];
   const isDisabled = selectedPanel === null;
 
@@ -45,7 +45,7 @@ const FootworkTab = ({ selectedPanel }) => {
       : shapeProps.imageKeyBlue;
   };
 
-  // Handle footwork button click - arms feet placement mode
+  // Handle footwork button click - arms symbol placement mode
   const handleFootworkClick = (item, side, color) => {
     if (selectedPanel === null) return;
 
@@ -54,7 +54,7 @@ const FootworkTab = ({ selectedPanel }) => {
     const imageKey =
       color === COLORS.RED ? shapeProps.imageKeyRed : shapeProps.imageKeyBlue;
 
-    armFeetPlacement({
+    armSymbolPlacement({
       panelId: selectedPanel,
       symbolDraft: {
         id: uuidv4(),

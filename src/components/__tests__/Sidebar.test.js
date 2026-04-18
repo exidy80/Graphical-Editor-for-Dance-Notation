@@ -8,7 +8,7 @@ beforeEach(() => {
   act(() => {
     useAppStore.setState({
       selectedPanel: panelId,
-      feetPlacement: {
+      symbolPlacement: {
         active: false,
         panelId: null,
         symbolDraft: null,
@@ -55,7 +55,7 @@ test('renders Link Hands option in Signals Other section', () => {
   expect(screen.getByText('Asterisk')).toBeInTheDocument();
 });
 
-test('foot button click arms feet placement instead of immediate insert', () => {
+test('foot button click arms symbol placement instead of immediate insert', () => {
   const panelId = useAppStore.getState().panels[0].id;
   const initialShapeCount = useAppStore
     .getState()
@@ -71,10 +71,54 @@ test('foot button click arms feet placement instead of immediate insert', () => 
   });
   fireEvent.click(footButtons[0]);
 
-  const { feetPlacement, panels } = useAppStore.getState();
+  const { symbolPlacement, panels } = useAppStore.getState();
   const currentShapeCount = panels.find((p) => p.id === panelId).shapes.length;
 
-  expect(feetPlacement.active).toBe(true);
-  expect(feetPlacement.symbolDraft).not.toBeNull();
+  expect(symbolPlacement.active).toBe(true);
+  expect(symbolPlacement.symbolDraft).not.toBeNull();
+  expect(currentShapeCount).toBe(initialShapeCount);
+});
+
+test('movement button click arms placement instead of immediate insert', () => {
+  const panelId = useAppStore.getState().panels[0].id;
+  const initialShapeCount = useAppStore
+    .getState()
+    .panels.find((p) => p.id === panelId).shapes.length;
+
+  render(<Sidebar />);
+
+  const movementTabButton = screen.getByRole('button', { name: /movement/i });
+  fireEvent.click(movementTabButton);
+
+  const movementButton = screen.getByTitle('Straight Line Up - Red');
+  fireEvent.click(movementButton);
+
+  const { symbolPlacement, panels } = useAppStore.getState();
+  const currentShapeCount = panels.find((p) => p.id === panelId).shapes.length;
+
+  expect(symbolPlacement.active).toBe(true);
+  expect(symbolPlacement.symbolDraft).not.toBeNull();
+  expect(currentShapeCount).toBe(initialShapeCount);
+});
+
+test('signals button click arms placement instead of immediate insert', () => {
+  const panelId = useAppStore.getState().panels[0].id;
+  const initialShapeCount = useAppStore
+    .getState()
+    .panels.find((p) => p.id === panelId).shapes.length;
+
+  render(<Sidebar />);
+
+  const signalsTabButton = screen.getByRole('button', { name: /signals/i });
+  fireEvent.click(signalsTabButton);
+
+  const signalButton = screen.getByTitle('Direction Up - Red');
+  fireEvent.click(signalButton);
+
+  const { symbolPlacement, panels } = useAppStore.getState();
+  const currentShapeCount = panels.find((p) => p.id === panelId).shapes.length;
+
+  expect(symbolPlacement.active).toBe(true);
+  expect(symbolPlacement.symbolDraft).not.toBeNull();
   expect(currentShapeCount).toBe(initialShapeCount);
 });

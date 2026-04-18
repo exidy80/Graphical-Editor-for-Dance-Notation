@@ -1,12 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Stage, Layer } from 'react-konva';
 import { useAppStore } from '../stores';
 import images from './ImageMapping';
 import { SHAPE_STYLE } from '../utils/dimensions';
+import Symbol from './Symbols';
 
-const FeetPlacementGhostOverlay = () => {
-  const feetPlacement = useAppStore((state) => state.feetPlacement);
-  const isArmed = feetPlacement.active && Boolean(feetPlacement.symbolDraft);
-  const shapeDraft = feetPlacement.symbolDraft;
+const SymbolPlacementGhostOverlay = () => {
+  const symbolPlacement = useAppStore((state) => state.symbolPlacement);
+  const isArmed =
+    symbolPlacement.active && Boolean(symbolPlacement.symbolDraft);
+  const shapeDraft = symbolPlacement.symbolDraft;
   const [cursor, setCursor] = useState(null);
   const [isDropAllowed, setIsDropAllowed] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
@@ -55,7 +58,17 @@ const FeetPlacementGhostOverlay = () => {
     };
   }, [imageSize.height, imageSize.width, shapeDraft]);
 
-  if (!isArmed || !shapeDraft?.imageKey || !cursor) return null;
+  if (!isArmed || !cursor) return null;
+
+  const hasImageGhost = Boolean(
+    shapeDraft?.imageKey && images[shapeDraft.imageKey],
+  );
+  const ghostShape = {
+    ...shapeDraft,
+    x: 48,
+    y: 48,
+    draggable: false,
+  };
 
   const scaleX =
     SHAPE_STYLE.IMAGE_SCALE_FACTOR *
@@ -67,35 +80,63 @@ const FeetPlacementGhostOverlay = () => {
   const top = cursor.y - hotspotOffset.y;
 
   return (
-    <div className="feet-ghost-overlay" aria-hidden="true">
-      <img
-        src={images[shapeDraft.imageKey]}
-        alt=""
-        className="feet-ghost-image"
-        style={{
-          left,
-          top,
-          transform: `scale(${scaleX}, ${scaleY})`,
-          opacity: isDropAllowed ? 0.45 : 0.22,
-        }}
-        onLoad={(event) => {
-          const { naturalWidth, naturalHeight } = event.currentTarget;
-          setImageSize({ width: naturalWidth, height: naturalHeight });
-        }}
-      />
+    <div className="symbol-ghost-overlay" aria-hidden="true">
+      {hasImageGhost ? (
+        <img
+          src={images[shapeDraft.imageKey]}
+          alt=""
+          className="symbol-ghost-image"
+          style={{
+            left,
+            top,
+            transform: `scale(${scaleX}, ${scaleY})`,
+            opacity: isDropAllowed ? 0.45 : 0.22,
+          }}
+          onLoad={(event) => {
+            const { naturalWidth, naturalHeight } = event.currentTarget;
+            setImageSize({ width: naturalWidth, height: naturalHeight });
+          }}
+        />
+      ) : (
+        <div
+          className="symbol-ghost-konva"
+          style={{
+            left: cursor.x - 48,
+            top: cursor.y - 48,
+            opacity: isDropAllowed ? 0.72 : 0.42,
+          }}
+        >
+          <Stage width={96} height={96}>
+            <Layer>
+              <Symbol
+                shape={ghostShape}
+                isSelected={false}
+                disabled={true}
+                opacity={1}
+                onShapeSelect={() => {}}
+                onUpdateShapeState={() => {}}
+                onDragStart={() => {}}
+                onDragEnd={() => {}}
+                isGlowing={false}
+                onRegisterNode={() => {}}
+              />
+            </Layer>
+          </Stage>
+        </div>
+      )}
       {!isDropAllowed && (
         <div
-          className="feet-ghost-no-drop"
+          className="symbol-ghost-no-drop"
           style={{
             left: cursor.x,
             top: cursor.y,
           }}
         >
-          <span className="feet-ghost-no-drop-slash" />
+          <span className="symbol-ghost-no-drop-slash" />
         </div>
       )}
     </div>
   );
 };
 
-export default FeetPlacementGhostOverlay;
+export default SymbolPlacementGhostOverlay;

@@ -72,12 +72,16 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const layerOrder = useAppStore((state) => state.layerOrder);
   const openContextMenu = useAppStore((state) => state.openContextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
-  const feetPlacement = useAppStore((state) => state.feetPlacement);
-  const updateFeetPlacementPreview = useAppStore(
-    (state) => state.updateFeetPlacementPreview,
+  const symbolPlacement = useAppStore((state) => state.symbolPlacement);
+  const updateSymbolPlacementPreview = useAppStore(
+    (state) => state.updateSymbolPlacementPreview,
   );
-  const commitFeetPlacement = useAppStore((state) => state.commitFeetPlacement);
-  const cancelFeetPlacement = useAppStore((state) => state.cancelFeetPlacement);
+  const commitSymbolPlacement = useAppStore(
+    (state) => state.commitSymbolPlacement,
+  );
+  const cancelSymbolPlacement = useAppStore(
+    (state) => state.cancelSymbolPlacement,
+  );
 
   // Marquee (rubber-band) selection state
   const [marquee, setMarquee] = useState(null); // { x1, y1, x2, y2 } in stage coords
@@ -102,11 +106,11 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
   const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
   const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
-  const isFeetPlacementArmed =
-    feetPlacement.active && Boolean(feetPlacement.symbolDraft);
+  const isSymbolPlacementArmed =
+    symbolPlacement.active && Boolean(symbolPlacement.symbolDraft);
   const [ghostImage] = useImage(
-    isFeetPlacementArmed && feetPlacement.symbolDraft.imageKey
-      ? images[feetPlacement.symbolDraft.imageKey]
+    isSymbolPlacementArmed && symbolPlacement.symbolDraft.imageKey
+      ? images[symbolPlacement.symbolDraft.imageKey]
       : null,
   );
 
@@ -153,11 +157,15 @@ const Canvas = ({ panelId, panelViewportSize }) => {
 
   const getPlacementTopLeft = useCallback(
     (cursorPoint) => {
-      if (!cursorPoint || !isFeetPlacementArmed || !feetPlacement.symbolDraft) {
+      if (
+        !cursorPoint ||
+        !isSymbolPlacementArmed ||
+        !symbolPlacement.symbolDraft
+      ) {
         return null;
       }
       const hotspotOffset = getHotspotOffset(
-        feetPlacement.symbolDraft,
+        symbolPlacement.symbolDraft,
         ghostImage,
       );
       return {
@@ -166,10 +174,10 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       };
     },
     [
-      feetPlacement.symbolDraft,
+      symbolPlacement.symbolDraft,
       getHotspotOffset,
       ghostImage,
-      isFeetPlacementArmed,
+      isSymbolPlacementArmed,
     ],
   );
 
@@ -414,14 +422,14 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const handleStageMouseDown = (e) => {
     const stage = e.target.getStage();
 
-    if (isFeetPlacementArmed) {
+    if (isSymbolPlacementArmed) {
       if (e.evt.button !== 0 || !stage) return;
       const pointer = stage.getPointerPosition();
       if (!pointer) return;
 
       const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
       const insidePanel = isInsidePanelBounds(cursorPoint);
-      updateFeetPlacementPreview(
+      updateSymbolPlacementPreview(
         panelId,
         cursorPoint.x,
         cursorPoint.y,
@@ -433,7 +441,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       const topLeft = getPlacementTopLeft(cursorPoint);
       if (!topLeft) return;
 
-      commitFeetPlacement(panelId, {
+      commitSymbolPlacement(panelId, {
         x: topLeft.x,
         y: topLeft.y,
         insidePanel: true,
@@ -448,13 +456,13 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   };
 
   const handleStageMouseMove = (e) => {
-    if (!isFeetPlacementArmed) return;
+    if (!isSymbolPlacementArmed) return;
     const stage = e.target.getStage();
     const pointer = stage?.getPointerPosition();
     if (!pointer) return;
 
     const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
-    updateFeetPlacementPreview(
+    updateSymbolPlacementPreview(
       panelId,
       cursorPoint.x,
       cursorPoint.y,
@@ -480,11 +488,11 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   };
 
   const handleContextMenu = (e) => {
-    if (isFeetPlacementArmed) {
+    if (isSymbolPlacementArmed) {
       e.evt.preventDefault();
       e.evt.stopPropagation();
       closeContextMenu();
-      cancelFeetPlacement();
+      cancelSymbolPlacement();
       return;
     }
 

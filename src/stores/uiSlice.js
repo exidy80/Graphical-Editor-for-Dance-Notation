@@ -13,7 +13,7 @@ const createUISlice = (set, get) => ({
   dancerFlash: [], // transient effects for visual feedback on dancers
   magnifyEnabled: false,
   contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
-  feetPlacement: {
+  symbolPlacement: {
     active: false,
     panelId: null,
     symbolDraft: null,
@@ -168,11 +168,11 @@ const createUISlice = (set, get) => ({
       contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
     }),
 
-  armFeetPlacement: ({ panelId, symbolDraft }) => {
+  armSymbolPlacement: ({ panelId, symbolDraft }) => {
     if (!symbolDraft) return;
     set({
       selectedPanel: panelId,
-      feetPlacement: {
+      symbolPlacement: {
         active: true,
         panelId,
         symbolDraft,
@@ -181,12 +181,12 @@ const createUISlice = (set, get) => ({
     });
   },
 
-  updateFeetPlacementPreview: (panelId, x, y, insidePanel) => {
+  updateSymbolPlacementPreview: (panelId, x, y, insidePanel) => {
     set((state) => {
-      if (!state.feetPlacement.active) return state;
+      if (!state.symbolPlacement.active) return state;
       return {
-        feetPlacement: {
-          ...state.feetPlacement,
+        symbolPlacement: {
+          ...state.symbolPlacement,
           preview: {
             panelId,
             x,
@@ -198,15 +198,15 @@ const createUISlice = (set, get) => ({
     });
   },
 
-  commitFeetPlacement: (panelId, position) => {
-    const { feetPlacement } = get();
-    if (!feetPlacement.active || !feetPlacement.symbolDraft) return false;
+  commitSymbolPlacement: (panelId, position) => {
+    const { symbolPlacement } = get();
+    if (!symbolPlacement.active || !symbolPlacement.symbolDraft) return false;
     if (!position?.insidePanel) return false;
     if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
       return false;
     }
 
-    const { hotspot, ...shapeDraft } = feetPlacement.symbolDraft;
+    const { hotspot, ...shapeDraft } = symbolPlacement.symbolDraft;
     get().setSelectedPanel(panelId);
     get().handleShapeDraw({
       ...shapeDraft,
@@ -215,13 +215,13 @@ const createUISlice = (set, get) => ({
     });
     get().setSelectedHand(null);
     get().setSelectedItems([{ type: 'shape', panelId, id: shapeDraft.id }]);
-    get().cancelFeetPlacement();
+    get().cancelSymbolPlacement();
     return true;
   },
 
-  cancelFeetPlacement: () =>
+  cancelSymbolPlacement: () =>
     set({
-      feetPlacement: {
+      symbolPlacement: {
         active: false,
         panelId: null,
         symbolDraft: null,
