@@ -1,12 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect as KonvaRect } from 'react-konva';
+import { useImage } from 'react-konva-utils';
 import Dancer from './Dancer';
 import Symbol from './Symbols';
+import images from './ImageMapping';
 import { useAppStore } from '../stores';
 import {
   UI_DIMENSIONS,
   DANCER_DIMENSIONS,
   HAND_DIMENSIONS,
+  SHAPE_STYLE,
 } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 import { STAGE_CENTER } from '../constants/shapeTypes';
@@ -69,6 +72,12 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const layerOrder = useAppStore((state) => state.layerOrder);
   const openContextMenu = useAppStore((state) => state.openContextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
+  const feetPlacement = useAppStore((state) => state.feetPlacement);
+  const updateFeetPlacementPreview = useAppStore(
+    (state) => state.updateFeetPlacementPreview,
+  );
+  const commitFeetPlacement = useAppStore((state) => state.commitFeetPlacement);
+  const cancelFeetPlacement = useAppStore((state) => state.cancelFeetPlacement);
 
   // Marquee (rubber-band) selection state
   const [marquee, setMarquee] = useState(null); // { x1, y1, x2, y2 } in stage coords
@@ -93,6 +102,76 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
   const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
   const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
+  const isFeetPlacementArmed =
+    feetPlacement.active && Boolean(feetPlacement.symbolDraft);
+  const [ghostImage] = useImage(
+    isFeetPlacementArmed && feetPlacement.symbolDraft.imageKey
+      ? images[feetPlacement.symbolDraft.imageKey]
+      : null,
+  );
+
+  const toLayerCoordinates = useCallback(
+    (stageX, stageY) => ({
+      x: (stageX - baseOffsetX) / contentScale,
+      y: (stageY - baseOffsetY) / contentScale,
+    }),
+    [baseOffsetX, baseOffsetY, contentScale],
+  );
+
+  const isInsidePanelBounds = useCallback((point) => {
+    if (!point) return false;
+    return (
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x <= UI_DIMENSIONS.CANVAS_SIZE.width &&
+      point.y <= UI_DIMENSIONS.CANVAS_SIZE.height
+    );
+  }, []);
+
+  const getHotspotOffset = useCallback((shapeDraft, image) => {
+    if (!shapeDraft) return { x: 0, y: 0 };
+
+    const hotspot = shapeDraft.hotspot || { mode: 'ratio', x: 0.5, y: 0.5 };
+    const scaleX =
+      SHAPE_STYLE.IMAGE_SCALE_FACTOR *
+      (shapeDraft.scaleX !== undefined ? shapeDraft.scaleX : 1);
+    const scaleY =
+      SHAPE_STYLE.IMAGE_SCALE_FACTOR *
+      (shapeDraft.scaleY !== undefined ? shapeDraft.scaleY : 1);
+    const renderedWidth = image?.width ? image.width * scaleX : 0;
+    const renderedHeight = image?.height ? image.height * scaleY : 0;
+
+    if (hotspot.mode === 'px') {
+      return { x: hotspot.x || 0, y: hotspot.y || 0 };
+    }
+
+    return {
+      x: renderedWidth * (hotspot.x !== undefined ? hotspot.x : 0.5),
+      y: renderedHeight * (hotspot.y !== undefined ? hotspot.y : 0.5),
+    };
+  }, []);
+
+  const getPlacementTopLeft = useCallback(
+    (cursorPoint) => {
+      if (!cursorPoint || !isFeetPlacementArmed || !feetPlacement.symbolDraft) {
+        return null;
+      }
+      const hotspotOffset = getHotspotOffset(
+        feetPlacement.symbolDraft,
+        ghostImage,
+      );
+      return {
+        x: cursorPoint.x - hotspotOffset.x,
+        y: cursorPoint.y - hotspotOffset.y,
+      };
+    },
+    [
+      feetPlacement.symbolDraft,
+      getHotspotOffset,
+      ghostImage,
+      isFeetPlacementArmed,
+    ],
+  );
 
   // Attach window-level listeners once so the marquee survives the cursor
   // briefly leaving the stage boundary mid-drag
@@ -333,10 +412,54 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   });
 
   const handleStageMouseDown = (e) => {
+    const stage = e.target.getStage();
+
+    if (isFeetPlacementArmed) {
+      if (e.evt.button !== 0 || !stage) return;
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
+
+      const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
+      const insidePanel = isInsidePanelBounds(cursorPoint);
+      updateFeetPlacementPreview(
+        panelId,
+        cursorPoint.x,
+        cursorPoint.y,
+        insidePanel,
+      );
+
+      if (!insidePanel) return;
+
+      const topLeft = getPlacementTopLeft(cursorPoint);
+      if (!topLeft) return;
+
+      commitFeetPlacement(panelId, {
+        x: topLeft.x,
+        y: topLeft.y,
+        insidePanel: true,
+      });
+      return;
+    }
+
     if (e.target !== e.target.getStage()) return;
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = stage.getPointerPosition();
     isMarqueeing.current = true;
     setMarquee({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y });
+  };
+
+  const handleStageMouseMove = (e) => {
+    if (!isFeetPlacementArmed) return;
+    const stage = e.target.getStage();
+    const pointer = stage?.getPointerPosition();
+    if (!pointer) return;
+
+    const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
+    updateFeetPlacementPreview(
+      panelId,
+      cursorPoint.x,
+      cursorPoint.y,
+      isInsidePanelBounds(cursorPoint),
+    );
   };
 
   const findAncestor = (node, predicate) => {
@@ -357,6 +480,14 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   };
 
   const handleContextMenu = (e) => {
+    if (isFeetPlacementArmed) {
+      e.evt.preventDefault();
+      e.evt.stopPropagation();
+      closeContextMenu();
+      cancelFeetPlacement();
+      return;
+    }
+
     e.evt.preventDefault();
     e.evt.stopPropagation();
 
@@ -454,6 +585,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       height={effectivePanelSize.height - 4}
       onContextMenu={handleContextMenu}
       onMouseDown={handleStageMouseDown}
+      onMouseMove={handleStageMouseMove}
     >
       <Layer
         x={baseOffsetX}

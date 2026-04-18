@@ -5,6 +5,7 @@ import Sidebar from './components/Sidebar';
 import AutoSaveManager from './components/AutoSaveManager';
 import KeystrokeHandler from './components/KeystrokeHandler';
 import ContextMenu from './components/ContextMenu';
+import FeetPlacementGhostOverlay from './components/FeetPlacementGhostOverlay';
 import './App.css';
 import { useAppStore } from './stores';
 const AppContent = () => {
@@ -30,6 +31,7 @@ const AppContent = () => {
       <KeystrokeHandler />
       <AutoSaveManager />
       <ContextMenu />
+      <FeetPlacementGhostOverlay />
       <Sidebar />
       <div className="main-content">
         <Toolbar />

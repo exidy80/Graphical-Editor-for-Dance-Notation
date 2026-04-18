@@ -1,6 +1,22 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import Sidebar from '../Sidebar';
+import { useAppStore } from '../../stores';
+
+beforeEach(() => {
+  const panelId = useAppStore.getState().panels[0]?.id || null;
+  act(() => {
+    useAppStore.setState({
+      selectedPanel: panelId,
+      feetPlacement: {
+        active: false,
+        panelId: null,
+        symbolDraft: null,
+        preview: null,
+      },
+    });
+  });
+});
 
 test('renders category buttons and expands', () => {
   render(<Sidebar />);
@@ -37,4 +53,28 @@ test('renders Link Hands option in Signals Other section', () => {
   expect(screen.getByText('Split Hands')).toBeInTheDocument();
   expect(screen.getByText('Hash')).toBeInTheDocument();
   expect(screen.getByText('Asterisk')).toBeInTheDocument();
+});
+
+test('foot button click arms feet placement instead of immediate insert', () => {
+  const panelId = useAppStore.getState().panels[0].id;
+  const initialShapeCount = useAppStore
+    .getState()
+    .panels.find((p) => p.id === panelId).shapes.length;
+
+  render(<Sidebar />);
+
+  const footworkTabButton = screen.getByRole('button', { name: /footwork/i });
+  fireEvent.click(footworkTabButton);
+
+  const footButtons = screen.getAllByRole('button', {
+    name: /basic - blue left/i,
+  });
+  fireEvent.click(footButtons[0]);
+
+  const { feetPlacement, panels } = useAppStore.getState();
+  const currentShapeCount = panels.find((p) => p.id === panelId).shapes.length;
+
+  expect(feetPlacement.active).toBe(true);
+  expect(feetPlacement.symbolDraft).not.toBeNull();
+  expect(currentShapeCount).toBe(initialShapeCount);
 });

@@ -192,6 +192,41 @@ describe('Keystroke Framework', () => {
         expect(getCurrentKeystrokeContext()).toBe('shape');
       }
     });
+
+    test('Escape cancels feet placement when armed', () => {
+      const { initializeDefaultKeystrokes, handleKeystroke, armFeetPlacement } =
+        useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+
+      act(() => {
+        initializeDefaultKeystrokes();
+        armFeetPlacement({
+          panelId,
+          symbolDraft: {
+            id: 'armed-foot',
+            type: 'image',
+            imageKey: 'leftFootBasicBlue',
+            draggable: true,
+          },
+        });
+      });
+
+      expect(useAppStore.getState().feetPlacement.active).toBe(true);
+
+      act(() => {
+        handleKeystroke('Escape', {
+          key: 'Escape',
+          ctrlKey: false,
+          metaKey: false,
+          shiftKey: false,
+          altKey: false,
+          preventDefault: jest.fn(),
+        });
+      });
+
+      expect(useAppStore.getState().feetPlacement.active).toBe(false);
+      expect(useAppStore.getState().feetPlacement.symbolDraft).toBeNull();
+    });
   });
 
   describe('Arrow Key Rotation Functionality', () => {

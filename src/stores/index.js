@@ -37,6 +37,12 @@ const createInitialState = () => ({
     disabled: [],
   },
   hiddenLayers: [], // Layer keys to hide (e.g., ['body', 'feet'])
+  feetPlacement: {
+    active: false,
+    panelId: null,
+    symbolDraft: null,
+    preview: null,
+  },
   _autoSaveTimer: null,
   multiDragState: null, // { [itemId]: { x, y, rotation, scaleX, scaleY } } captured at drag start
 });

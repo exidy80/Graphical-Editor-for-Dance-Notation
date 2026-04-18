@@ -148,6 +148,42 @@
   margin-left: 5px;
 }
 
+.feet-ghost-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1400;
+}
+
+.feet-ghost-image {
+  position: fixed;
+  transform-origin: top left;
+  will-change: transform, left, top;
+}
+
+.feet-ghost-no-drop {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  margin-left: -5px;
+  margin-top: -5px;
+  border-radius: 50%;
+  border: 1px solid rgba(198, 40, 40, 0.9);
+  background: rgba(255, 255, 255, 0.75);
+  box-sizing: border-box;
+}
+
+.feet-ghost-no-drop-slash {
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 4px;
+  height: 1px;
+  background: rgba(198, 40, 40, 0.95);
+  transform: rotate(-45deg);
+  transform-origin: center;
+}
+
 
 .colour-toggle.react-toggle--checked .react-toggle-track {
   background-color: #ff0000 !important; /* Red when checked */

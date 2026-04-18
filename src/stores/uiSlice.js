@@ -13,6 +13,12 @@ const createUISlice = (set, get) => ({
   dancerFlash: [], // transient effects for visual feedback on dancers
   magnifyEnabled: false,
   contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
+  feetPlacement: {
+    active: false,
+    panelId: null,
+    symbolDraft: null,
+    preview: null,
+  },
   // Generalized flash for symbols
   queueSymbolFlash: (panelId, symbolId, duration = 500) => {
     const entry = { panelId, symbolId };
@@ -160,6 +166,67 @@ const createUISlice = (set, get) => ({
   closeContextMenu: () =>
     set({
       contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
+    }),
+
+  armFeetPlacement: ({ panelId, symbolDraft }) => {
+    if (!symbolDraft) return;
+    set({
+      selectedPanel: panelId,
+      feetPlacement: {
+        active: true,
+        panelId,
+        symbolDraft,
+        preview: null,
+      },
+    });
+  },
+
+  updateFeetPlacementPreview: (panelId, x, y, insidePanel) => {
+    set((state) => {
+      if (!state.feetPlacement.active) return state;
+      return {
+        feetPlacement: {
+          ...state.feetPlacement,
+          preview: {
+            panelId,
+            x,
+            y,
+            insidePanel,
+          },
+        },
+      };
+    });
+  },
+
+  commitFeetPlacement: (panelId, position) => {
+    const { feetPlacement } = get();
+    if (!feetPlacement.active || !feetPlacement.symbolDraft) return false;
+    if (!position?.insidePanel) return false;
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+      return false;
+    }
+
+    const { hotspot, ...shapeDraft } = feetPlacement.symbolDraft;
+    get().setSelectedPanel(panelId);
+    get().handleShapeDraw({
+      ...shapeDraft,
+      x: position.x,
+      y: position.y,
+    });
+    get().setSelectedHand(null);
+    get().setSelectedItems([{ type: 'shape', panelId, id: shapeDraft.id }]);
+    get().cancelFeetPlacement();
+    return true;
+  },
+
+  cancelFeetPlacement: () =>
+    set({
+      feetPlacement: {
+        active: false,
+        panelId: null,
+        symbolDraft: null,
+        preview: null,
+      },
     }),
 
   toggleMagnify: () => {

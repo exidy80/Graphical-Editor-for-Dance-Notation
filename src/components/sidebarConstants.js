@@ -12,6 +12,8 @@ export const SIDES = {
   RIGHT: 'right',
 };
 
+const DEFAULT_FEET_HOTSPOT = { mode: 'ratio', x: 0.5, y: 0.5 };
+
 // Map the shapes to their types
 export const shapeMapping = {
   'Straight Line': { type: ShapeTypes.STRAIGHT_LINE },
@@ -55,51 +57,61 @@ export const shapeMapping = {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'leftFootBasicRed',
     imageKeyBlue: 'leftFootBasicBlue',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Right Foot Basic': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'rightFootBasicRed',
     imageKeyBlue: 'rightFootBasicBlue',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Left Heel': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'leftHeelRed',
     imageKeyBlue: 'leftHeelBlue',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Right Heel': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'rightHeelRed',
     imageKeyBlue: 'rightHeelBlue',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Left Ball': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'leftBallRed',
     imageKeyBlue: 'leftBallBlue',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Right Ball': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'rightBallRed',
     imageKeyBlue: 'rightBallBlue',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Whole Left': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'wholeRedLeft',
     imageKeyBlue: 'wholeBlueLeft',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Whole Right': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'wholeRedRight',
     imageKeyBlue: 'wholeBlueRight',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Hov Left': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'hovRedLeft',
     imageKeyBlue: 'hovBlueLeft',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Hov Right': {
     type: ShapeTypes.IMAGE,
     imageKeyRed: 'hovRedRight',
     imageKeyBlue: 'hovBlueRight',
+    hotspot: DEFAULT_FEET_HOTSPOT,
   },
   'Centre Point': {
     type: ShapeTypes.IMAGE,

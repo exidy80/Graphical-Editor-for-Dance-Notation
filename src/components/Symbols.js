@@ -38,6 +38,8 @@ const Symbol = ({
 
   //Load image for feet symbols
   const [image] = useImage(images[shape.imageKey]);
+  const isImageSymbol = shape.type === ShapeTypes.IMAGE;
+  const canAttachTransformer = !isImageSymbol || Boolean(image);
 
   //check if its the stage marker
   const isStageCenter = shape.type === ShapeTypes.STAGE_CENTER;
@@ -104,7 +106,13 @@ const Symbol = ({
   );
 
   useEffect(() => {
-    if (isSelected && !isStageCenter && trRef.current && shapeRef.current) {
+    if (
+      isSelected &&
+      !isStageCenter &&
+      canAttachTransformer &&
+      trRef.current &&
+      shapeRef.current
+    ) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     } else if (!isSelected && trRef.current) {
@@ -112,7 +120,7 @@ const Symbol = ({
       trRef.current.nodes([]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageCenter]);
+  }, [isSelected, isStageCenter, canAttachTransformer]);
 
   useEffect(() => {
     if (onRegisterNode && shapeRef.current) {
@@ -154,11 +162,17 @@ const Symbol = ({
 
   //Attach or detach transformer when selection changes
   useEffect(() => {
-    if (isSelected && !isStageCenter && trRef.current && shapeRef.current) {
+    if (
+      isSelected &&
+      !isStageCenter &&
+      canAttachTransformer &&
+      trRef.current &&
+      shapeRef.current
+    ) {
       trRef.current.nodes([shapeRef.current]);
       trRef.current.getLayer().batchDraw();
     }
-  }, [isSelected, isStageCenter]);
+  }, [isSelected, isStageCenter, canAttachTransformer]);
 
   const commonProps = {
     ref: shapeRef,
@@ -192,7 +206,7 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageCenter && (
+        {isSelected && !isStageCenter && canAttachTransformer && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -220,7 +234,7 @@ const Symbol = ({
           shape={shape}
           commonProps={commonProps}
         />
-        {isSelected && !isStageCenter && (
+        {isSelected && !isStageCenter && canAttachTransformer && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -254,7 +268,7 @@ const Symbol = ({
           hitStrokeWidth={SHAPE_STYLE.HIT_STROKE_WIDTH}
           dash={[10, 5]}
         />
-        {isSelected && !isStageCenter && (
+        {isSelected && !isStageCenter && canAttachTransformer && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -287,7 +301,7 @@ const Symbol = ({
           strokeWidth={3}
           hitStrokeWidth={10}
         />
-        {isSelected && !isStageCenter && (
+        {isSelected && !isStageCenter && canAttachTransformer && (
           <Transformer
             ref={trRef}
             centeredScaling={true}
@@ -433,7 +447,7 @@ const Symbol = ({
           strokeWidth={1}
         />
       )}
-      {isSelected && !isStageCenter && (
+      {isSelected && !isStageCenter && canAttachTransformer && (
         <Transformer
           ref={trRef}
           centeredScaling={true}

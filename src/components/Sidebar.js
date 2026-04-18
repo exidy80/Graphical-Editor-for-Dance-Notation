@@ -7,7 +7,6 @@ import { signalsTabConfig } from './SignalsTab';
 
 const Sidebar = () => {
   // Get state and handlers from store
-  const handleShapeDraw = useAppStore((state) => state.handleShapeDraw);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
 
   // Local state for active tab
@@ -79,10 +78,7 @@ const Sidebar = () => {
         }}
       >
         {activeTabConfig && (
-          <activeTabConfig.component
-            selectedPanel={selectedPanel}
-            handleShapeDraw={handleShapeDraw}
-          />
+          <activeTabConfig.component selectedPanel={selectedPanel} />
         )}
       </div>
 

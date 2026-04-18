@@ -365,6 +365,11 @@ const createKeystrokeSlice = (set, get, api) => ({
     registerKeystroke('Escape', {
       description: 'Deselect all objects',
       handler: (event, context) => {
+        const { feetPlacement, cancelFeetPlacement } = get();
+        if (feetPlacement?.active) {
+          cancelFeetPlacement();
+          return;
+        }
         set({
           selectedItems: [],
           selectedHand: null,
