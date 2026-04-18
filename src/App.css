@@ -167,18 +167,6 @@
   height: 96px;
 }
 
-.symbol-ghost-generic {
-  position: fixed;
-  width: 10px;
-  height: 10px;
-  margin-left: -5px;
-  margin-top: -5px;
-  border-radius: 50%;
-  border: 2px solid rgba(40, 90, 180, 0.9);
-  background: rgba(255, 255, 255, 0.5);
-  box-sizing: border-box;
-}
-
 .symbol-ghost-no-drop {
   position: fixed;
   width: 10px;

@@ -9,10 +9,10 @@ import {
   UI_DIMENSIONS,
   DANCER_DIMENSIONS,
   HAND_DIMENSIONS,
-  SHAPE_STYLE,
 } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 import { STAGE_CENTER } from '../constants/shapeTypes';
+import { getSymbolPlacementHotspotOffset } from '../utils/symbolPlacement';
 
 // Shape types that are never user-selectable
 const NON_SELECTABLE_TYPES = new Set([STAGE_CENTER]);
@@ -132,29 +132,6 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     );
   }, []);
 
-  const getHotspotOffset = useCallback((shapeDraft, image) => {
-    if (!shapeDraft) return { x: 0, y: 0 };
-
-    const hotspot = shapeDraft.hotspot || { mode: 'ratio', x: 0.5, y: 0.5 };
-    const scaleX =
-      SHAPE_STYLE.IMAGE_SCALE_FACTOR *
-      (shapeDraft.scaleX !== undefined ? shapeDraft.scaleX : 1);
-    const scaleY =
-      SHAPE_STYLE.IMAGE_SCALE_FACTOR *
-      (shapeDraft.scaleY !== undefined ? shapeDraft.scaleY : 1);
-    const renderedWidth = image?.width ? image.width * scaleX : 0;
-    const renderedHeight = image?.height ? image.height * scaleY : 0;
-
-    if (hotspot.mode === 'px') {
-      return { x: hotspot.x || 0, y: hotspot.y || 0 };
-    }
-
-    return {
-      x: renderedWidth * (hotspot.x !== undefined ? hotspot.x : 0.5),
-      y: renderedHeight * (hotspot.y !== undefined ? hotspot.y : 0.5),
-    };
-  }, []);
-
   const getPlacementTopLeft = useCallback(
     (cursorPoint) => {
       if (
@@ -164,21 +141,19 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       ) {
         return null;
       }
-      const hotspotOffset = getHotspotOffset(
+      const hotspotOffset = getSymbolPlacementHotspotOffset(
         symbolPlacement.symbolDraft,
-        ghostImage,
+        {
+          width: ghostImage?.width,
+          height: ghostImage?.height,
+        },
       );
       return {
         x: cursorPoint.x - hotspotOffset.x,
         y: cursorPoint.y - hotspotOffset.y,
       };
     },
-    [
-      symbolPlacement.symbolDraft,
-      getHotspotOffset,
-      ghostImage,
-      isSymbolPlacementArmed,
-    ],
+    [symbolPlacement.symbolDraft, ghostImage, isSymbolPlacementArmed],
   );
 
   // Attach window-level listeners once so the marquee survives the cursor

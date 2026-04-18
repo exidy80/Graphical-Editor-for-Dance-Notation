@@ -12,7 +12,7 @@ export const SIDES = {
   RIGHT: 'right',
 };
 
-const DEFAULT_FEET_HOTSPOT = { mode: 'ratio', x: 0.5, y: 0.5 };
+const DEFAULT_FEET_HOTSPOT = { mode: 'ratio', x: 1, y: 1 };
 
 // Map the shapes to their types
 export const shapeMapping = {

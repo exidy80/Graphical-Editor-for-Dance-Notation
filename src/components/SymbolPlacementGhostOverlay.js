@@ -4,6 +4,7 @@ import { useAppStore } from '../stores';
 import images from './ImageMapping';
 import { SHAPE_STYLE } from '../utils/dimensions';
 import Symbol from './Symbols';
+import { getSymbolPlacementHotspotOffset } from '../utils/symbolPlacement';
 
 const SymbolPlacementGhostOverlay = () => {
   const symbolPlacement = useAppStore((state) => state.symbolPlacement);
@@ -36,26 +37,7 @@ const SymbolPlacementGhostOverlay = () => {
   }, [isArmed]);
 
   const hotspotOffset = useMemo(() => {
-    if (!shapeDraft) return { x: 0, y: 0 };
-
-    const hotspot = shapeDraft.hotspot || { mode: 'ratio', x: 0.5, y: 0.5 };
-    const scaleX =
-      SHAPE_STYLE.IMAGE_SCALE_FACTOR *
-      (shapeDraft.scaleX !== undefined ? shapeDraft.scaleX : 1);
-    const scaleY =
-      SHAPE_STYLE.IMAGE_SCALE_FACTOR *
-      (shapeDraft.scaleY !== undefined ? shapeDraft.scaleY : 1);
-    const renderedWidth = imageSize.width * scaleX;
-    const renderedHeight = imageSize.height * scaleY;
-
-    if (hotspot.mode === 'px') {
-      return { x: hotspot.x || 0, y: hotspot.y || 0 };
-    }
-
-    return {
-      x: renderedWidth * (hotspot.x !== undefined ? hotspot.x : 0.5),
-      y: renderedHeight * (hotspot.y !== undefined ? hotspot.y : 0.5),
-    };
+    return getSymbolPlacementHotspotOffset(shapeDraft, imageSize);
   }, [imageSize.height, imageSize.width, shapeDraft]);
 
   if (!isArmed || !cursor) return null;
@@ -101,8 +83,8 @@ const SymbolPlacementGhostOverlay = () => {
         <div
           className="symbol-ghost-konva"
           style={{
-            left: cursor.x - 48,
-            top: cursor.y - 48,
+            left: cursor.x - hotspotOffset.x - 48,
+            top: cursor.y - hotspotOffset.y - 48,
             opacity: isDropAllowed ? 0.72 : 0.42,
           }}
         >
