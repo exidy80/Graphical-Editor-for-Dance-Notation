@@ -16,24 +16,22 @@ const SymbolPlacementGhostOverlay = () => {
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
-    if (!isArmed) {
-      setCursor(null);
-      setIsDropAllowed(false);
-      return;
-    }
-
-    const handleMouseMove = (event) => {
+    const updateCursorState = (event) => {
       const x = event.clientX;
       const y = event.clientY;
       const target = document.elementFromPoint(x, y);
       const overKonvaStage = Boolean(target?.closest('.konvajs-content'));
 
       setCursor({ x, y });
-      setIsDropAllowed(overKonvaStage);
+      setIsDropAllowed(isArmed ? overKonvaStage : false);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', updateCursorState);
+    window.addEventListener('pointerdown', updateCursorState);
+    return () => {
+      window.removeEventListener('mousemove', updateCursorState);
+      window.removeEventListener('pointerdown', updateCursorState);
+    };
   }, [isArmed]);
 
   const hotspotOffset = useMemo(() => {
