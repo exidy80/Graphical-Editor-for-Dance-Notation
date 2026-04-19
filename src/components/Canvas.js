@@ -667,13 +667,43 @@ const Canvas = ({ panelId, panelViewportSize }) => {
               />
             ));
 
-            const arms = visibleDancers.map((dancer, index) => (
-              <Dancer
-                key={`${dancer.id}-arms`}
-                {...getDancerProps(dancer, index)}
-                renderOnly="arms"
-              />
-            ));
+            // For each arm segment, order dancers so that a thin blue segment
+            // renders beneath red (blue first), otherwise blue stays on top (blue last).
+            const blueDancer = visibleDancers.find((d) => d.colour === 'blue');
+            const ARM_SEGMENTS = [
+              {
+                renderKey: 'leftUpperArm',
+                thicknessKey: 'leftUpperArmThickness',
+              },
+              {
+                renderKey: 'rightUpperArm',
+                thicknessKey: 'rightUpperArmThickness',
+              },
+              {
+                renderKey: 'leftLowerArm',
+                thicknessKey: 'leftLowerArmThickness',
+              },
+              {
+                renderKey: 'rightLowerArm',
+                thicknessKey: 'rightLowerArmThickness',
+              },
+            ];
+
+            const arms = ARM_SEGMENTS.flatMap(({ renderKey, thicknessKey }) => {
+              const blueIsThin = blueDancer?.[thicknessKey] === 'thin';
+              const orderedDancers = blueIsThin
+                ? [...visibleDancers].sort((a) =>
+                    a.colour === 'blue' ? -1 : 1,
+                  )
+                : visibleDancers;
+              return orderedDancers.map((dancer) => (
+                <Dancer
+                  key={`${dancer.id}-${renderKey}`}
+                  {...getDancerProps(dancer, visibleDancers.indexOf(dancer))}
+                  renderOnly={renderKey}
+                />
+              ));
+            });
 
             // Add one invisible complete dancer for transformers and interaction
             const interactionLayer = visibleDancers.map((dancer, index) => {
