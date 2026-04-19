@@ -479,6 +479,70 @@ describe('Keystroke Framework', () => {
       expect(shapeB.y).toBeCloseTo(135.3553390593, 6);
     });
 
+    test('should fine rotate multi-selected shapes around a shared center with Alt+Ctrl+Arrow', () => {
+      const {
+        initializeDefaultKeystrokes,
+        handleKeystroke,
+        handleShapeDraw,
+        handleShapeSelection,
+      } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+
+      const shapeAId = 'group-fine-rotate-shape-a';
+      const shapeBId = 'group-fine-rotate-shape-b';
+
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: shapeAId,
+          type: 'signal',
+          x: 100,
+          y: 100,
+          rotation: 0,
+          fill: 'red',
+          stroke: 'black',
+        });
+        handleShapeDraw({
+          id: shapeBId,
+          type: 'signal',
+          x: 200,
+          y: 100,
+          rotation: 0,
+          fill: 'blue',
+          stroke: 'black',
+        });
+
+        handleShapeSelection(panelId, shapeAId);
+        handleShapeSelection(panelId, shapeBId, true);
+        initializeDefaultKeystrokes();
+      });
+
+      act(() => {
+        handleKeystroke('ArrowRight', {
+          key: 'ArrowRight',
+          altKey: true,
+          ctrlKey: true,
+          metaKey: false,
+          shiftKey: false,
+        });
+      });
+
+      const shapeA = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeAId);
+      const shapeB = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeBId);
+
+      expect(shapeA.rotation).toBe(5);
+      expect(shapeB.rotation).toBe(5);
+
+      expect(shapeA.x).toBeCloseTo(100.1902650954, 6);
+      expect(shapeA.y).toBeCloseTo(95.6422128626, 6);
+      expect(shapeB.x).toBeCloseTo(199.8097349046, 6);
+      expect(shapeB.y).toBeCloseTo(104.3577871374, 6);
+    });
+
     test('should not move symbol position during rotation (simple rotation test)', () => {
       const {
         initializeDefaultKeystrokes,

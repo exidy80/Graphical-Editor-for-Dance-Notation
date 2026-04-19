@@ -324,6 +324,53 @@ const createKeystrokeSlice = (set, get, api) => ({
       priority: 4,
     });
 
+    // Option/Alt + Ctrl/Cmd + arrow keys - fine group rotation around shared center
+    registerKeystroke('ArrowLeft', {
+      description:
+        'Fine rotate multi-selection counter-clockwise around shared center',
+      handler: (event, context) => {
+        const { fineRotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(-fineRotationStep);
+      },
+      context: 'dancer',
+      modifiers: { alt: true, ctrl: true },
+      priority: 5,
+    });
+
+    registerKeystroke('ArrowLeft', {
+      description:
+        'Fine rotate multi-selection counter-clockwise around shared center',
+      handler: (event, context) => {
+        const { fineRotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(-fineRotationStep);
+      },
+      context: 'shape',
+      modifiers: { alt: true, ctrl: true },
+      priority: 5,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Fine rotate multi-selection clockwise around shared center',
+      handler: (event, context) => {
+        const { fineRotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(fineRotationStep);
+      },
+      context: 'dancer',
+      modifiers: { alt: true, ctrl: true },
+      priority: 5,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Fine rotate multi-selection clockwise around shared center',
+      handler: (event, context) => {
+        const { fineRotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(fineRotationStep);
+      },
+      context: 'shape',
+      modifiers: { alt: true, ctrl: true },
+      priority: 5,
+    });
+
     // Left arrow with Shift - fine rotation counter-clockwise
     registerKeystroke('ArrowLeft', {
       description: 'Fine rotate selection counter-clockwise',
@@ -794,31 +841,17 @@ const createKeystrokeSlice = (set, get, api) => ({
 
     if (!selectionData.length) return;
 
-    const bounds = selectionData.reduce(
-      (acc, entry) => {
-        const minX = entry.rect.x;
-        const minY = entry.rect.y;
-        const maxX = entry.rect.x + entry.rect.width;
-        const maxY = entry.rect.y + entry.rect.height;
-
-        return {
-          minX: Math.min(acc.minX, minX),
-          minY: Math.min(acc.minY, minY),
-          maxX: Math.max(acc.maxX, maxX),
-          maxY: Math.max(acc.maxY, maxY),
-        };
-      },
-      {
-        minX: Infinity,
-        minY: Infinity,
-        maxX: -Infinity,
-        maxY: -Infinity,
-      },
+    // Use mean center as a stable group pivot; axis-aligned bounds can drift as items rotate.
+    const totalCenter = selectionData.reduce(
+      (acc, entry) => ({
+        x: acc.x + entry.center.x,
+        y: acc.y + entry.center.y,
+      }),
+      { x: 0, y: 0 },
     );
-
     const pivot = {
-      x: (bounds.minX + bounds.maxX) / 2,
-      y: (bounds.minY + bounds.maxY) / 2,
+      x: totalCenter.x / selectionData.length,
+      y: totalCenter.y / selectionData.length,
     };
 
     selectionData.forEach(({ item, object, node, center }) => {
