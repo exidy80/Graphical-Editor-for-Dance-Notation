@@ -129,6 +129,7 @@ const PositionPanel = () => {
           <div
             key={panel.id}
             className={`position-panel ${isSelected ? 'selected' : ''}`}
+            data-panel-id={panel.id}
             ref={(el) => (panelRefs.current[panel.id] = el)}
             onClick={() => handlePanelSelection(panel.id)}
             draggable={dragEnabledPanelId === panel.id}

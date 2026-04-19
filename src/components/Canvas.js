@@ -12,7 +12,10 @@ import {
 } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 import { STAGE_CENTER } from '../constants/shapeTypes';
-import { getSymbolPlacementHotspotOffset } from '../utils/symbolPlacement';
+import {
+  getSymbolPlacementHotspotOffset,
+  isSymbolPlacementTargetPanel,
+} from '../utils/symbolPlacement';
 
 // Shape types that are never user-selectable
 const NON_SELECTABLE_TYPES = new Set([STAGE_CENTER]);
@@ -101,6 +104,11 @@ const Canvas = ({ panelId, panelViewportSize }) => {
 
   const effectivePanelSize = panelViewportSize || panelSize;
   const isMagnified = magnifyEnabled && selectedPanel === panelId;
+  const isPlacementPanelAllowed = isSymbolPlacementTargetPanel({
+    candidatePanelId: panelId,
+    magnifyEnabled,
+    selectedPanel,
+  });
   const contentScale = isMagnified ? UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE : 1;
   const scaledCanvasWidth = UI_DIMENSIONS.CANVAS_SIZE.width * contentScale;
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
@@ -108,7 +116,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
   const isSymbolPlacementArmed =
     symbolPlacement.active && Boolean(symbolPlacement.symbolDraft);
-  const [ghostImage] = useImage(
+  const [placementImage] = useImage(
     isSymbolPlacementArmed && symbolPlacement.symbolDraft.imageKey
       ? images[symbolPlacement.symbolDraft.imageKey]
       : null,
@@ -144,8 +152,8 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       const hotspotOffset = getSymbolPlacementHotspotOffset(
         symbolPlacement.symbolDraft,
         {
-          width: ghostImage?.width,
-          height: ghostImage?.height,
+          width: placementImage?.width,
+          height: placementImage?.height,
         },
       );
       return {
@@ -153,7 +161,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
         y: cursorPoint.y - hotspotOffset.y,
       };
     },
-    [symbolPlacement.symbolDraft, ghostImage, isSymbolPlacementArmed],
+    [symbolPlacement.symbolDraft, placementImage, isSymbolPlacementArmed],
   );
 
   // Attach window-level listeners once so the marquee survives the cursor
@@ -306,6 +314,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       setTimeout(() => {
         // Tiny drag → treat as background click (deselect all)
         if (maxSX - minSX < 5 && maxSY - minSY < 5) {
+          setSelectedPanelRef.current(panelId);
           handleCanvasClickRef.current();
           return;
         }
@@ -356,6 +365,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
           setSelectedPanelRef.current(panelId);
           setSelectedItemsRef.current(newSelected);
         } else {
+          setSelectedPanelRef.current(panelId);
           handleCanvasClickRef.current();
         }
       }, 0);
@@ -398,12 +408,15 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     const stage = e.target.getStage();
 
     if (isSymbolPlacementArmed) {
+      e.evt.preventDefault();
+      e.evt.stopPropagation();
       if (e.evt.button !== 0 || !stage) return;
       const pointer = stage.getPointerPosition();
       if (!pointer) return;
 
       const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
-      const insidePanel = isInsidePanelBounds(cursorPoint);
+      const insidePanel =
+        isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
       updateSymbolPlacementPreview(
         panelId,
         cursorPoint.x,
@@ -430,6 +443,12 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     setMarquee({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y });
   };
 
+  const handleStageClick = (e) => {
+    if (!isSymbolPlacementArmed) return;
+    e.evt.preventDefault();
+    e.evt.stopPropagation();
+  };
+
   const handleStageMouseMove = (e) => {
     if (!isSymbolPlacementArmed) return;
     const stage = e.target.getStage();
@@ -437,11 +456,13 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     if (!pointer) return;
 
     const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
+    const insidePanel =
+      isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
     updateSymbolPlacementPreview(
       panelId,
       cursorPoint.x,
       cursorPoint.y,
-      isInsidePanelBounds(cursorPoint),
+      insidePanel,
     );
   };
 
@@ -568,6 +589,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       height={effectivePanelSize.height - 4}
       onContextMenu={handleContextMenu}
       onMouseDown={handleStageMouseDown}
+      onClick={handleStageClick}
       onMouseMove={handleStageMouseMove}
     >
       <Layer

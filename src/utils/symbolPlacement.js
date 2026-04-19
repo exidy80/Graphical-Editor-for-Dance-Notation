@@ -115,3 +115,12 @@ export const getSymbolPlacementHotspotOffset = (
     y: renderedHeight * (hotspot.y !== undefined ? hotspot.y : 1),
   };
 };
+
+export const isSymbolPlacementTargetPanel = ({
+  candidatePanelId,
+  magnifyEnabled,
+  selectedPanel,
+}) => {
+  if (!candidatePanelId) return false;
+  return !magnifyEnabled || candidatePanelId === selectedPanel;
+};
