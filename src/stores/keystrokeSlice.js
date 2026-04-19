@@ -13,6 +13,66 @@ const getNodeVisualCenter = (node) => {
   };
 };
 
+const getCenterDeltaInParentSpace = (node, beforeCenter, afterCenter) => {
+  const parent = node.getParent?.();
+  if (!parent?.getAbsoluteTransform) {
+    return {
+      x: beforeCenter.x - afterCenter.x,
+      y: beforeCenter.y - afterCenter.y,
+    };
+  }
+
+  const parentTransform = parent.getAbsoluteTransform().copy();
+  parentTransform.invert();
+
+  const beforeLocal = parentTransform.point(beforeCenter);
+  const afterLocal = parentTransform.point(afterCenter);
+
+  return {
+    x: beforeLocal.x - afterLocal.x,
+    y: beforeLocal.y - afterLocal.y,
+  };
+};
+
+const rotatePointAroundPivot = (point, pivot, degrees) => {
+  const radians = (degrees * Math.PI) / 180;
+  const cos = Math.cos(radians);
+  const sin = Math.sin(radians);
+  const dx = point.x - pivot.x;
+  const dy = point.y - pivot.y;
+
+  // Screen-space rotation where positive angles rotate clockwise.
+  return {
+    x: pivot.x + dx * cos - dy * sin,
+    y: pivot.y + dx * sin + dy * cos,
+  };
+};
+
+const getStageDeltaInParentSpace = (
+  node,
+  beforeStagePoint,
+  afterStagePoint,
+) => {
+  const parent = node.getParent?.();
+  if (!parent?.getAbsoluteTransform) {
+    return {
+      x: afterStagePoint.x - beforeStagePoint.x,
+      y: afterStagePoint.y - beforeStagePoint.y,
+    };
+  }
+
+  const parentTransform = parent.getAbsoluteTransform().copy();
+  parentTransform.invert();
+
+  const beforeLocal = parentTransform.point(beforeStagePoint);
+  const afterLocal = parentTransform.point(afterStagePoint);
+
+  return {
+    x: afterLocal.x - beforeLocal.x,
+    y: afterLocal.y - beforeLocal.y,
+  };
+};
+
 const createKeystrokeSlice = (set, get, api) => ({
   // State
   keystrokes: {},
@@ -215,6 +275,53 @@ const createKeystrokeSlice = (set, get, api) => ({
       },
       context: 'shape',
       priority: 1,
+    });
+
+    // Option/Alt + arrow keys - rotate multi-selection around shared center
+    registerKeystroke('ArrowLeft', {
+      description:
+        'Rotate multi-selection counter-clockwise around shared center',
+      handler: (event, context) => {
+        const { rotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(-rotationStep);
+      },
+      context: 'dancer',
+      modifiers: { alt: true },
+      priority: 4,
+    });
+
+    registerKeystroke('ArrowLeft', {
+      description:
+        'Rotate multi-selection counter-clockwise around shared center',
+      handler: (event, context) => {
+        const { rotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(-rotationStep);
+      },
+      context: 'shape',
+      modifiers: { alt: true },
+      priority: 4,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Rotate multi-selection clockwise around shared center',
+      handler: (event, context) => {
+        const { rotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(rotationStep);
+      },
+      context: 'dancer',
+      modifiers: { alt: true },
+      priority: 4,
+    });
+
+    registerKeystroke('ArrowRight', {
+      description: 'Rotate multi-selection clockwise around shared center',
+      handler: (event, context) => {
+        const { rotationStep } = get();
+        get()._rotateSelectionAroundSharedCenter(rotationStep);
+      },
+      context: 'shape',
+      modifiers: { alt: true },
+      priority: 4,
     });
 
     // Left arrow with Shift - fine rotation counter-clockwise
@@ -599,8 +706,13 @@ const createKeystrokeSlice = (set, get, api) => ({
         const beforeCenter = getNodeVisualCenter(node);
         node.rotation((node.rotation() || 0) + degrees);
         const afterCenter = getNodeVisualCenter(node);
-        node.x(node.x() + (beforeCenter.x - afterCenter.x));
-        node.y(node.y() + (beforeCenter.y - afterCenter.y));
+        const parentSpaceDelta = getCenterDeltaInParentSpace(
+          node,
+          beforeCenter,
+          afterCenter,
+        );
+        node.x(node.x() + parentSpaceDelta.x);
+        node.y(node.y() + parentSpaceDelta.y);
 
         const nextState = {
           x: node.x(),
@@ -628,6 +740,135 @@ const createKeystrokeSlice = (set, get, api) => ({
         updateShapeState(item.panelId, item.id, {
           rotation: (shape.rotation || 0) + degrees,
         });
+      }
+    });
+  },
+
+  _rotateSelectionAroundSharedCenter: (degrees) => {
+    const {
+      selectedItems,
+      updateDancerState,
+      updateShapeState,
+      panels,
+      getCanvasNode,
+    } = get();
+    if (!selectedItems.length) return;
+
+    const selectionData = selectedItems
+      .map((item) => {
+        const panel = panels.find((p) => p.id === item.panelId);
+        if (!panel) return null;
+
+        const object =
+          item.type === 'dancer'
+            ? panel.dancers.find((d) => d.id === item.id)
+            : panel.shapes.find((s) => s.id === item.id);
+        if (!object) return null;
+
+        const node = getCanvasNode(item.panelId, item.id, item.type);
+        if (node) {
+          const rect = node.getClientRect();
+          return {
+            item,
+            object,
+            node,
+            center: {
+              x: rect.x + rect.width / 2,
+              y: rect.y + rect.height / 2,
+            },
+            rect,
+          };
+        }
+
+        const x = object.x || 0;
+        const y = object.y || 0;
+        return {
+          item,
+          object,
+          node: null,
+          center: { x, y },
+          rect: { x, y, width: 0, height: 0 },
+        };
+      })
+      .filter(Boolean);
+
+    if (!selectionData.length) return;
+
+    const bounds = selectionData.reduce(
+      (acc, entry) => {
+        const minX = entry.rect.x;
+        const minY = entry.rect.y;
+        const maxX = entry.rect.x + entry.rect.width;
+        const maxY = entry.rect.y + entry.rect.height;
+
+        return {
+          minX: Math.min(acc.minX, minX),
+          minY: Math.min(acc.minY, minY),
+          maxX: Math.max(acc.maxX, maxX),
+          maxY: Math.max(acc.maxY, maxY),
+        };
+      },
+      {
+        minX: Infinity,
+        minY: Infinity,
+        maxX: -Infinity,
+        maxY: -Infinity,
+      },
+    );
+
+    const pivot = {
+      x: (bounds.minX + bounds.maxX) / 2,
+      y: (bounds.minY + bounds.maxY) / 2,
+    };
+
+    selectionData.forEach(({ item, object, node, center }) => {
+      const nextCenter = rotatePointAroundPivot(center, pivot, degrees);
+
+      if (node) {
+        // Match single-item rotation behavior first, then move to the grouped pivot target.
+        const beforeCenter = getNodeVisualCenter(node);
+        node.rotation((node.rotation() || 0) + degrees);
+        const afterRotationCenter = getNodeVisualCenter(node);
+        const centerPreserveDelta = getCenterDeltaInParentSpace(
+          node,
+          beforeCenter,
+          afterRotationCenter,
+        );
+        node.x(node.x() + centerPreserveDelta.x);
+        node.y(node.y() + centerPreserveDelta.y);
+
+        const orbitDelta = getStageDeltaInParentSpace(
+          node,
+          beforeCenter,
+          nextCenter,
+        );
+        node.x(node.x() + orbitDelta.x);
+        node.y(node.y() + orbitDelta.y);
+
+        const nextState = {
+          x: node.x(),
+          y: node.y(),
+          rotation: node.rotation(),
+        };
+
+        if (item.type === 'dancer') {
+          updateDancerState(item.panelId, item.id, nextState);
+        } else if (item.type === 'shape') {
+          updateShapeState(item.panelId, item.id, nextState);
+        }
+        return;
+      }
+
+      const nextState = {
+        x: (object.x || 0) + (nextCenter.x - center.x),
+        y: (object.y || 0) + (nextCenter.y - center.y),
+        rotation: (object.rotation || 0) + degrees,
+      };
+
+      if (item.type === 'dancer') {
+        updateDancerState(item.panelId, item.id, nextState);
+      } else if (item.type === 'shape') {
+        updateShapeState(item.panelId, item.id, nextState);
       }
     });
   },
