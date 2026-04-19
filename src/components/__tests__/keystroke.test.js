@@ -415,6 +415,134 @@ describe('Keystroke Framework', () => {
       expect(finalState.rotation).toBe(0);
     });
 
+    test('should rotate multi-selected shapes around a shared center with Alt+Arrow', () => {
+      const {
+        initializeDefaultKeystrokes,
+        handleKeystroke,
+        handleShapeDraw,
+        handleShapeSelection,
+      } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+
+      const shapeAId = 'group-rotate-shape-a';
+      const shapeBId = 'group-rotate-shape-b';
+
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: shapeAId,
+          type: 'signal',
+          x: 100,
+          y: 100,
+          rotation: 0,
+          fill: 'red',
+          stroke: 'black',
+        });
+        handleShapeDraw({
+          id: shapeBId,
+          type: 'signal',
+          x: 200,
+          y: 100,
+          rotation: 0,
+          fill: 'blue',
+          stroke: 'black',
+        });
+
+        handleShapeSelection(panelId, shapeAId);
+        handleShapeSelection(panelId, shapeBId, true);
+        initializeDefaultKeystrokes();
+      });
+
+      act(() => {
+        handleKeystroke('ArrowRight', {
+          key: 'ArrowRight',
+          altKey: true,
+          shiftKey: false,
+          ctrlKey: false,
+          metaKey: false,
+        });
+      });
+
+      const shapeA = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeAId);
+      const shapeB = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeBId);
+
+      expect(shapeA.rotation).toBe(45);
+      expect(shapeB.rotation).toBe(45);
+
+      expect(shapeA.x).toBeCloseTo(114.6446609407, 6);
+      expect(shapeA.y).toBeCloseTo(64.6446609407, 6);
+      expect(shapeB.x).toBeCloseTo(185.3553390593, 6);
+      expect(shapeB.y).toBeCloseTo(135.3553390593, 6);
+    });
+
+    test('should fine rotate multi-selected shapes around a shared center with Alt+Ctrl+Arrow', () => {
+      const {
+        initializeDefaultKeystrokes,
+        handleKeystroke,
+        handleShapeDraw,
+        handleShapeSelection,
+      } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+
+      const shapeAId = 'group-fine-rotate-shape-a';
+      const shapeBId = 'group-fine-rotate-shape-b';
+
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: shapeAId,
+          type: 'signal',
+          x: 100,
+          y: 100,
+          rotation: 0,
+          fill: 'red',
+          stroke: 'black',
+        });
+        handleShapeDraw({
+          id: shapeBId,
+          type: 'signal',
+          x: 200,
+          y: 100,
+          rotation: 0,
+          fill: 'blue',
+          stroke: 'black',
+        });
+
+        handleShapeSelection(panelId, shapeAId);
+        handleShapeSelection(panelId, shapeBId, true);
+        initializeDefaultKeystrokes();
+      });
+
+      act(() => {
+        handleKeystroke('ArrowRight', {
+          key: 'ArrowRight',
+          altKey: true,
+          ctrlKey: true,
+          metaKey: false,
+          shiftKey: false,
+        });
+      });
+
+      const shapeA = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeAId);
+      const shapeB = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeBId);
+
+      expect(shapeA.rotation).toBe(5);
+      expect(shapeB.rotation).toBe(5);
+
+      expect(shapeA.x).toBeCloseTo(100.1902650954, 6);
+      expect(shapeA.y).toBeCloseTo(95.6422128626, 6);
+      expect(shapeB.x).toBeCloseTo(199.8097349046, 6);
+      expect(shapeB.y).toBeCloseTo(104.3577871374, 6);
+    });
+
     test('should not move symbol position during rotation (simple rotation test)', () => {
       const {
         initializeDefaultKeystrokes,
@@ -477,6 +605,84 @@ describe('Keystroke Framework', () => {
       expect(afterSecondRotation.rotation).toBe(90);
       expect(afterSecondRotation.x).toBe(initialX); // Position should remain unchanged
       expect(afterSecondRotation.y).toBe(initialY); // Position should remain unchanged
+    });
+
+    test('should preserve visual center for keyboard rotation under magnified parent scale', () => {
+      const {
+        initializeDefaultKeystrokes,
+        handleKeystroke,
+        handleShapeDraw,
+        handleShapeSelection,
+        registerCanvasNode,
+      } = useAppStore.getState();
+      const panelId = useAppStore.getState().panels[0].id;
+      const shapeId = 'scaled-parent-rotation-shape';
+
+      const parentTransform = {
+        copy: jest.fn(() => parentTransform),
+        invert: jest.fn(() => parentTransform),
+        point: jest.fn((point) => ({
+          x: point.x / 2,
+          y: point.y / 2,
+        })),
+      };
+
+      const rotationState = { value: 0 };
+      const positionState = { x: 150, y: 120 };
+
+      const node = {
+        rotation: jest.fn((value) => {
+          if (value === undefined) return rotationState.value;
+          rotationState.value = value;
+          return rotationState.value;
+        }),
+        x: jest.fn((value) => {
+          if (value === undefined) return positionState.x;
+          positionState.x = value;
+          return positionState.x;
+        }),
+        y: jest.fn((value) => {
+          if (value === undefined) return positionState.y;
+          positionState.y = value;
+          return positionState.y;
+        }),
+        getClientRect: jest.fn(() =>
+          rotationState.value === 0
+            ? { x: 100, y: 80, width: 40, height: 20 }
+            : { x: 110, y: 86, width: 40, height: 20 },
+        ),
+        getParent: jest.fn(() => ({
+          getAbsoluteTransform: jest.fn(() => parentTransform),
+        })),
+      };
+
+      act(() => {
+        useAppStore.getState().setSelectedPanel(panelId);
+        handleShapeDraw({
+          id: shapeId,
+          type: 'image',
+          x: positionState.x,
+          y: positionState.y,
+          fill: 'red',
+          stroke: 'black',
+        });
+        handleShapeSelection(panelId, shapeId);
+        registerCanvasNode(panelId, shapeId, 'shape', node);
+        initializeDefaultKeystrokes();
+      });
+
+      act(() => {
+        handleKeystroke('ArrowRight', { key: 'ArrowRight' });
+      });
+
+      const rotatedShape = useAppStore
+        .getState()
+        .panels[0].shapes.find((s) => s.id === shapeId);
+
+      expect(rotatedShape.rotation).toBe(45);
+      expect(rotatedShape.x).toBe(145);
+      expect(rotatedShape.y).toBe(117);
+      expect(parentTransform.point).toHaveBeenCalledTimes(2);
     });
 
     test('should respect rotation step configuration', () => {
