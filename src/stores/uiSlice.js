@@ -13,6 +13,12 @@ const createUISlice = (set, get) => ({
   dancerFlash: [], // transient effects for visual feedback on dancers
   magnifyEnabled: false,
   contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
+  symbolPlacement: {
+    active: false,
+    panelId: null,
+    symbolDraft: null,
+    preview: null,
+  },
   // Generalized flash for symbols
   queueSymbolFlash: (panelId, symbolId, duration = 500) => {
     const entry = { panelId, symbolId };
@@ -160,6 +166,67 @@ const createUISlice = (set, get) => ({
   closeContextMenu: () =>
     set({
       contextMenu: { open: false, x: 0, y: 0, target: null, openedAt: 0 },
+    }),
+
+  armSymbolPlacement: ({ panelId, symbolDraft }) => {
+    if (!symbolDraft) return;
+    set({
+      selectedPanel: panelId,
+      symbolPlacement: {
+        active: true,
+        panelId,
+        symbolDraft,
+        preview: null,
+      },
+    });
+  },
+
+  updateSymbolPlacementPreview: (panelId, x, y, insidePanel) => {
+    set((state) => {
+      if (!state.symbolPlacement.active) return state;
+      return {
+        symbolPlacement: {
+          ...state.symbolPlacement,
+          preview: {
+            panelId,
+            x,
+            y,
+            insidePanel,
+          },
+        },
+      };
+    });
+  },
+
+  commitSymbolPlacement: (panelId, position) => {
+    const { symbolPlacement } = get();
+    if (!symbolPlacement.active || !symbolPlacement.symbolDraft) return false;
+    if (!position?.insidePanel) return false;
+    if (!Number.isFinite(position.x) || !Number.isFinite(position.y)) {
+      return false;
+    }
+
+    const { hotspot, ...shapeDraft } = symbolPlacement.symbolDraft;
+    get().setSelectedPanel(panelId);
+    get().handleShapeDraw({
+      ...shapeDraft,
+      x: position.x,
+      y: position.y,
+    });
+    get().setSelectedHand(null);
+    get().setSelectedItems([{ type: 'shape', panelId, id: shapeDraft.id }]);
+    get().cancelSymbolPlacement();
+    return true;
+  },
+
+  cancelSymbolPlacement: () =>
+    set({
+      symbolPlacement: {
+        active: false,
+        panelId: null,
+        symbolDraft: null,
+        preview: null,
+      },
     }),
 
   toggleMagnify: () => {

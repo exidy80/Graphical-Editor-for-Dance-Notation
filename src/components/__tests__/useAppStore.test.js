@@ -464,4 +464,64 @@ describe('useAppStore', () => {
     expect(getState().selectedItems).toEqual([]);
     expect(getState().selectedHand).toBeNull();
   });
+
+  test('commitSymbolPlacement rejects NaN x coordinates', () => {
+    const { getState } = useAppStore;
+    const panelId = getState().panels[0].id;
+    const initialShapeCount = getState().panels[0].shapes.length;
+
+    act(() => {
+      getState().armSymbolPlacement({
+        panelId,
+        symbolDraft: {
+          id: 'nan-coords-shape',
+          type: ShapeTypes.IMAGE,
+          imageKey: 'leftFootBasicBlue',
+          draggable: true,
+        },
+      });
+    });
+
+    let commitResult;
+    act(() => {
+      commitResult = getState().commitSymbolPlacement(panelId, {
+        x: Number.NaN,
+        y: 100,
+        insidePanel: true,
+      });
+    });
+
+    const nextShapeCount = getState().panels[0].shapes.length;
+
+    expect(commitResult).toBe(false);
+    expect(nextShapeCount).toBe(initialShapeCount);
+  });
+
+  test('commitSymbolPlacement rejects NaN y coordinates', () => {
+    const { getState } = useAppStore;
+    const panelId = getState().panels[0].id;
+
+    act(() => {
+      getState().armSymbolPlacement({
+        panelId,
+        symbolDraft: {
+          id: 'nan-y-shape',
+          type: ShapeTypes.IMAGE,
+          imageKey: 'leftFootBasicBlue',
+          draggable: true,
+        },
+      });
+    });
+
+    let commitResult;
+    act(() => {
+      commitResult = getState().commitSymbolPlacement(panelId, {
+        x: 120,
+        y: Number.NaN,
+        insidePanel: true,
+      });
+    });
+
+    expect(commitResult).toBe(false);
+  });
 });

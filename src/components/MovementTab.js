@@ -6,9 +6,11 @@ import {
   faRedo,
   faUndo,
 } from '@fortawesome/free-solid-svg-icons';
+import { useAppStore } from '../stores';
 import { COLORS, shapeMapping } from './sidebarConstants';
 
 const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
+  const armSymbolPlacement = useAppStore((state) => state.armSymbolPlacement);
   const isDisabled = selectedPanel === null;
   const motionItems = [
     'Straight Line',
@@ -73,8 +75,6 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
       id: uuidv4(),
       ...shapeProps,
       stroke: color,
-      x: 200,
-      y: 200,
       draggable: true,
     };
 
@@ -83,7 +83,19 @@ const MovementTab = ({ selectedPanel, handleShapeDraw }) => {
       shapeData.fill = color;
     }
 
-    handleShapeDraw(shapeData);
+    if (typeof handleShapeDraw === 'function') {
+      handleShapeDraw({
+        ...shapeData,
+        x: 200,
+        y: 200,
+      });
+      return;
+    }
+
+    armSymbolPlacement({
+      panelId: selectedPanel,
+      symbolDraft: shapeData,
+    });
   };
 
   // Helper to render arrow icon (straight line with arrowhead)

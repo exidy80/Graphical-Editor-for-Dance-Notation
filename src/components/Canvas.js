@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect as KonvaRect } from 'react-konva';
+import { useImage } from 'react-konva-utils';
 import Dancer from './Dancer';
 import Symbol from './Symbols';
+import images from './ImageMapping';
 import { useAppStore } from '../stores';
 import {
   UI_DIMENSIONS,
@@ -10,6 +12,10 @@ import {
 } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 import { STAGE_CENTER } from '../constants/shapeTypes';
+import {
+  getSymbolPlacementHotspotOffset,
+  isSymbolPlacementTargetPanel,
+} from '../utils/symbolPlacement';
 
 // Shape types that are never user-selectable
 const NON_SELECTABLE_TYPES = new Set([STAGE_CENTER]);
@@ -69,6 +75,16 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const layerOrder = useAppStore((state) => state.layerOrder);
   const openContextMenu = useAppStore((state) => state.openContextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
+  const symbolPlacement = useAppStore((state) => state.symbolPlacement);
+  const updateSymbolPlacementPreview = useAppStore(
+    (state) => state.updateSymbolPlacementPreview,
+  );
+  const commitSymbolPlacement = useAppStore(
+    (state) => state.commitSymbolPlacement,
+  );
+  const cancelSymbolPlacement = useAppStore(
+    (state) => state.cancelSymbolPlacement,
+  );
 
   // Marquee (rubber-band) selection state
   const [marquee, setMarquee] = useState(null); // { x1, y1, x2, y2 } in stage coords
@@ -88,11 +104,65 @@ const Canvas = ({ panelId, panelViewportSize }) => {
 
   const effectivePanelSize = panelViewportSize || panelSize;
   const isMagnified = magnifyEnabled && selectedPanel === panelId;
+  const isPlacementPanelAllowed = isSymbolPlacementTargetPanel({
+    candidatePanelId: panelId,
+    magnifyEnabled,
+    selectedPanel,
+  });
   const contentScale = isMagnified ? UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE : 1;
   const scaledCanvasWidth = UI_DIMENSIONS.CANVAS_SIZE.width * contentScale;
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
   const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
   const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
+  const isSymbolPlacementArmed =
+    symbolPlacement.active && Boolean(symbolPlacement.symbolDraft);
+  const [placementImage] = useImage(
+    isSymbolPlacementArmed && symbolPlacement.symbolDraft.imageKey
+      ? images[symbolPlacement.symbolDraft.imageKey]
+      : null,
+  );
+
+  const toLayerCoordinates = useCallback(
+    (stageX, stageY) => ({
+      x: (stageX - baseOffsetX) / contentScale,
+      y: (stageY - baseOffsetY) / contentScale,
+    }),
+    [baseOffsetX, baseOffsetY, contentScale],
+  );
+
+  const isInsidePanelBounds = useCallback((point) => {
+    if (!point) return false;
+    return (
+      point.x >= 0 &&
+      point.y >= 0 &&
+      point.x <= UI_DIMENSIONS.CANVAS_SIZE.width &&
+      point.y <= UI_DIMENSIONS.CANVAS_SIZE.height
+    );
+  }, []);
+
+  const getPlacementTopLeft = useCallback(
+    (cursorPoint) => {
+      if (
+        !cursorPoint ||
+        !isSymbolPlacementArmed ||
+        !symbolPlacement.symbolDraft
+      ) {
+        return null;
+      }
+      const hotspotOffset = getSymbolPlacementHotspotOffset(
+        symbolPlacement.symbolDraft,
+        {
+          width: placementImage?.width,
+          height: placementImage?.height,
+        },
+      );
+      return {
+        x: cursorPoint.x - hotspotOffset.x,
+        y: cursorPoint.y - hotspotOffset.y,
+      };
+    },
+    [symbolPlacement.symbolDraft, placementImage, isSymbolPlacementArmed],
+  );
 
   // Attach window-level listeners once so the marquee survives the cursor
   // briefly leaving the stage boundary mid-drag
@@ -244,6 +314,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       setTimeout(() => {
         // Tiny drag → treat as background click (deselect all)
         if (maxSX - minSX < 5 && maxSY - minSY < 5) {
+          setSelectedPanelRef.current(panelId);
           handleCanvasClickRef.current();
           return;
         }
@@ -294,6 +365,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
           setSelectedPanelRef.current(panelId);
           setSelectedItemsRef.current(newSelected);
         } else {
+          setSelectedPanelRef.current(panelId);
           handleCanvasClickRef.current();
         }
       }, 0);
@@ -333,10 +405,65 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   });
 
   const handleStageMouseDown = (e) => {
+    const stage = e.target.getStage();
+
+    if (isSymbolPlacementArmed) {
+      e.evt.preventDefault();
+      e.evt.stopPropagation();
+      if (e.evt.button !== 0 || !stage) return;
+      const pointer = stage.getPointerPosition();
+      if (!pointer) return;
+
+      const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
+      const insidePanel =
+        isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
+      updateSymbolPlacementPreview(
+        panelId,
+        cursorPoint.x,
+        cursorPoint.y,
+        insidePanel,
+      );
+
+      if (!insidePanel) return;
+
+      const topLeft = getPlacementTopLeft(cursorPoint);
+      if (!topLeft) return;
+
+      commitSymbolPlacement(panelId, {
+        x: topLeft.x,
+        y: topLeft.y,
+        insidePanel: true,
+      });
+      return;
+    }
+
     if (e.target !== e.target.getStage()) return;
-    const pos = e.target.getStage().getPointerPosition();
+    const pos = stage.getPointerPosition();
     isMarqueeing.current = true;
     setMarquee({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y });
+  };
+
+  const handleStageClick = (e) => {
+    if (!isSymbolPlacementArmed) return;
+    e.evt.preventDefault();
+    e.evt.stopPropagation();
+  };
+
+  const handleStageMouseMove = (e) => {
+    if (!isSymbolPlacementArmed) return;
+    const stage = e.target.getStage();
+    const pointer = stage?.getPointerPosition();
+    if (!pointer) return;
+
+    const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
+    const insidePanel =
+      isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
+    updateSymbolPlacementPreview(
+      panelId,
+      cursorPoint.x,
+      cursorPoint.y,
+      insidePanel,
+    );
   };
 
   const findAncestor = (node, predicate) => {
@@ -357,6 +484,14 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   };
 
   const handleContextMenu = (e) => {
+    if (isSymbolPlacementArmed) {
+      e.evt.preventDefault();
+      e.evt.stopPropagation();
+      closeContextMenu();
+      cancelSymbolPlacement();
+      return;
+    }
+
     e.evt.preventDefault();
     e.evt.stopPropagation();
 
@@ -454,6 +589,8 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       height={effectivePanelSize.height - 4}
       onContextMenu={handleContextMenu}
       onMouseDown={handleStageMouseDown}
+      onClick={handleStageClick}
+      onMouseMove={handleStageMouseMove}
     >
       <Layer
         x={baseOffsetX}

@@ -2,6 +2,7 @@ import React from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faShoePrints } from '@fortawesome/free-solid-svg-icons';
+import { useAppStore } from '../stores';
 import images from './ImageMapping';
 import {
   COLORS,
@@ -10,7 +11,8 @@ import {
   shapeMapping,
 } from './sidebarConstants';
 
-const FootworkTab = ({ selectedPanel, handleShapeDraw }) => {
+const FootworkTab = ({ selectedPanel }) => {
+  const armSymbolPlacement = useAppStore((state) => state.armSymbolPlacement);
   const items = ['Basic', 'Hover', 'Heel', 'Ball', 'Whole'];
   const isDisabled = selectedPanel === null;
 
@@ -43,7 +45,7 @@ const FootworkTab = ({ selectedPanel, handleShapeDraw }) => {
       : shapeProps.imageKeyBlue;
   };
 
-  // Handle footwork button click - creates shape with proper properties
+  // Handle footwork button click - arms symbol placement mode
   const handleFootworkClick = (item, side, color) => {
     if (selectedPanel === null) return;
 
@@ -52,13 +54,14 @@ const FootworkTab = ({ selectedPanel, handleShapeDraw }) => {
     const imageKey =
       color === COLORS.RED ? shapeProps.imageKeyRed : shapeProps.imageKeyBlue;
 
-    handleShapeDraw({
-      id: uuidv4(),
-      ...shapeProps,
-      imageKey,
-      x: 200,
-      y: 200,
-      draggable: true,
+    armSymbolPlacement({
+      panelId: selectedPanel,
+      symbolDraft: {
+        id: uuidv4(),
+        ...shapeProps,
+        imageKey,
+        draggable: true,
+      },
     });
   };
 
