@@ -298,5 +298,25 @@ export const initializeDefaultKeystrokes = (get, api, set) => {
   registerDancerColorShortcut('w', 'red', 0);
   registerDancerColorShortcut('f', 'red', 0);
   registerDancerColorShortcut('m', 'blue', 1);
+
+  registerKeystroke('c', {
+    description: 'Copy selected objects',
+    handler: () => {
+      get().copySelection();
+    },
+    context: 'global',
+    modifiers: { ctrl: true },
+    priority: 1,
+  });
+
+  registerKeystroke('v', {
+    description: 'Paste copied objects into current panel',
+    handler: () => {
+      get().pasteClipboard();
+    },
+    context: 'global',
+    modifiers: { ctrl: true },
+    priority: 1,
+  });
   registerDancerColorShortcut('l', 'blue', 1);
 };
