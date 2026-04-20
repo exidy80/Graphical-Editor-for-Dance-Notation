@@ -241,18 +241,7 @@ const createUISlice = (set, get) => ({
       const panel = panels.find((p) => p.id === item.panelId);
       if (!panel) return;
 
-      if (item.type === 'dancer') {
-        const dancerIndex = panel.dancers.findIndex((d) => d.id === item.id);
-        if (dancerIndex === -1) return;
-        clipboardItems.push({
-          type: 'dancer',
-          dancerData: { ...panel.dancers[dancerIndex] },
-          headShape: panel.headShapes[dancerIndex],
-          handShape: panel.handShapes
-            ? { ...(panel.handShapes[dancerIndex] || {}) }
-            : {},
-        });
-      } else if (item.type === 'shape') {
+      if (item.type === 'shape') {
         const shape = panel.shapes.find((s) => s.id === item.id);
         if (!shape || NON_COPYABLE_SHAPE_TYPES.has(shape.type)) return;
         clipboardItems.push({
@@ -280,32 +269,12 @@ const createUISlice = (set, get) => ({
       const panels = state.panels.map((panel) => {
         if (panel.id !== selectedPanel) return panel;
 
-        let newDancers = [...panel.dancers];
-        let newHeadShapes = [...(panel.headShapes || [])];
-        let newHandShapes = [...(panel.handShapes || [])];
         let newShapes = [...panel.shapes];
 
         clipboard.forEach((entry, i) => {
           const newId = newIds[i];
 
-          if (entry.type === 'dancer') {
-            newDancers = [
-              ...newDancers,
-              {
-                ...entry.dancerData,
-                id: newId,
-                x: (entry.dancerData.x || 0) + PASTE_OFFSET,
-                y: (entry.dancerData.y || 0) + PASTE_OFFSET,
-              },
-            ];
-            newHeadShapes = [...newHeadShapes, entry.headShape];
-            newHandShapes = [...newHandShapes, { ...(entry.handShape || {}) }];
-            newSelectedItems.push({
-              type: 'dancer',
-              panelId: selectedPanel,
-              id: newId,
-            });
-          } else if (entry.type === 'shape') {
+          if (entry.type === 'shape') {
             newShapes = [
               ...newShapes,
               {
@@ -325,9 +294,6 @@ const createUISlice = (set, get) => ({
 
         return {
           ...panel,
-          dancers: newDancers,
-          headShapes: newHeadShapes,
-          handShapes: newHandShapes,
           shapes: newShapes,
         };
       });

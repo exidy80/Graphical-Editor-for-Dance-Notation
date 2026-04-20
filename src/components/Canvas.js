@@ -1,15 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Stage, Layer, Rect as KonvaRect } from 'react-konva';
 import { useImage } from 'react-konva-utils';
-import Dancer from './Dancer';
+import DancerCoordination, { getDancerAABB } from './DancerCoordination';
 import Symbol from './Symbols';
 import images from './ImageMapping';
 import { useAppStore } from '../stores';
-import {
-  UI_DIMENSIONS,
-  DANCER_DIMENSIONS,
-  HAND_DIMENSIONS,
-} from '../utils/dimensions';
+import { UI_DIMENSIONS } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 import { STAGE_CENTER } from '../constants/shapeTypes';
 import {
@@ -185,68 +181,6 @@ const Canvas = ({ panelId, panelViewportSize }) => {
 
   const panel = panels.find((p) => p.id === panelId);
 
-  // Returns the axis-aligned bounding box (AABB) in layer space for a dancer,
-  // accounting for rotation and scale. Uses local points to better match
-  // the dancer's origin (shoulders) instead of assuming a centered rectangle.
-  const getDancerAABB = useCallback((dancer) => {
-    const scaleX = dancer.scaleX || 1;
-    const scaleY = dancer.scaleY || 1;
-    const r = ((dancer.rotation || 0) * Math.PI) / 180;
-    const cos = Math.cos(r);
-    const sin = Math.sin(r);
-
-    const bodyHalfWidth = DANCER_DIMENSIONS.BODY_WIDTH / 2;
-    const headBaseY = DANCER_DIMENSIONS.HEAD_SIZE / 4;
-    const headTop = headBaseY - DANCER_DIMENSIONS.HEAD_SIZE / 2;
-    const bodyBottom = headBaseY + DANCER_DIMENSIONS.BODY_HEIGHT;
-    const handPad = Math.max(HAND_DIMENSIONS.WIDTH, HAND_DIMENSIONS.HEIGHT) / 2;
-    const elbowPad = 3;
-
-    const points = [
-      { x: -bodyHalfWidth, y: headTop },
-      { x: bodyHalfWidth, y: headTop },
-      { x: -bodyHalfWidth, y: bodyBottom },
-      { x: bodyHalfWidth, y: bodyBottom },
-    ];
-
-    const leftHand = dancer.leftHandPos || { x: 0, y: 0 };
-    const rightHand = dancer.rightHandPos || { x: 0, y: 0 };
-    const leftElbow = dancer.leftElbowPos || { x: 0, y: 0 };
-    const rightElbow = dancer.rightElbowPos || { x: 0, y: 0 };
-
-    const addPointWithPad = (pt, pad) => {
-      points.push(
-        { x: pt.x - pad, y: pt.y - pad },
-        { x: pt.x + pad, y: pt.y + pad },
-      );
-    };
-
-    addPointWithPad(leftHand, handPad);
-    addPointWithPad(rightHand, handPad);
-    addPointWithPad(leftElbow, elbowPad);
-    addPointWithPad(rightElbow, elbowPad);
-
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-
-    points.forEach((pt) => {
-      const sx = pt.x * scaleX;
-      const sy = pt.y * scaleY;
-      const rx = sx * cos - sy * sin;
-      const ry = sx * sin + sy * cos;
-      const worldX = dancer.x + rx;
-      const worldY = dancer.y + ry;
-      minX = Math.min(minX, worldX);
-      maxX = Math.max(maxX, worldX);
-      minY = Math.min(minY, worldY);
-      maxY = Math.max(maxY, worldY);
-    });
-
-    return { minX, maxX, minY, maxY };
-  }, []);
-
   // Returns the AABB in layer space for a shape by querying the actual rendered Konva node.
   // This matches exactly what the Transformer sees.
   const getShapeAABB = useCallback(
@@ -380,7 +314,6 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     baseOffsetX,
     baseOffsetY,
     contentScale,
-    getDancerAABB,
     getShapeAABB,
   ]);
 
@@ -403,6 +336,50 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       }
     }
   });
+
+  const getDancerProps = (dancer, index) => {
+    const isSelected = selectedItems.some((item) => item.id === dancer.id);
+
+    const selectedHandSide =
+      selectedHand &&
+      selectedHand.panelId === panelId &&
+      selectedHand.dancerId === dancer.id
+        ? selectedHand.handSide
+        : null;
+
+    const dancerHandFlash = handFlash.filter(
+      (h) => h.panelId === panelId && h.dancerId === dancer.id,
+    );
+
+    const isGlowing = dancerFlash.some(
+      (f) => f.panelId === panelId && f.dancerId === dancer.id,
+    );
+
+    return {
+      dancer,
+      chosenHead: headShapes[index],
+      chosenHandShapes: handShapes[index],
+      isSelected,
+      selectedHandSide,
+      handFlash: dancerHandFlash,
+      disabled: opacity.dancers.disabled,
+      opacity: opacity.dancers.value,
+      onDancerSelect: (e) =>
+        handleDancerSelection(panelId, dancer.id, !!e?.evt?.shiftKey),
+      onHandClick: (handSide) => handleHandClick(panelId, dancer.id, handSide),
+      onUpdateDancerState: (newState) =>
+        movePrimaryAndSelection(panelId, dancer.id, 'dancer', newState),
+      onUpdateHandPosition: (side, newPos) =>
+        updateHandPosition(panelId, dancer.id, side, newPos),
+      onUpdateHandRotation: (side, rotation) =>
+        updateHandRotation(panelId, dancer.id, side, rotation),
+      onDragStart: startDragMode,
+      onDragEnd: endDragMode,
+      isGlowing,
+      onRegisterNode: (node) =>
+        registerCanvasNode(panelId, dancer.id, 'dancer', node),
+    };
+  };
 
   const handleStageMouseDown = (e) => {
     const stage = e.target.getStage();
@@ -600,127 +577,14 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       >
         {layerOrder.map((layerKey) => {
           if (layerKey === 'body') {
-            // Filter out hidden dancers
-            const visibleDancers = dancers.filter(
-              (d) => !isObjectHidden(d, 'dancer'),
-            );
-
-            // Helper to create dancer props
-            const getDancerProps = (dancer, index) => {
-              const isSelected = selectedItems.some(
-                (item) => item.id === dancer.id,
-              );
-
-              const selectedHandSide =
-                selectedHand &&
-                selectedHand.panelId === panelId &&
-                selectedHand.dancerId === dancer.id
-                  ? selectedHand.handSide
-                  : null;
-
-              const dancerHandFlash = handFlash.filter(
-                (h) => h.panelId === panelId && h.dancerId === dancer.id,
-              );
-
-              const isGlowing = dancerFlash.some(
-                (f) => f.panelId === panelId && f.dancerId === dancer.id,
-              );
-
-              return {
-                dancer,
-                chosenHead: headShapes[index],
-                chosenHandShapes: handShapes[index],
-                isSelected,
-                selectedHandSide,
-                handFlash: dancerHandFlash,
-                disabled: opacity.dancers.disabled,
-                opacity: opacity.dancers.value,
-                onDancerSelect: (e) =>
-                  handleDancerSelection(panelId, dancer.id, !!e?.evt?.shiftKey),
-                onHandClick: (handSide) =>
-                  handleHandClick(panelId, dancer.id, handSide),
-                onUpdateDancerState: (newState) =>
-                  movePrimaryAndSelection(
-                    panelId,
-                    dancer.id,
-                    'dancer',
-                    newState,
-                  ),
-                onUpdateHandPosition: (side, newPos) =>
-                  updateHandPosition(panelId, dancer.id, side, newPos),
-                onUpdateHandRotation: (side, rotation) =>
-                  updateHandRotation(panelId, dancer.id, side, rotation),
-                onDragStart: startDragMode,
-                onDragEnd: endDragMode,
-                isGlowing,
-                onRegisterNode: (node) =>
-                  registerCanvasNode(panelId, dancer.id, 'dancer', node),
-              };
-            };
-
-            // Render all dancer bodies first, then all arms
-            const bodies = visibleDancers.map((dancer, index) => (
-              <Dancer
-                key={`${dancer.id}-body`}
-                {...getDancerProps(dancer, index)}
-                renderOnly="body"
+            return (
+              <DancerCoordination
+                key="dancer-coordination"
+                dancers={dancers}
+                getDancerProps={getDancerProps}
+                isObjectHidden={isObjectHidden}
               />
-            ));
-
-            // For each arm segment, order dancers so that a thin blue segment
-            // renders beneath red (blue first), otherwise blue stays on top (blue last).
-            const blueDancer = visibleDancers.find((d) => d.colour === 'blue');
-            const ARM_SEGMENTS = [
-              {
-                renderKey: 'leftUpperArm',
-                thicknessKey: 'leftUpperArmThickness',
-              },
-              {
-                renderKey: 'rightUpperArm',
-                thicknessKey: 'rightUpperArmThickness',
-              },
-              {
-                renderKey: 'leftLowerArm',
-                thicknessKey: 'leftLowerArmThickness',
-              },
-              {
-                renderKey: 'rightLowerArm',
-                thicknessKey: 'rightLowerArmThickness',
-              },
-            ];
-
-            const arms = ARM_SEGMENTS.flatMap(({ renderKey, thicknessKey }) => {
-              const blueIsThin = blueDancer?.[thicknessKey] === 'thin';
-              const orderedDancers = blueIsThin
-                ? [...visibleDancers].sort((a) =>
-                    a.colour === 'blue' ? -1 : 1,
-                  )
-                : visibleDancers;
-              return orderedDancers.map((dancer) => (
-                <Dancer
-                  key={`${dancer.id}-${renderKey}`}
-                  {...getDancerProps(dancer, visibleDancers.indexOf(dancer))}
-                  renderOnly={renderKey}
-                />
-              ));
-            });
-
-            // Add one invisible complete dancer for transformers and interaction
-            const interactionLayer = visibleDancers.map((dancer, index) => {
-              const props = getDancerProps(dancer, index);
-              // Only render transformers for selected dancers
-              if (!props.isSelected && !props.selectedHandSide) return null;
-
-              return (
-                <Dancer
-                  key={`${dancer.id}-interaction`}
-                  {...props}
-                  renderOnly="all"
-                />
-              );
-            });
-
-            return [...bodies, ...arms, ...interactionLayer];
+            );
           }
 
           const list = shapesByCategory[layerKey];
