@@ -1,21 +1,13 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useCallback } from 'react';
 import { Stage, Layer, Rect as KonvaRect } from 'react-konva';
-import { useImage } from 'react-konva-utils';
-import Dancer from './Dancer';
+import DancerCoordination from './DancerCoordination';
 import Symbol from './Symbols';
-import images from './ImageMapping';
+import useMarqueeSelection from './useMarqueeSelection';
+import useSymbolPlacement from './useSymbolPlacement';
 import { useAppStore } from '../stores';
-import {
-  UI_DIMENSIONS,
-  DANCER_DIMENSIONS,
-  HAND_DIMENSIONS,
-} from '../utils/dimensions';
+import { UI_DIMENSIONS } from '../utils/dimensions';
 import { LAYER_KEYS, isShapeInCategory } from 'utils/layersConfig';
 import { STAGE_CENTER } from '../constants/shapeTypes';
-import {
-  getSymbolPlacementHotspotOffset,
-  isSymbolPlacementTargetPanel,
-} from '../utils/symbolPlacement';
 
 // Shape types that are never user-selectable
 const NON_SELECTABLE_TYPES = new Set([STAGE_CENTER]);
@@ -75,52 +67,16 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const layerOrder = useAppStore((state) => state.layerOrder);
   const openContextMenu = useAppStore((state) => state.openContextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
-  const symbolPlacement = useAppStore((state) => state.symbolPlacement);
-  const updateSymbolPlacementPreview = useAppStore(
-    (state) => state.updateSymbolPlacementPreview,
-  );
-  const commitSymbolPlacement = useAppStore(
-    (state) => state.commitSymbolPlacement,
-  );
-  const cancelSymbolPlacement = useAppStore(
-    (state) => state.cancelSymbolPlacement,
-  );
 
-  // Marquee (rubber-band) selection state
-  const [marquee, setMarquee] = useState(null); // { x1, y1, x2, y2 } in stage coords
-  const isMarqueeing = useRef(false);
   const stageRef = useRef(null);
-  const handleMarqueeFinish = useRef(() => {});
-
-  // Store stable references - update them during render (allowed for refs)
-  const handleCanvasClickRef = useRef(handleCanvasClick);
-  const setSelectedPanelRef = useRef(setSelectedPanel);
-  const setSelectedItemsRef = useRef(setSelectedItems);
-
-  // Update refs during render (not in useEffect to avoid triggering during render)
-  handleCanvasClickRef.current = handleCanvasClick;
-  setSelectedPanelRef.current = setSelectedPanel;
-  setSelectedItemsRef.current = setSelectedItems;
 
   const effectivePanelSize = panelViewportSize || panelSize;
   const isMagnified = magnifyEnabled && selectedPanel === panelId;
-  const isPlacementPanelAllowed = isSymbolPlacementTargetPanel({
-    candidatePanelId: panelId,
-    magnifyEnabled,
-    selectedPanel,
-  });
   const contentScale = isMagnified ? UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE : 1;
   const scaledCanvasWidth = UI_DIMENSIONS.CANVAS_SIZE.width * contentScale;
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
   const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
   const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
-  const isSymbolPlacementArmed =
-    symbolPlacement.active && Boolean(symbolPlacement.symbolDraft);
-  const [placementImage] = useImage(
-    isSymbolPlacementArmed && symbolPlacement.symbolDraft.imageKey
-      ? images[symbolPlacement.symbolDraft.imageKey]
-      : null,
-  );
 
   const toLayerCoordinates = useCallback(
     (stageX, stageY) => ({
@@ -140,249 +96,30 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     );
   }, []);
 
-  const getPlacementTopLeft = useCallback(
-    (cursorPoint) => {
-      if (
-        !cursorPoint ||
-        !isSymbolPlacementArmed ||
-        !symbolPlacement.symbolDraft
-      ) {
-        return null;
-      }
-      const hotspotOffset = getSymbolPlacementHotspotOffset(
-        symbolPlacement.symbolDraft,
-        {
-          width: placementImage?.width,
-          height: placementImage?.height,
-        },
-      );
-      return {
-        x: cursorPoint.x - hotspotOffset.x,
-        y: cursorPoint.y - hotspotOffset.y,
-      };
-    },
-    [symbolPlacement.symbolDraft, placementImage, isSymbolPlacementArmed],
-  );
-
-  // Attach window-level listeners once so the marquee survives the cursor
-  // briefly leaving the stage boundary mid-drag
-  useEffect(() => {
-    const onWindowMouseMove = (e) => {
-      if (!isMarqueeing.current || !stageRef.current) return;
-      const rect = stageRef.current.container().getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      setMarquee((m) => m && { ...m, x2: x, y2: y });
-    };
-    const onWindowMouseUp = () => handleMarqueeFinish.current?.();
-    window.addEventListener('mousemove', onWindowMouseMove);
-    window.addEventListener('mouseup', onWindowMouseUp);
-    return () => {
-      window.removeEventListener('mousemove', onWindowMouseMove);
-      window.removeEventListener('mouseup', onWindowMouseUp);
-    };
-  }, []);
-
   const panel = panels.find((p) => p.id === panelId);
 
-  // Returns the axis-aligned bounding box (AABB) in layer space for a dancer,
-  // accounting for rotation and scale. Uses local points to better match
-  // the dancer's origin (shoulders) instead of assuming a centered rectangle.
-  const getDancerAABB = useCallback((dancer) => {
-    const scaleX = dancer.scaleX || 1;
-    const scaleY = dancer.scaleY || 1;
-    const r = ((dancer.rotation || 0) * Math.PI) / 180;
-    const cos = Math.cos(r);
-    const sin = Math.sin(r);
+  const placement = useSymbolPlacement({
+    panelId,
+    magnifyEnabled,
+    selectedPanel,
+    toLayerCoordinates,
+    isInsidePanelBounds,
+  });
 
-    const bodyHalfWidth = DANCER_DIMENSIONS.BODY_WIDTH / 2;
-    const headBaseY = DANCER_DIMENSIONS.HEAD_SIZE / 4;
-    const headTop = headBaseY - DANCER_DIMENSIONS.HEAD_SIZE / 2;
-    const bodyBottom = headBaseY + DANCER_DIMENSIONS.BODY_HEIGHT;
-    const handPad = Math.max(HAND_DIMENSIONS.WIDTH, HAND_DIMENSIONS.HEIGHT) / 2;
-    const elbowPad = 3;
-
-    const points = [
-      { x: -bodyHalfWidth, y: headTop },
-      { x: bodyHalfWidth, y: headTop },
-      { x: -bodyHalfWidth, y: bodyBottom },
-      { x: bodyHalfWidth, y: bodyBottom },
-    ];
-
-    const leftHand = dancer.leftHandPos || { x: 0, y: 0 };
-    const rightHand = dancer.rightHandPos || { x: 0, y: 0 };
-    const leftElbow = dancer.leftElbowPos || { x: 0, y: 0 };
-    const rightElbow = dancer.rightElbowPos || { x: 0, y: 0 };
-
-    const addPointWithPad = (pt, pad) => {
-      points.push(
-        { x: pt.x - pad, y: pt.y - pad },
-        { x: pt.x + pad, y: pt.y + pad },
-      );
-    };
-
-    addPointWithPad(leftHand, handPad);
-    addPointWithPad(rightHand, handPad);
-    addPointWithPad(leftElbow, elbowPad);
-    addPointWithPad(rightElbow, elbowPad);
-
-    let minX = Infinity;
-    let maxX = -Infinity;
-    let minY = Infinity;
-    let maxY = -Infinity;
-
-    points.forEach((pt) => {
-      const sx = pt.x * scaleX;
-      const sy = pt.y * scaleY;
-      const rx = sx * cos - sy * sin;
-      const ry = sx * sin + sy * cos;
-      const worldX = dancer.x + rx;
-      const worldY = dancer.y + ry;
-      minX = Math.min(minX, worldX);
-      maxX = Math.max(maxX, worldX);
-      minY = Math.min(minY, worldY);
-      maxY = Math.max(maxY, worldY);
-    });
-
-    return { minX, maxX, minY, maxY };
-  }, []);
-
-  // Returns the AABB in layer space for a shape by querying the actual rendered Konva node.
-  // This matches exactly what the Transformer sees.
-  const getShapeAABB = useCallback(
-    (shape) => {
-      if (!stageRef.current) {
-        // Stage not ready yet - return minimal bbox at shape position
-        return { minX: shape.x, maxX: shape.x, minY: shape.y, maxY: shape.y };
-      }
-
-      // Query the actual rendered node from the stage
-      const nodes = stageRef.current.find((node) => {
-        return node.getAttr && node.getAttr('shapeId') === shape.id;
-      });
-
-      if (nodes.length > 0) {
-        // Get the client rect (AABB) from the actual rendered node
-        const node = nodes[0];
-        const clientRect = node.getClientRect();
-
-        // clientRect is in stage coordinates, we need to convert to layer coordinates
-        // to match the marquee coordinates which are also converted to layer space
-        const layerMinX = (clientRect.x - baseOffsetX) / contentScale;
-        const layerMinY = (clientRect.y - baseOffsetY) / contentScale;
-        const layerMaxX =
-          (clientRect.x + clientRect.width - baseOffsetX) / contentScale;
-        const layerMaxY =
-          (clientRect.y + clientRect.height - baseOffsetY) / contentScale;
-
-        return {
-          minX: layerMinX,
-          maxX: layerMaxX,
-          minY: layerMinY,
-          maxY: layerMaxY,
-        };
-      }
-
-      // Node not found - return minimal bbox at shape position
-      return { minX: shape.x, maxX: shape.x, minY: shape.y, maxY: shape.y };
-    },
-    [baseOffsetX, baseOffsetY, contentScale],
-  );
-
-  // Update the marquee finish logic whenever dependencies change
-  useEffect(() => {
-    if (!panel) return;
-
-    const { dancers, shapes } = panel;
-
-    handleMarqueeFinish.current = () => {
-      if (!isMarqueeing.current) return;
-      isMarqueeing.current = false;
-
-      if (!marquee) return;
-
-      const { x1, y1, x2, y2 } = marquee;
-      const minSX = Math.min(x1, x2);
-      const maxSX = Math.max(x1, x2);
-      const minSY = Math.min(y1, y2);
-      const maxSY = Math.max(y1, y2);
-
-      // Clear marquee immediately
-      setMarquee(null);
-
-      // Defer selection updates to avoid setState-during-render warnings
-      setTimeout(() => {
-        // Tiny drag → treat as background click (deselect all)
-        if (maxSX - minSX < 5 && maxSY - minSY < 5) {
-          setSelectedPanelRef.current(panelId);
-          handleCanvasClickRef.current();
-          return;
-        }
-
-        // Convert marquee from stage coords to layer coords
-        const toLayer = (sx, sy) => ({
-          x: (sx - baseOffsetX) / contentScale,
-          y: (sy - baseOffsetY) / contentScale,
-        });
-        const tl = toLayer(minSX, minSY);
-        const br = toLayer(maxSX, maxSY);
-
-        const isEnclosed = (bbox) =>
-          bbox.minX >= tl.x &&
-          bbox.maxX <= br.x &&
-          bbox.minY >= tl.y &&
-          bbox.maxY <= br.y;
-
-        const newSelected = [];
-
-        // Check visible, enabled dancers
-        dancers
-          .filter(
-            (d) => !isObjectHidden(d, 'dancer') && !opacity.dancers.disabled,
-          )
-          .forEach((dancer) => {
-            if (isEnclosed(getDancerAABB(dancer)))
-              newSelected.push({ type: 'dancer', panelId, id: dancer.id });
-          });
-
-        // Check shapes: skip hidden, individually-disabled, globally-disabled,
-        // and non-interactive stage markers (STAGE_CENTER)
-        shapes
-          .filter(
-            (s) =>
-              !isObjectHidden(s, 'shape') &&
-              !opacity.disabled.includes(s.id) &&
-              !opacity.symbols.disabled &&
-              !NON_SELECTABLE_TYPES.has(s.type),
-          )
-          .forEach((shape) => {
-            if (isEnclosed(getShapeAABB(shape)))
-              newSelected.push({ type: 'shape', panelId, id: shape.id });
-          });
-
-        // Update selection
-        if (newSelected.length > 0) {
-          setSelectedPanelRef.current(panelId);
-          setSelectedItemsRef.current(newSelected);
-        } else {
-          setSelectedPanelRef.current(panelId);
-          handleCanvasClickRef.current();
-        }
-      }, 0);
-    };
-  }, [
-    marquee,
+  const { marquee, onMouseDown: marqueeOnMouseDown } = useMarqueeSelection({
+    stageRef,
+    panelId,
     panel,
-    hiddenLayers,
     isObjectHidden,
     opacity,
-    panelId,
+    nonSelectableTypes: NON_SELECTABLE_TYPES,
     baseOffsetX,
     baseOffsetY,
     contentScale,
-    getDancerAABB,
-    getShapeAABB,
-  ]);
+    setSelectedPanel,
+    setSelectedItems,
+    handleCanvasClick,
+  });
 
   if (!panel) return null;
 
@@ -404,66 +141,61 @@ const Canvas = ({ panelId, panelViewportSize }) => {
     }
   });
 
+  const getDancerProps = (dancer, index) => {
+    const isSelected = selectedItems.some((item) => item.id === dancer.id);
+
+    const selectedHandSide =
+      selectedHand &&
+      selectedHand.panelId === panelId &&
+      selectedHand.dancerId === dancer.id
+        ? selectedHand.handSide
+        : null;
+
+    const dancerHandFlash = handFlash.filter(
+      (h) => h.panelId === panelId && h.dancerId === dancer.id,
+    );
+
+    const isGlowing = dancerFlash.some(
+      (f) => f.panelId === panelId && f.dancerId === dancer.id,
+    );
+
+    return {
+      dancer,
+      chosenHead: headShapes[index],
+      chosenHandShapes: handShapes[index],
+      isSelected,
+      selectedHandSide,
+      handFlash: dancerHandFlash,
+      disabled: opacity.dancers.disabled,
+      opacity: opacity.dancers.value,
+      onDancerSelect: (e) =>
+        handleDancerSelection(panelId, dancer.id, !!e?.evt?.shiftKey),
+      onHandClick: (handSide) => handleHandClick(panelId, dancer.id, handSide),
+      onUpdateDancerState: (newState) =>
+        movePrimaryAndSelection(panelId, dancer.id, 'dancer', newState),
+      onUpdateHandPosition: (side, newPos) =>
+        updateHandPosition(panelId, dancer.id, side, newPos),
+      onUpdateHandRotation: (side, rotation) =>
+        updateHandRotation(panelId, dancer.id, side, rotation),
+      onDragStart: startDragMode,
+      onDragEnd: endDragMode,
+      isGlowing,
+      onRegisterNode: (node) =>
+        registerCanvasNode(panelId, dancer.id, 'dancer', node),
+    };
+  };
+
   const handleStageMouseDown = (e) => {
-    const stage = e.target.getStage();
-
-    if (isSymbolPlacementArmed) {
-      e.evt.preventDefault();
-      e.evt.stopPropagation();
-      if (e.evt.button !== 0 || !stage) return;
-      const pointer = stage.getPointerPosition();
-      if (!pointer) return;
-
-      const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
-      const insidePanel =
-        isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
-      updateSymbolPlacementPreview(
-        panelId,
-        cursorPoint.x,
-        cursorPoint.y,
-        insidePanel,
-      );
-
-      if (!insidePanel) return;
-
-      const topLeft = getPlacementTopLeft(cursorPoint);
-      if (!topLeft) return;
-
-      commitSymbolPlacement(panelId, {
-        x: topLeft.x,
-        y: topLeft.y,
-        insidePanel: true,
-      });
-      return;
-    }
-
-    if (e.target !== e.target.getStage()) return;
-    const pos = stage.getPointerPosition();
-    isMarqueeing.current = true;
-    setMarquee({ x1: pos.x, y1: pos.y, x2: pos.x, y2: pos.y });
+    if (placement.handleMouseDown(e)) return;
+    marqueeOnMouseDown(e);
   };
 
   const handleStageClick = (e) => {
-    if (!isSymbolPlacementArmed) return;
-    e.evt.preventDefault();
-    e.evt.stopPropagation();
+    placement.handleClick(e);
   };
 
   const handleStageMouseMove = (e) => {
-    if (!isSymbolPlacementArmed) return;
-    const stage = e.target.getStage();
-    const pointer = stage?.getPointerPosition();
-    if (!pointer) return;
-
-    const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
-    const insidePanel =
-      isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
-    updateSymbolPlacementPreview(
-      panelId,
-      cursorPoint.x,
-      cursorPoint.y,
-      insidePanel,
-    );
+    placement.handleMouseMove(e);
   };
 
   const findAncestor = (node, predicate) => {
@@ -484,13 +216,7 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   };
 
   const handleContextMenu = (e) => {
-    if (isSymbolPlacementArmed) {
-      e.evt.preventDefault();
-      e.evt.stopPropagation();
-      closeContextMenu();
-      cancelSymbolPlacement();
-      return;
-    }
+    if (placement.handleContextMenu(e)) return;
 
     e.evt.preventDefault();
     e.evt.stopPropagation();
@@ -600,97 +326,14 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       >
         {layerOrder.map((layerKey) => {
           if (layerKey === 'body') {
-            // Filter out hidden dancers
-            const visibleDancers = dancers.filter(
-              (d) => !isObjectHidden(d, 'dancer'),
+            return (
+              <DancerCoordination
+                key="dancer-coordination"
+                dancers={dancers}
+                getDancerProps={getDancerProps}
+                isObjectHidden={isObjectHidden}
+              />
             );
-
-            // Helper to create dancer props
-            const getDancerProps = (dancer, index) => {
-              const isSelected = selectedItems.some(
-                (item) => item.id === dancer.id,
-              );
-
-              const selectedHandSide =
-                selectedHand &&
-                selectedHand.panelId === panelId &&
-                selectedHand.dancerId === dancer.id
-                  ? selectedHand.handSide
-                  : null;
-
-              const dancerHandFlash = handFlash.filter(
-                (h) => h.panelId === panelId && h.dancerId === dancer.id,
-              );
-
-              const isGlowing = dancerFlash.some(
-                (f) => f.panelId === panelId && f.dancerId === dancer.id,
-              );
-
-              return {
-                dancer,
-                chosenHead: headShapes[index],
-                chosenHandShapes: handShapes[index],
-                isSelected,
-                selectedHandSide,
-                handFlash: dancerHandFlash,
-                disabled: opacity.dancers.disabled,
-                opacity: opacity.dancers.value,
-                onDancerSelect: (e) =>
-                  handleDancerSelection(panelId, dancer.id, !!e?.evt?.shiftKey),
-                onHandClick: (handSide) =>
-                  handleHandClick(panelId, dancer.id, handSide),
-                onUpdateDancerState: (newState) =>
-                  movePrimaryAndSelection(
-                    panelId,
-                    dancer.id,
-                    'dancer',
-                    newState,
-                  ),
-                onUpdateHandPosition: (side, newPos) =>
-                  updateHandPosition(panelId, dancer.id, side, newPos),
-                onUpdateHandRotation: (side, rotation) =>
-                  updateHandRotation(panelId, dancer.id, side, rotation),
-                onDragStart: startDragMode,
-                onDragEnd: endDragMode,
-                isGlowing,
-                onRegisterNode: (node) =>
-                  registerCanvasNode(panelId, dancer.id, 'dancer', node),
-              };
-            };
-
-            // Render all dancer bodies first, then all arms
-            const bodies = visibleDancers.map((dancer, index) => (
-              <Dancer
-                key={`${dancer.id}-body`}
-                {...getDancerProps(dancer, index)}
-                renderOnly="body"
-              />
-            ));
-
-            const arms = visibleDancers.map((dancer, index) => (
-              <Dancer
-                key={`${dancer.id}-arms`}
-                {...getDancerProps(dancer, index)}
-                renderOnly="arms"
-              />
-            ));
-
-            // Add one invisible complete dancer for transformers and interaction
-            const interactionLayer = visibleDancers.map((dancer, index) => {
-              const props = getDancerProps(dancer, index);
-              // Only render transformers for selected dancers
-              if (!props.isSelected && !props.selectedHandSide) return null;
-
-              return (
-                <Dancer
-                  key={`${dancer.id}-interaction`}
-                  {...props}
-                  renderOnly="all"
-                />
-              );
-            });
-
-            return [...bodies, ...arms, ...interactionLayer];
           }
 
           const list = shapesByCategory[layerKey];

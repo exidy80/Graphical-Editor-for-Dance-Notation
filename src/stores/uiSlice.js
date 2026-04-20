@@ -1,6 +1,8 @@
 // UI state slice - handles selection state, opacity, visual effects, and other UI concerns
+import { v4 as uuidv4 } from 'uuid';
 import { UI_DIMENSIONS } from '../utils/dimensions.js';
 import { LAYER_KEYS } from '../utils/layersConfig.js';
+import { NON_COPYABLE_SHAPE_TYPES } from '../constants/shapeTypes.js';
 
 const CANVAS_SIZE_INCREMENT = 0.2;
 const MIN_CANVAS_SIZE = 1.0;
@@ -228,6 +230,77 @@ const createUISlice = (set, get) => ({
         preview: null,
       },
     }),
+
+  // Copy selected items to internal clipboard
+  copySelection: () => {
+    const { selectedItems, panels } = get();
+    if (!selectedItems.length) return;
+
+    const clipboardItems = [];
+    selectedItems.forEach((item) => {
+      const panel = panels.find((p) => p.id === item.panelId);
+      if (!panel) return;
+
+      if (item.type === 'shape') {
+        const shape = panel.shapes.find((s) => s.id === item.id);
+        if (!shape || NON_COPYABLE_SHAPE_TYPES.has(shape.type)) return;
+        clipboardItems.push({
+          type: 'shape',
+          shapeData: { ...shape },
+        });
+      }
+    });
+
+    if (clipboardItems.length) set({ clipboard: clipboardItems });
+  },
+
+  // Paste clipboard items into the selected panel
+  pasteClipboard: () => {
+    const { clipboard, selectedPanel } = get();
+    if (!clipboard.length || !selectedPanel) return;
+
+    const PASTE_OFFSET = 20;
+    // Pre-generate IDs outside the set callback to keep the reducer pure
+    const newIds = clipboard.map(() => uuidv4());
+
+    set((state) => {
+      const newSelectedItems = [];
+
+      const panels = state.panels.map((panel) => {
+        if (panel.id !== selectedPanel) return panel;
+
+        let newShapes = [...panel.shapes];
+
+        clipboard.forEach((entry, i) => {
+          const newId = newIds[i];
+
+          if (entry.type === 'shape') {
+            newShapes = [
+              ...newShapes,
+              {
+                ...entry.shapeData,
+                id: newId,
+                x: (entry.shapeData.x || 0) + PASTE_OFFSET,
+                y: (entry.shapeData.y || 0) + PASTE_OFFSET,
+              },
+            ];
+            newSelectedItems.push({
+              type: 'shape',
+              panelId: selectedPanel,
+              id: newId,
+            });
+          }
+        });
+
+        return {
+          ...panel,
+          shapes: newShapes,
+        };
+      });
+
+      return { panels, selectedItems: newSelectedItems };
+    });
+  },
 
   toggleMagnify: () => {
     const { magnifyEnabled } = get();

@@ -521,9 +521,9 @@ describe('Keystroke Framework', () => {
         handleKeystroke('ArrowRight', {
           key: 'ArrowRight',
           altKey: true,
-          ctrlKey: true,
+          ctrlKey: false,
           metaKey: false,
-          shiftKey: false,
+          shiftKey: true,
         });
       });
 

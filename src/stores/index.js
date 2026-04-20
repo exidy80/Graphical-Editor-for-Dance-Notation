@@ -45,6 +45,7 @@ const createInitialState = () => ({
   },
   _autoSaveTimer: null,
   multiDragState: null, // { [itemId]: { x, y, rotation, scaleX, scaleY } } captured at drag start
+  clipboard: [], // Array of copied items: { type, dancerData?, headShape?, handShape?, shapeData? }
 });
 
 // Create initial store with auto-save functionality

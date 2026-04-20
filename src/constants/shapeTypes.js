@@ -5,6 +5,13 @@ export const STAGE_X = 'stageX';
 export const STAGE_NEXT = 'stageNext';
 export const STAGE_CENTER = 'stageCenter';
 
+// Shape types that cannot be copied/pasted
+export const NON_COPYABLE_SHAPE_TYPES = new Set([
+  STAGE_X,
+  STAGE_NEXT,
+  STAGE_CENTER,
+]);
+
 // Spin types (two full rotations)
 export const SPIN_TWO = 'spinTwo';
 export const SPIN_TWO_CW = 'spinTwoCW';

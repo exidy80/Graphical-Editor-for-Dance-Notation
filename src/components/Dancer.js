@@ -268,8 +268,10 @@ const Dancer = ({
       const elbowPos = dancer[`${side}ElbowPos`];
       const handPos = dancer[`${side}HandPos`];
 
-      if (upperArm && lowerArm) {
+      if (upperArm) {
         upperArm.points([shoulderX, headSize / 4, elbowPos.x, elbowPos.y]);
+      }
+      if (lowerArm) {
         lowerArm.points([elbowPos.x, elbowPos.y, handPos.x, handPos.y]);
       }
     };
@@ -514,12 +516,10 @@ const Dancer = ({
     [dancer, onUpdateDancerState, disabled],
   );
 
-  const renderArm = (side) => {
+  const renderUpperArmSegment = (side) => {
     const upperArmThickness = dancer[`${side}UpperArmThickness`] || 'thick';
-    const lowerArmThickness = dancer[`${side}LowerArmThickness`] || 'thick';
-
     return (
-      <Group key={`${side}arm${dancer.id}`}>
+      <>
         <Line
           ref={side === 'left' ? leftUpperArmRef : rightUpperArmRef}
           stroke={dancer.colour}
@@ -527,26 +527,12 @@ const Dancer = ({
             upperArmThickness === 'thick'
               ? ARM_THICKNESS.THICK
               : ARM_THICKNESS.THIN
-          } //The two thickness options to toggle between
-          hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH} // Consistent hitbox
+          }
+          hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH}
           onClick={(e) => handleArmClick(side, 'Upper')(e)}
           shadowColor={isGlowing ? dancer.colour : null}
           shadowBlur={isGlowing ? 15 : 0}
           shadowOpacity={isGlowing ? 1 : 0}
-        />
-        <Line
-          ref={side === 'left' ? leftLowerArmRef : rightLowerArmRef}
-          stroke={dancer.colour}
-          strokeWidth={
-            lowerArmThickness === 'thick'
-              ? ARM_THICKNESS.THICK
-              : ARM_THICKNESS.THIN
-          }
-          shadowColor={isGlowing ? dancer.colour : null}
-          shadowBlur={isGlowing ? 15 : 0}
-          shadowOpacity={isGlowing ? 1 : 0}
-          hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH} // Consistent hitbox
-          onClick={(e) => handleArmClick(side, 'Lower')(e)}
         />
         <Circle
           x={dancer[`${side}ElbowPos`].x}
@@ -563,7 +549,38 @@ const Dancer = ({
           shadowBlur={isGlowing ? 15 : 0}
           shadowOpacity={isGlowing ? 1 : 0}
         />
+      </>
+    );
+  };
+
+  const renderLowerArmSegment = (side) => {
+    const lowerArmThickness = dancer[`${side}LowerArmThickness`] || 'thick';
+    return (
+      <>
+        <Line
+          ref={side === 'left' ? leftLowerArmRef : rightLowerArmRef}
+          stroke={dancer.colour}
+          strokeWidth={
+            lowerArmThickness === 'thick'
+              ? ARM_THICKNESS.THICK
+              : ARM_THICKNESS.THIN
+          }
+          hitStrokeWidth={ARM_THICKNESS.HIT_STROKE_WIDTH}
+          onClick={(e) => handleArmClick(side, 'Lower')(e)}
+          shadowColor={isGlowing ? dancer.colour : null}
+          shadowBlur={isGlowing ? 15 : 0}
+          shadowOpacity={isGlowing ? 1 : 0}
+        />
         {renderHand(side)}
+      </>
+    );
+  };
+
+  const renderArm = (side) => {
+    return (
+      <Group key={`${side}arm${dancer.id}`}>
+        {renderUpperArmSegment(side)}
+        {renderLowerArmSegment(side)}
       </Group>
     );
   };
@@ -607,6 +624,10 @@ const Dancer = ({
         )}
         {(renderOnly === 'all' || renderOnly === 'arms') &&
           ['left', 'right'].map((side) => renderArm(side))}
+        {renderOnly === 'leftUpperArm' && renderUpperArmSegment('left')}
+        {renderOnly === 'rightUpperArm' && renderUpperArmSegment('right')}
+        {renderOnly === 'leftLowerArm' && renderLowerArmSegment('left')}
+        {renderOnly === 'rightLowerArm' && renderLowerArmSegment('right')}
       </Group>
       {isSelected && renderOnly === 'all' && (
         <Transformer
