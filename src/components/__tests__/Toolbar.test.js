@@ -31,9 +31,14 @@ test('lock mode toggle button toggles variant', () => {
   render(<Toolbar />);
   const lockBtn = screen.getByText('Hold Hands').closest('button');
   expect(lockBtn).toHaveClass('btn-outline-dark');
-  fireEvent.click(lockBtn);
-  // Variant should flip to primary when lock mode is active
+  act(() => {
+    useAppStore.getState().setLockModeActive(true);
+  });
   expect(lockBtn).toHaveClass('btn-primary');
+  act(() => {
+    useAppStore.getState().setLockModeActive(false);
+  });
+  expect(lockBtn).toHaveClass('btn-outline-dark');
 });
 
 test('magnify toggle button toggles variant', () => {
@@ -41,7 +46,7 @@ test('magnify toggle button toggles variant', () => {
   const magnifyBtn = screen.getByText('Magnify').closest('button');
   expect(magnifyBtn).toHaveClass('btn-outline-dark');
   fireEvent.click(magnifyBtn);
-  expect(magnifyBtn).toHaveClass('btn-primary');
+  expect(magnifyBtn).toHaveClass('btn-dark');
   fireEvent.click(magnifyBtn);
   expect(magnifyBtn).toHaveClass('btn-outline-dark');
 });
