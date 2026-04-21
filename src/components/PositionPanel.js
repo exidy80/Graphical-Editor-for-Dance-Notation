@@ -14,8 +14,10 @@ import {
 const PositionPanel = () => {
   const panels = useAppStore((state) => state.panels);
   const selectedPanel = useAppStore((state) => state.selectedPanel);
+  const selectedItems = useAppStore((state) => state.selectedItems);
   const panelSize = useAppStore((state) => state.panelSize);
   const magnifyEnabled = useAppStore((state) => state.magnifyEnabled);
+  const getCanvasNode = useAppStore((state) => state.getCanvasNode);
   const handlePanelSelection = useAppStore(
     (state) => state.handlePanelSelection,
   );
@@ -46,14 +48,110 @@ const PositionPanel = () => {
     if (!magnifyEnabled || !selectedPanel) return;
     const panelElement = panelRefs.current[selectedPanel];
     const gridElement = document.querySelector('.position-panel-grid');
-    if (!panelElement || !gridElement) return;
+    const panel = panels.find((p) => p.id === selectedPanel);
+    if (!panelElement || !gridElement || !panel) return;
+
+    const displayPanelSize = {
+      width: panelSize.width * UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE,
+      height: panelSize.height * UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE,
+    };
+
+    const canvasWrapper = panelElement.querySelector('.panel-canvas-wrapper');
+    const panelRect = panelElement.getBoundingClientRect();
+    const canvasWrapperRect = canvasWrapper?.getBoundingClientRect();
+    const canvasOffsetLeft = canvasWrapperRect
+      ? canvasWrapperRect.left - panelRect.left
+      : 0;
+    const canvasOffsetTop = canvasWrapperRect
+      ? canvasWrapperRect.top - panelRect.top
+      : 0;
+
+    const contentScale = UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE;
+    const scaledCanvasWidth = UI_DIMENSIONS.CANVAS_SIZE.width * contentScale;
+    const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
+    const baseOffsetX = (displayPanelSize.width - scaledCanvasWidth) / 2;
+    const baseOffsetY = (displayPanelSize.height - scaledCanvasHeight) / 2;
+
+    const selectionInPanel = selectedItems.filter(
+      (item) => item.panelId === selectedPanel,
+    );
+
+    let targetX = canvasOffsetLeft + displayPanelSize.width / 2;
+    let targetY = canvasOffsetTop + displayPanelSize.height / 2;
+
+    if (selectionInPanel.length > 0) {
+      const selectionCenters = selectionInPanel
+        .map((item) => {
+          const node = getCanvasNode(item.panelId, item.id, item.type);
+          if (node && typeof node.getClientRect === 'function') {
+            const rect = node.getClientRect();
+            return {
+              x: canvasOffsetLeft + rect.x + rect.width / 2,
+              y: canvasOffsetTop + rect.y + rect.height / 2,
+            };
+          }
+
+          const object =
+            item.type === 'dancer'
+              ? panel.dancers.find((d) => d.id === item.id)
+              : panel.shapes.find((s) => s.id === item.id);
+          if (!object) return null;
+
+          return {
+            x: canvasOffsetLeft + baseOffsetX + (object.x || 0) * contentScale,
+            y: canvasOffsetTop + baseOffsetY + (object.y || 0) * contentScale,
+          };
+        })
+        .filter(Boolean);
+
+      if (selectionCenters.length === 1) {
+        targetX = selectionCenters[0].x;
+        targetY = selectionCenters[0].y;
+      } else if (selectionCenters.length > 1) {
+        const total = selectionCenters.reduce(
+          (acc, center) => ({
+            x: acc.x + center.x,
+            y: acc.y + center.y,
+          }),
+          { x: 0, y: 0 },
+        );
+        targetX = total.x / selectionCenters.length;
+        targetY = total.y / selectionCenters.length;
+      }
+    }
+
+    const gridRect = gridElement.getBoundingClientRect();
+    const panelLeftInGrid =
+      panelRect.left - gridRect.left + gridElement.scrollLeft;
+    const panelTopInGrid = panelRect.top - gridRect.top + gridElement.scrollTop;
+
+    const targetScrollLeft =
+      panelLeftInGrid + targetX - gridElement.clientWidth / 2;
+    const targetScrollTop =
+      panelTopInGrid + targetY - gridElement.clientHeight / 2;
+
+    const maxScrollLeft = Math.max(
+      0,
+      gridElement.scrollWidth - gridElement.clientWidth,
+    );
+    const maxScrollTop = Math.max(
+      0,
+      gridElement.scrollHeight - gridElement.clientHeight,
+    );
 
     gridElement.scrollTo({
-      top: panelElement.offsetTop,
-      left: panelElement.offsetLeft,
+      top: Math.max(0, Math.min(targetScrollTop, maxScrollTop)),
+      left: Math.max(0, Math.min(targetScrollLeft, maxScrollLeft)),
       behavior: 'smooth',
     });
-  }, [magnifyEnabled, selectedPanel]);
+  }, [
+    magnifyEnabled,
+    selectedPanel,
+    selectedItems,
+    panels,
+    panelSize,
+    getCanvasNode,
+  ]);
 
   const optionsBarHeight = 40; //size of bar at top of panel
 
@@ -205,6 +303,7 @@ const PositionPanel = () => {
               </div>
             </div>
             <div
+              className="panel-canvas-wrapper"
               style={{
                 flex: expandedNotesPanel === panel.id ? '0 0 0' : '1 1 auto',
                 width: '100%',
