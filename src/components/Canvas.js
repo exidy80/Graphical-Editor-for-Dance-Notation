@@ -71,12 +71,19 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   const stageRef = useRef(null);
 
   const effectivePanelSize = panelViewportSize || panelSize;
+  const drawableViewportSize = {
+    width: effectivePanelSize.width,
+    height: Math.max(
+      0,
+      effectivePanelSize.height - UI_DIMENSIONS.PANEL_NOTES_HEIGHT,
+    ),
+  };
   const isMagnified = magnifyEnabled && selectedPanel === panelId;
   const contentScale = isMagnified ? UI_DIMENSIONS.MAGNIFY_CONTENT_SCALE : 1;
   const scaledCanvasWidth = UI_DIMENSIONS.CANVAS_SIZE.width * contentScale;
   const scaledCanvasHeight = UI_DIMENSIONS.CANVAS_SIZE.height * contentScale;
-  const baseOffsetX = (effectivePanelSize.width - scaledCanvasWidth) / 2;
-  const baseOffsetY = (effectivePanelSize.height - scaledCanvasHeight) / 2;
+  const baseOffsetX = (drawableViewportSize.width - scaledCanvasWidth) / 2;
+  const baseOffsetY = (drawableViewportSize.height - scaledCanvasHeight) / 2;
 
   const toLayerCoordinates = useCallback(
     (stageX, stageY) => ({
@@ -311,8 +318,8 @@ const Canvas = ({ panelId, panelViewportSize }) => {
   return (
     <Stage
       ref={stageRef}
-      width={effectivePanelSize.width - 4} //Slightly smaller than container
-      height={effectivePanelSize.height - 4}
+      width={drawableViewportSize.width}
+      height={drawableViewportSize.height}
       onContextMenu={handleContextMenu}
       onMouseDown={handleStageMouseDown}
       onClick={handleStageClick}

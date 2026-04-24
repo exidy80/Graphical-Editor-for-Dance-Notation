@@ -6,7 +6,6 @@ import {
   getSymbolPlacementHotspotOffset,
   isSymbolPlacementTargetPanel,
 } from '../utils/symbolPlacement';
-import { UI_DIMENSIONS } from '../utils/dimensions';
 
 /**
  * Encapsulates all symbol-placement concerns:
@@ -85,16 +84,14 @@ const useSymbolPlacement = ({
       if (!pointer) return true;
 
       const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
-      const insidePanel =
-        isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
       updateSymbolPlacementPreview(
         panelId,
         cursorPoint.x,
         cursorPoint.y,
-        insidePanel,
+        isPlacementPanelAllowed,
       );
 
-      if (!insidePanel) return true;
+      if (!isPlacementPanelAllowed) return true;
       const topLeft = getPlacementTopLeft(cursorPoint);
       if (!topLeft) return true;
       commitSymbolPlacement(panelId, {
@@ -109,7 +106,6 @@ const useSymbolPlacement = ({
       isPlacementPanelAllowed,
       panelId,
       toLayerCoordinates,
-      isInsidePanelBounds,
       getPlacementTopLeft,
       updateSymbolPlacementPreview,
       commitSymbolPlacement,
@@ -133,13 +129,11 @@ const useSymbolPlacement = ({
       const pointer = stage?.getPointerPosition();
       if (!pointer) return true;
       const cursorPoint = toLayerCoordinates(pointer.x, pointer.y);
-      const insidePanel =
-        isPlacementPanelAllowed && isInsidePanelBounds(cursorPoint);
       updateSymbolPlacementPreview(
         panelId,
         cursorPoint.x,
         cursorPoint.y,
-        insidePanel,
+        isPlacementPanelAllowed,
       );
       return true;
     },
@@ -148,7 +142,6 @@ const useSymbolPlacement = ({
       isPlacementPanelAllowed,
       panelId,
       toLayerCoordinates,
-      isInsidePanelBounds,
       updateSymbolPlacementPreview,
     ],
   );
