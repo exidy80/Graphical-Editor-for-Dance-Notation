@@ -13,6 +13,10 @@ const ContextMenu = () => {
   const contextMenu = useAppStore((state) => state.contextMenu);
   const closeContextMenu = useAppStore((state) => state.closeContextMenu);
   const handleHandSelection = useAppStore((state) => state.handleHandSelection);
+  const handleHeadSelection = useAppStore((state) => state.handleHeadSelection);
+  const handleDancerSelection = useAppStore(
+    (state) => state.handleDancerSelection,
+  );
   const setSelectedHand = useAppStore((state) => state.setSelectedHand);
   const setSelectedPanel = useAppStore((state) => state.setSelectedPanel);
   const updateShapeState = useAppStore((state) => state.updateShapeState);
@@ -314,10 +318,71 @@ const ContextMenu = () => {
     </>
   );
 
+  const renderHeadMenu = () => (
+    <>
+      <button
+        type="button"
+        style={itemStyle}
+        onClick={closeAfter(() => {
+          setSelectedPanel(target.panelId);
+          handleDancerSelection(target.panelId, target.dancerId);
+          handleHeadSelection('Upright');
+        })}
+      >
+        Upright
+      </button>
+      <button
+        type="button"
+        style={itemStyle}
+        onClick={closeAfter(() => {
+          setSelectedPanel(target.panelId);
+          handleDancerSelection(target.panelId, target.dancerId);
+          handleHeadSelection('Duck');
+        })}
+      >
+        Duck
+      </button>
+      <button
+        type="button"
+        style={itemStyle}
+        onClick={closeAfter(() => {
+          setSelectedPanel(target.panelId);
+          handleDancerSelection(target.panelId, target.dancerId);
+          handleHeadSelection('Bow');
+        })}
+      >
+        Bow
+      </button>
+      <button
+        type="button"
+        style={itemStyle}
+        onClick={closeAfter(() => {
+          setSelectedPanel(target.panelId);
+          handleDancerSelection(target.panelId, target.dancerId);
+          handleHeadSelection('Bend Knees');
+        })}
+      >
+        Bend Knees
+      </button>
+      <button
+        type="button"
+        style={itemStyle}
+        onClick={closeAfter(() => {
+          setSelectedPanel(target.panelId);
+          handleDancerSelection(target.panelId, target.dancerId);
+          handleHeadSelection('Squat');
+        })}
+      >
+        Squat
+      </button>
+    </>
+  );
+
   let content = null;
   if (target.kind === 'hand') content = renderHandMenu();
   if (target.kind === 'handSymbol') content = renderHandSymbolMenu();
   if (target.kind === 'footSymbol') content = renderFootSymbolMenu();
+  if (target.kind === 'head') content = renderHeadMenu();
 
   if (!content) return null;
 

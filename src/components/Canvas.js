@@ -278,6 +278,28 @@ const Canvas = ({ panelId, panelViewportSize }) => {
       }
     }
 
+    const headNode = findAncestor(e.target, (node) => {
+      if (!node || !node.name) return false;
+      return node.name() === 'head';
+    });
+
+    if (headNode) {
+      const dancerNode = findAncestor(
+        headNode,
+        (node) => node.getAttr && node.getAttr('dancerId'),
+      );
+      const dancerId = dancerNode ? dancerNode.getAttr('dancerId') : null;
+
+      if (dancerId) {
+        openContextMenu({
+          x,
+          y,
+          target: { kind: 'head', panelId, dancerId },
+        });
+        return;
+      }
+    }
+
     const shapeNode = findAncestor(
       e.target,
       (node) =>

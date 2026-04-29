@@ -329,6 +329,7 @@ const Dancer = ({
       ref: headRef,
       opacity: opacity,
       onClick: disabled ? null : onDancerSelect,
+      name: 'head',
     };
 
     const filledProps = {
