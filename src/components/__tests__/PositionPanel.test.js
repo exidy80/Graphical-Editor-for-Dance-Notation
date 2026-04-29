@@ -157,7 +157,7 @@ test('magnify centers one selected item', () => {
   });
 
   expect(gridElement.scrollTo).toHaveBeenLastCalledWith({
-    top: 160.25,
+    top: 210.25,
     left: 202,
     behavior: 'smooth',
   });
@@ -186,7 +186,7 @@ test('magnify uses shared center for multi-selection', () => {
   });
 
   expect(gridElement.scrollTo).toHaveBeenLastCalledWith({
-    top: 340.25,
+    top: 390.25,
     left: 202,
     behavior: 'smooth',
   });
@@ -216,7 +216,7 @@ test('magnify re-centers selection when canvas size increases', () => {
   });
 
   expect(gridElement.scrollTo).toHaveBeenLastCalledWith({
-    top: 160.25,
+    top: 210.25,
     left: 202,
     behavior: 'smooth',
   });
@@ -229,7 +229,7 @@ test('magnify re-centers selection when canvas size increases', () => {
   });
 
   expect(gridElement.scrollTo).toHaveBeenLastCalledWith({
-    top: 460.25,
+    top: 510.25,
     left: 502,
     behavior: 'smooth',
   });

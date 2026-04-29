@@ -184,7 +184,7 @@ export const initializeDefaultKeystrokes = (get, api, set) => {
   registerKeystroke('r', {
     description: 'Reset rotation to starting position',
     handler: () => {
-      const { selectedItems, updateDancerState, updateShapeState, panels } =
+      const { selectedItems, panels, _rotateSelectionToAbsoluteRotation } =
         get();
       if (!selectedItems.length) return;
 
@@ -196,11 +196,11 @@ export const initializeDefaultKeystrokes = (get, api, set) => {
           const dancer = panel.dancers.find((d) => d.id === item.id);
           if (!dancer) return;
           const originalRotation = dancer.colour === 'red' ? 180 : 0;
-          updateDancerState(item.panelId, item.id, {
-            rotation: originalRotation,
-          });
+          // Use _rotateSelectionToAbsoluteRotation to preserve visual center
+          _rotateSelectionToAbsoluteRotation(originalRotation);
         } else if (item.type === 'shape') {
-          updateShapeState(item.panelId, item.id, { rotation: 0 });
+          // Use _rotateSelectionToAbsoluteRotation to preserve visual center
+          _rotateSelectionToAbsoluteRotation(0);
         }
       });
     },

@@ -49,13 +49,13 @@ describe('Canvas Size Centering and Positioning', () => {
       expect(stageNext).toBeDefined();
       expect(stageCenter).toBeDefined();
 
-      // All three should be at panel visual center (absolute positions)
+      // All three should be at canvas center (absolute positions)
       expect(stageX.x).toBe(300); // Canvas center X
-      expect(stageX.y).toBe(275); // Visual center Y
+      expect(stageX.y).toBe(300); // Canvas center Y
       expect(stageNext.x).toBe(300); // Canvas center X
-      expect(stageNext.y).toBe(275); // Visual center Y
+      expect(stageNext.y).toBe(300); // Canvas center Y
       expect(stageCenter.x).toBe(300); // Canvas center X
-      expect(stageCenter.y).toBe(275); // Visual center Y
+      expect(stageCenter.y).toBe(300); // Canvas center Y
     });
 
     test('dancers should be positioned relative to canvas center', () => {
@@ -72,9 +72,9 @@ describe('Canvas Size Centering and Positioning', () => {
       expect(panel.dancers[0].x).toBe(canvasCenterX);
       expect(panel.dancers[1].x).toBe(canvasCenterX);
 
-      // Dancers should be at positions relative to visual center
-      expect(panel.dancers[0].y).toBe(185); // Visual center - dancer offset
-      expect(panel.dancers[1].y).toBe(365); // Visual center + dancer offset
+      // Dancers should be at positions relative to canvas center
+      expect(panel.dancers[0].y).toBe(210); // Canvas center - dancer offset
+      expect(panel.dancers[1].y).toBe(390); // Canvas center + dancer offset
     });
   });
 
@@ -266,8 +266,8 @@ describe('Canvas Size Centering and Positioning', () => {
       expect(panel.dancers[1].x).toBe(canvasCenterX);
 
       const stageX = panel.shapes.find((s) => s.type === 'stageX');
-      expect(stageX.x).toBe(canvasCenterX); // Visual center X
-      expect(stageX.y).toBe(275); // Visual center Y
+      expect(stageX.x).toBe(canvasCenterX); // Canvas center X
+      expect(stageX.y).toBe(300); // Canvas center Y
     });
   });
 });

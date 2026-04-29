@@ -59,6 +59,16 @@ const DEFAULT_PANEL_SIZE = { width: 300, height: 300 };
 const CANVAS_SIZE = { width: 600, height: 600 }; // Fixed canvas size that panels are viewports into
 const PANEL_NOTES_HEIGHT = 50;
 const MAGNIFY_CONTENT_SCALE = 2;
+
+// The true geometric center of the canvas (for absolute positioning of dancers and stage markers)
+const CANVAS_CENTER = {
+  x: CANVAS_SIZE.width / 2,
+  y: CANVAS_SIZE.height / 2,
+};
+
+// Visual center accounting for UI elements (notes bar at bottom)
+// Used when positioning content relative to available visual space
+// NOTE: Don't confuse with CANVAS_CENTER! CANVAS_CENTER is for absolute positioning.
 const PANEL_VISUAL_CENTER = {
   x: CANVAS_SIZE.width / 2,
   y: (CANVAS_SIZE.height - PANEL_NOTES_HEIGHT) / 2,
@@ -68,6 +78,7 @@ export const UI_DIMENSIONS = {
   DEFAULT_PANEL_SIZE,
   CANVAS_SIZE,
   PANEL_NOTES_HEIGHT,
+  CANVAS_CENTER,
   PANEL_VISUAL_CENTER,
   MAGNIFY_CONTENT_SCALE,
   MIN_TRANSFORM_SIZE: 5, // Minimum width/height for transforms

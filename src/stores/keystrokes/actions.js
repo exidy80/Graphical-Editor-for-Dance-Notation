@@ -23,60 +23,74 @@ export const createKeystrokeActions = (get) => ({
   getCanvasNode: (panelId, itemId, itemType) =>
     canvasNodeRegistry.get(makeRegistryKey(panelId, itemType, itemId)),
 
+  _rotateItemToAbsoluteRotation: (item, targetRotation) => {
+    const { updateDancerState, updateShapeState, panels, getCanvasNode } =
+      get();
+
+    const panel = panels.find((p) => p.id === item.panelId);
+    if (!panel) return;
+
+    const node = getCanvasNode(item.panelId, item.id, item.type);
+    if (node) {
+      // Get center before rotation change
+      const beforeCenter = getNodeVisualCenter(node);
+      // Set rotation to target value
+      node.rotation(targetRotation);
+      // Get center after rotation change
+      const afterCenter = getNodeVisualCenter(node);
+      // Calculate position delta to keep visual center in same place
+      const parentSpaceDelta = getCenterDeltaInParentSpace(
+        node,
+        beforeCenter,
+        afterCenter,
+      );
+      node.x(node.x() + parentSpaceDelta.x);
+      node.y(node.y() + parentSpaceDelta.y);
+
+      const nextState = {
+        x: node.x(),
+        y: node.y(),
+        rotation: node.rotation(),
+      };
+
+      if (item.type === 'dancer') {
+        updateDancerState(item.panelId, item.id, nextState);
+      } else if (item.type === 'shape') {
+        updateShapeState(item.panelId, item.id, nextState);
+      }
+      return;
+    }
+
+    // No node, just update rotation directly
+    if (item.type === 'dancer') {
+      updateDancerState(item.panelId, item.id, {
+        rotation: targetRotation,
+      });
+    } else if (item.type === 'shape') {
+      updateShapeState(item.panelId, item.id, {
+        rotation: targetRotation,
+      });
+    }
+  },
+
   _rotateSelection: (degrees) => {
-    const {
-      selectedItems,
-      updateDancerState,
-      updateShapeState,
-      panels,
-      getCanvasNode,
-    } = get();
+    const { selectedItems, panels } = get();
     if (!selectedItems.length) return;
 
     selectedItems.forEach((item) => {
       const panel = panels.find((p) => p.id === item.panelId);
       if (!panel) return;
 
-      const node = getCanvasNode(item.panelId, item.id, item.type);
-      if (node) {
-        const beforeCenter = getNodeVisualCenter(node);
-        node.rotation((node.rotation() || 0) + degrees);
-        const afterCenter = getNodeVisualCenter(node);
-        const parentSpaceDelta = getCenterDeltaInParentSpace(
-          node,
-          beforeCenter,
-          afterCenter,
-        );
-        node.x(node.x() + parentSpaceDelta.x);
-        node.y(node.y() + parentSpaceDelta.y);
+      const object =
+        item.type === 'dancer'
+          ? panel.dancers.find((d) => d.id === item.id)
+          : panel.shapes.find((s) => s.id === item.id);
+      if (!object) return;
 
-        const nextState = {
-          x: node.x(),
-          y: node.y(),
-          rotation: node.rotation(),
-        };
+      const currentRotation = object.rotation || 0;
+      const targetRotation = currentRotation + degrees;
 
-        if (item.type === 'dancer') {
-          updateDancerState(item.panelId, item.id, nextState);
-        } else if (item.type === 'shape') {
-          updateShapeState(item.panelId, item.id, nextState);
-        }
-        return;
-      }
-
-      if (item.type === 'dancer') {
-        const dancer = panel.dancers.find((d) => d.id === item.id);
-        if (!dancer) return;
-        updateDancerState(item.panelId, item.id, {
-          rotation: (dancer.rotation || 0) + degrees,
-        });
-      } else if (item.type === 'shape') {
-        const shape = panel.shapes.find((s) => s.id === item.id);
-        if (!shape) return;
-        updateShapeState(item.panelId, item.id, {
-          rotation: (shape.rotation || 0) + degrees,
-        });
-      }
+      get()._rotateItemToAbsoluteRotation(item, targetRotation);
     });
   },
 
@@ -188,6 +202,15 @@ export const createKeystrokeActions = (get) => ({
       } else if (item.type === 'shape') {
         updateShapeState(item.panelId, item.id, nextState);
       }
+    });
+  },
+
+  _rotateSelectionToAbsoluteRotation: (targetRotation) => {
+    const { selectedItems } = get();
+    if (!selectedItems.length) return;
+
+    selectedItems.forEach((item) => {
+      get()._rotateItemToAbsoluteRotation(item, targetRotation);
     });
   },
 
